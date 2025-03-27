@@ -5,12 +5,20 @@ build-backend = "maturin"
 [project]
 name = "py-diffsol-new"
 requires-python = ">=3.8"
+version = "0.0.1"
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
 ]
-dynamic = ["version"]
+dependencies = [
+    "numpy",
+]
 
 [tool.maturin]
-features = ["pyo3/extension-module"]
+features = ["pyo3/extension-module", "diffsol/diffsl-llvm18"]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+]

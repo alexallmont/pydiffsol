@@ -1,0 +1,2 @@
+[dependencies]
+features = ["diffsl-llvm18"]
