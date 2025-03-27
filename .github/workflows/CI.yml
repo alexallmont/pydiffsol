@@ -46,7 +46,7 @@ jobs:
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v2
         with:
-          version: "18.0"
+          version: "17.0"
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
