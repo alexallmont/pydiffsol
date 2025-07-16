@@ -48,12 +48,12 @@ jobs:
         with:
           version: "17.0"
       - name: Set features variable and install dependencies
-        run: echo "ADDITIONAL_FEATURES_FLAGS=--features diffsl-llvm17" >> $GITHUB_ENV
+        run: echo "ADDITIONAL_FEATURES_FLAGS=--features diffsol/diffsl-llvm17" >> $GITHUB_ENV
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist --find-interpreter
+          args: --release --verbose ${{ env.ADDITIONAL_FEATURES_FLAGS || '' }} --out dist --find-interpreter
           sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
           manylinux: auto
       - name: Upload wheels
@@ -109,7 +109,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist --find-interpreter
+          args: --release --verbose ${{ env.ADDITIONAL_FEATURES_FLAGS || '' }} --out dist --find-interpreter
           sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
           manylinux: musllinux_1_2
       - name: Upload wheels
@@ -167,7 +167,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist --find-interpreter
+          args: --release --verbose ${{ env.ADDITIONAL_FEATURES_FLAGS || '' }} --out dist --find-interpreter
           sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
       - name: Upload wheels
         uses: actions/upload-artifact@v4
@@ -203,7 +203,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist --find-interpreter
+          args: --release --verbose ${{ env.ADDITIONAL_FEATURES_FLAGS || '' }} --out dist --find-interpreter
           sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
       - name: Upload wheels
         uses: actions/upload-artifact@v4
@@ -227,7 +227,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           command: sdist
-          args: --out dist
+          args: --verbose ${{ env.ADDITIONAL_FEATURES_FLAGS || '' }} --out dist
       - name: Upload sdist
         uses: actions/upload-artifact@v4
         with:
