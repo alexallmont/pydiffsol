@@ -8,8 +8,11 @@ name = "py_diffsol_new"
 crate-type = ["cdylib"]
 
 [dependencies]
-diffsol = { version = "0.5.3", features = ["diffsl"] }
-faer = "0.21.9"
-nalgebra = "0.33.2"
-numpy = "0.24.0"
-pyo3 = "0.24.0"
+pyo3 = { version = "0.25.0", default-features = false, features = ["extension-module"] }
+diffsol = { version = "0.6.6", features = ["diffsl", "diffsl-llvm", "nalgebra", "faer"] }
+nalgebra = { version = ">=0.30, <0.34", default-features = false, features = ["std"] }
+faer = "0.22.6"
+numpy = "0.25.0"
+
+[dev-dependencies]
+pyo3 = { version = "*", features = ["auto-initialize"] }

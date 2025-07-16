@@ -4,16 +4,16 @@ use pyo3::exceptions::PyRuntimeError;
 use crate::enums::*;
 
 #[pyclass]
-struct Config {
-    method: SolverMethod,
-    linear_solver: SolverType,
-    rtol: f64,
+pub(crate) struct Config {
+    pub(crate) method: SolverMethod,
+    pub(crate) linear_solver: SolverType,
+    pub(crate) rtol: f64,
 }
 
 #[pyclass]
 #[pyo3(name = "Config")]
 #[derive(Clone)]
-pub struct ConfigWrapper(Arc<Mutex<Config>>);
+pub(crate) struct ConfigWrapper(pub(crate) Arc<Mutex<Config>>);
 
 #[pymethods]
 impl ConfigWrapper {

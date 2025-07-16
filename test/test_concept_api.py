@@ -9,7 +9,7 @@ def test_api_concept():
         F { r*u*(1 - u/k) }
         out { u }
         """,
-        mtype=ds.nalgebra_dense_f64
+        matrix_type=ds.nalgebra_dense_f64
     )
 
     config = ds.Config()
@@ -29,3 +29,6 @@ def test_api_concept():
     #    expect = k*y0/(y0 + (k - y0)*np.exp(-r*t))
     #    err = np.abs(y[0] - expect)
     #    assert err < 1e-6
+
+if __name__ == "__main__":
+    test_api_concept()
