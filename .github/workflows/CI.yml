@@ -41,6 +41,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: 3.x
+      - name: Rust version
+        run: rustc -Vv
+      - name: Install LLVM and Clang
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: "17.0"
+      - name: Set features variable and install dependencies
+        run: echo "ADDITIONAL_FEATURES_FLAGS=--features diffsl-llvm17" >> $GITHUB_ENV
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
