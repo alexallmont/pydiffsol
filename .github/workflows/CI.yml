@@ -41,28 +41,19 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: 3.x
-      - name: Rust version
-        run: rustc -Vv
-      - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v2
-        with:
-          version: "17.0"
-      - name: Set features variable and install dependencies (Ubuntu)
-        run: echo "ADDITIONAL_FEATURES_FLAGS=--features diffsol/diffsl-llvm17" >> $GITHUB_ENV
-      - name: FIXME diagnostic LLVM info
-        run: |
-          llvm-config --version
-          llvm-config --prefix
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --verbose ${{ env.ADDITIONAL_FEATURES_FLAGS || '' }} --out dist --find-interpreter
+          args: --release --verbose --features diffsol/diffsl-llvm16 --out dist --find-interpreter
           sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
-          manylinux: auto
+          manylinux: "2_34"
           before-script-linux: |
+            yum install -y llvm16-devel
+            export PATH=$PATH:/usr/lib64/llvm16/bin/
             llvm-config --version
             llvm-config --prefix
+            export LLVM_SYS_160_PREFIX=$(llvm-config --prefix)
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
