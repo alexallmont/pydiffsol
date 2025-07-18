@@ -45,15 +45,16 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --verbose --features diffsol/diffsl-llvm15 --out dist --find-interpreter
+          args: --release --verbose --features diffsol/diffsl-llvm17 --out dist --find-interpreter
           sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
-          manylinux: "2_34"
+          manylinux: "2_28"
           before-script-linux: |
-            yum install -y clang15 llvm15 llvm15-devel
-            export PATH=$PATH:/usr/lib64/llvm15/bin/
+            yum update -y
+            yum -y install llvm-devel-17.0.6 clang-devel-17.0.6 libzstd-devel zstd ncurses-devel zlib-devel libffi libffi-devel
+            export LLVM_DIR=/usr
+            export LLVM_SYS_170_PREFIX=/usr
             llvm-config --version
             llvm-config --prefix
-            export LLVM_SYS_150_PREFIX=$(llvm-config --prefix)
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
