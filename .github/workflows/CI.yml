@@ -50,7 +50,7 @@ jobs:
           manylinux: "2_34"
           before-script-linux: |
             yum install -y clang15 llvm15 llvm15-devel
-            export PATH=$PATH:/usr/lib64/llvm16/bin/
+            export PATH=$PATH:/usr/lib64/llvm15/bin/
             llvm-config --version
             llvm-config --prefix
             export LLVM_SYS_150_PREFIX=$(llvm-config --prefix)
