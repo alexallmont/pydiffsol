@@ -1,0 +1,45 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: test_basic_api.py",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/test/test_basic_api.py",
+            "python": ".venv/bin/python",
+            "console": "integratedTerminal",
+            "preLaunchTask": "maturin develop",
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Rust: test_basic_api.py",
+            "program": ".venv/bin/python",
+            "args": [
+                "test/test_basic_api.py"
+            ],
+            "cwd": "${workspaceFolder}",
+            "initCommands": [
+                "settings set target.process.stop-on-exec false"
+            ],
+            "preLaunchTask": "maturin develop",
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Rust: 01_population_dynamics.py",
+            "program": ".venv/bin/python",
+            "args": [
+                "examples/01_population_dynamics.py"
+            ],
+            "cwd": "${workspaceFolder}",
+            "initCommands": [
+                "settings set target.process.stop-on-exec false"
+            ],
+            "preLaunchTask": "maturin develop",
+        }
+    ]
+}
