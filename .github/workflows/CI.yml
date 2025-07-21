@@ -176,7 +176,9 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
     if: ${{ startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' }}
-    needs: [linux, musllinux, windows, macos, sdist]
+    # FIXME uncomment when windows and macos building
+    # needs: [linux, musllinux, windows, macos, sdist]
+    needs: [linux, musllinux, sdist]
     permissions:
       # Use to sign the release artifacts
       id-token: write
