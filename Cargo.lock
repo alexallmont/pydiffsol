@@ -1575,17 +1575,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "py-diffsol-new"
-version = "0.1.0"
-dependencies = [
- "diffsol",
- "faer",
- "nalgebra",
- "numpy",
- "pyo3",
-]
-
-[[package]]
 name = "py_literal"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1596,6 +1585,17 @@ dependencies = [
  "num-traits",
  "pest",
  "pest_derive",
+]
+
+[[package]]
+name = "pydiffsol"
+version = "0.1.0"
+dependencies = [
+ "diffsol",
+ "faer",
+ "nalgebra",
+ "numpy",
+ "pyo3",
 ]
 
 [[package]]

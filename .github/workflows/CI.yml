@@ -51,7 +51,7 @@ jobs:
           set -e
           python3 -m venv .venv
           source .venv/bin/activate
-          pip install py-diffsol-new --find-links dist --force-reinstall
+          pip install pydiffsol --find-links dist --force-reinstall
           pip install pytest
           pytest
 
