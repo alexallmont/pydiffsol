@@ -16,9 +16,9 @@ diffsol-cranelift = ["diffsol/diffsl-cranelift"]
 
 [dependencies]
 pyo3 = { version = "0.25.0", default-features = false, features = ["extension-module"] }
-diffsol = { version = "0.6.6", features = ["diffsl", "diffsl-llvm", "nalgebra", "faer"] }
-nalgebra = { version = ">=0.30, <0.34", default-features = false, features = ["std"] }
+diffsol = { version = "0.6.6" }
 faer = "0.22.6"
+nalgebra = "0.33.2"
 numpy = "0.25.0"
 
 [dev-dependencies]
