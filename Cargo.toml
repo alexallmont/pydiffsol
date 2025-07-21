@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "py_diffsol_new"
+name = "pydiffsol"
 crate-type = ["cdylib"]
 
 [features]

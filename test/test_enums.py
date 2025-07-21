@@ -1,5 +1,5 @@
 import pytest
-import py_diffsol_new as ds
+import pydiffsol as ds
 
 def test_enums_exist():
     # Implicitly checks __repr__ (using PyO3 default)

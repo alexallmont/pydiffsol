@@ -1,6 +1,5 @@
 import numpy as np
-import py_diffsol_new as ds
-
+import pydiffsol as ds
 
 def test_basic_api():
     ode = ds.Ode(

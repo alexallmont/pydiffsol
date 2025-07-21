@@ -1,4 +1,4 @@
-import py_diffsol_new as ds
+import pydiffsol as ds
 import plotly.subplots as psp
 import numpy as np
 

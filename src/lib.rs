@@ -6,7 +6,7 @@ mod ode;
 
 /// A Python module implemented in Rust.
 #[pymodule]
-fn py_diffsol_new(m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn pydiffsol(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // Register all Python API classes
     m.add_class::<enums::MatrixType>()?;
