@@ -3,13 +3,19 @@ use std::sync::{Arc, Mutex};
 
 use crate::{config::ConfigWrapper, enums::*};
 
-use diffsol::{MatrixCommon, LlvmModule, OdeEquations, OdeSolverMethod, Vector};
+use diffsol::{MatrixCommon, OdeEquations, OdeSolverMethod, Vector};
 use diffsol::error::DiffsolError;
 use pyo3::prelude::*;
 use pyo3::exceptions::PyValueError;
 use nalgebra::DMatrix;
 use numpy::{ToPyArray, PyReadonlyArray1, PyArray1, PyArray2};
 use numpy::ndarray::{Array1, ArrayView2, ShapeBuilder};
+
+#[cfg(feature = "diffsol-cranelift")]
+type JitModule = diffsol::CraneliftJitModule;
+
+#[cfg(feature = "diffsol-llvm")]
+type JitModule = diffsol::LlvmModule;
 
 #[pyclass]
 struct Ode {
@@ -83,7 +89,7 @@ impl OdeWrapper {
                 type LS = diffsol::NalgebraLU<f64>;
 
                 let params = V::from_slice(params.as_array().as_slice().unwrap(), C::default());
-                let mut problem = diffsol::OdeBuilder::<M>::new().build_from_diffsl::<LlvmModule>(self_guard.code.as_str())?;
+                let mut problem = diffsol::OdeBuilder::<M>::new().build_from_diffsl::<JitModule>(self_guard.code.as_str())?;
                 problem.eqn.set_params(&params);
 
                 let config_guard = config.0.lock().unwrap();

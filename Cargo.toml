@@ -7,6 +7,13 @@ edition = "2021"
 name = "py_diffsol_new"
 crate-type = ["cdylib"]
 
+[features]
+diffsol-llvm = []
+diffsol-llvm15 = ["diffsol/diffsl-llvm15", "diffsol-llvm"]
+diffsol-llvm16 = ["diffsol/diffsl-llvm16", "diffsol-llvm"]
+diffsol-llvm17 = ["diffsol/diffsl-llvm17", "diffsol-llvm"]
+diffsol-cranelift = ["diffsol/diffsl-cranelift"]
+
 [dependencies]
 pyo3 = { version = "0.25.0", default-features = false, features = ["extension-module"] }
 diffsol = { version = "0.6.6", features = ["diffsl", "diffsl-llvm", "nalgebra", "faer"] }

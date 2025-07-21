@@ -6,7 +6,7 @@
         {
             "label": "maturin develop",
             "type": "shell",
-            "command": "maturin develop --extras dev --features diffsol/diffsl-llvm17",
+            "command": "maturin develop --extras dev --features diffsol-llvm17",
         },
     ]
 }
