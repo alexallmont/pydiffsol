@@ -4,7 +4,8 @@ build-backend = "maturin"
 
 [project]
 name = "pydiffsol"
-requires-python = ">=3.8"
+dynamic = ["version"]
+requires-python = ">=3.9"
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
@@ -14,7 +15,6 @@ dependencies = [
     "numpy",
 ]
 readme = { file = "README_PyPI.md", content-type = "text/markdown" }
-dynamic = ["version"]
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
