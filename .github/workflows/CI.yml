@@ -101,11 +101,21 @@ jobs:
           target: ${{ matrix.platform.target }}
           args: --release --out dist --find-interpreter --features diffsol-llvm17
           sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        env:
+          RUSTFLAGS: "-C link-arg=-stdlib=libc++ -C link-arg=-Wl,-rpath,/usr/lib"
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
           name: wheels-macos-${{ matrix.platform.target }}
           path: dist
+      - name: pytest
+        run: |
+          set -e
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install pydiffsol --find-links dist --force-reinstall
+          pip install pytest
+          pytest
 
   sdist:
     runs-on: ubuntu-latest
