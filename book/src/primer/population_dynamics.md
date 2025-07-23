@@ -62,10 +62,10 @@ We also have initial conditions for the populations at time \\(t = 0\\). We can 
 Let's solve this system of ODEs using pydiffsol.
 
 ```python,ignore
-{{#include ../../../examples/01-population-dynamics.py:10:37}}
+{{#include ../../../examples/01-population-dynamics.py:7:38}}
 ```
 
-{{#include images/prey-predator.html}}
+{{#include images/prey-predator.png}}
 
 A phase plane plot of the predator-prey system is a useful visualisation of the dynamics of the system. This plot shows the prey population on the x-axis and the predator population on the y-axis. Trajectories in the phase plane represent the evolution of the populations over time. Lets reframe the equations to introduce a new parameter \\(y_0\\) which is the initial predator and prey population. We can then plot the phase plane for different values of \\(y_0\\) to see how the system behaves for different initial conditions.
 
@@ -78,7 +78,7 @@ Our initial conditions are now:
 so we can solve this system for different values of \\(y_0\\) and plot the phase plane for each case. We will use similar code as above, but we will introduce our new parameter and loop over different values of \\(y_0\\)
 
 ```python,ignore
-{{#include ../../../examples/01-population-dynamics.py:40:70}}
+{{#include ../../../examples/01-population-dynamics.py:41:72}}
 ```
 
-{{#include images/prey-predator2.html}}
+{{#include images/prey-predator2.png}}

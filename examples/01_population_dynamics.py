@@ -1,11 +1,10 @@
-import pydiffsol as ds
-import plotly.subplots as psp
-import numpy as np
+# Load matplotlib headless to avoid macos UI/window issues when debugging
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 
-PLOTLY_ARGS = {
-    "full_html": False,
-    "include_plotlyjs": False
-}
+import numpy as np
+import pydiffsol as ds
 
 def solve():
     ode = ds.Ode(
@@ -31,10 +30,12 @@ def solve():
     params = np.array([])
     ys, ts = ode.solve(params, 40.0, config)
 
-    fig = psp.make_subplots(rows=1, cols=1)
-    fig.add_scatter(x=ts, y=ys[0], name="prey")
-    fig.add_scatter(x=ts, y=ys[1], name="predator")
-    fig.write_html("book/src/primer/images/prey-predator.html", **PLOTLY_ARGS)
+    fig, ax = plt.subplots()
+    ax.plot(ts, ys[0], label="prey")
+    ax.plot(ts, ys[1], label="predator")
+    ax.set_xlabel("t")
+    ax.set_ylabel("population")
+    fig.savefig("book/src/primer/images/prey-predator.png")
 
 
 def phase_plane():
@@ -60,14 +61,15 @@ def phase_plane():
     config.linear_solver = ds.lu
     config.rtol = 1e-6
 
-    fig = psp.make_subplots(rows=1, cols=1)
+    fig, ax = plt.subplots()
     for i in range(5):
         y0 = float(i + 1)
         params = np.array([y0])
         [prey, predator], _ = ode.solve(params, 40.0, config)
-        fig.add_scatter(x=prey, y=predator, name=f"y0 = {y0}")
-
-    fig.write_html("book/src/primer/images/prey-predator2.html", **PLOTLY_ARGS)
+        ax.plot(prey, predator, label=f"y0 = {y0}")
+    ax.set_xlabel("prey")
+    ax.set_ylabel("predator")
+    fig.savefig("book/src/primer/images/prey-predator2.png")
 
 
 if __name__ == "__main__":
