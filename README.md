@@ -2,18 +2,39 @@
 
 Python bindings for [diffsol](https://github.com/martinjrobins/diffsol)
 
+## Example usage
+
+```py
+import pydiffsol as ds
+import numpy as np
+
+ode = ds.Ode(
+    """
+    r { 1.0 }
+    k { 1.0 }
+    u { 0.1 }
+    F { r * u * (1.0 - u / k) }
+    """,
+    ds.nalgebra_dense_f64
+)
+p = np.array([])
+print(ode.solve(p, 0.4))
+```
+
 ## Local development
 
-Specify the `diffsol-llvm` version in `maturin develop`. Also add `dev` extras
-for pytest along with plotly and pandas for docs image generation.
+To build locally, use [maturin](https://www.maturin.rs/installation.html) and
+set `diffsol-llvm` feature to your installed LLVM. Also specify `dev` extras for
+pytest, running examples and docs image generation. For example:
 
 ```sh
 maturin develop --extras dev --features diffsol-llvm17
 ```
 
-The included `.vscode` IDE config works with `diffsol-llvm17` by default. This
-assumes that you have installed on macos with `brew install llvm@17` or for
-debian-flavoured linux `apt install llvm-17`.
+The included `.vscode` include examples for running tests and examples in
+python and rust debuggers. The config works with `diffsol-llvm17` by default and
+assumes that you have it already installed, for example on macos with
+`brew install llvm@17` or for debian-flavoured linux `apt install llvm-17`.
 
 ## Licenses
 
