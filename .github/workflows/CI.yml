@@ -107,7 +107,7 @@ jobs:
           cd dist
           WHEEL_FILE=$(find . -name "pydiffsol*.whl" -exec basename {} \;)
           unzip $WHEEL_FILE -d wheel_fix_rpath
-          cp $LLVM_PATH/lib/lib/libunwind.1.dylib wheel_fix_rpath/pydiffsol
+          cp $LLVM_PATH/lib/libunwind.1.dylib wheel_fix_rpath/pydiffsol
           cp /opt/homebrew/opt/zstd/lib/libzstd.1.dylib wheel_fix_rpath/pydiffsol
           SO_FILE=$(find wheel_fix_rpath -name "*.so")
           install_name_tool -change @rpath/libc++.1.dylib /usr/lib/libc++.1.dylib $SO_FILE
