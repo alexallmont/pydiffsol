@@ -1,5 +1,0 @@
-[target.aarch64-apple-darwin]
-rustflags = [
-  "-C", "link-arg=-stdlib=libc++",
-  "-C", "link-arg=-Wl,-rpath,/usr/lib",
-]

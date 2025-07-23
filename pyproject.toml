@@ -15,6 +15,7 @@ dependencies = [
     "numpy",
 ]
 readme = { file = "README_PyPI.md", content-type = "text/markdown" }
+license-files = ["LICENSE", "LICENSE.libunwind", "LICENSE.zstd"]
 
 [tool.maturin]
 features = ["pyo3/extension-module"]

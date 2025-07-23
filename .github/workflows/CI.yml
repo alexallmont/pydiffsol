@@ -101,6 +101,17 @@ jobs:
           target: ${{ matrix.platform.target }}
           args: --release --out dist --find-interpreter --features diffsol-llvm17
           sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
+      - name: Fix dist rpath
+        run: |
+          # Resolve dynamic linkage issues by patching rpath and copying dylibs
+          cd dist
+          unzip pydiffsol*.whl -d wheel_fix_rpath
+          cp /opt/homebrew/opt/llvm@17/lib/libunwind.1.dylib wheel_fix_rpath/pydiffsol
+          cp /opt/homebrew/opt/zstd/lib/libzstd.1.dylib wheel_fix_rpath/pydiffsol
+          find wheel_fix_rpath -name '*.so' -exec install_name_tool -change @rpath/libc++.1.dylib /usr/lib/libc++.1.dylib {} \;
+          find wheel_fix_rpath -name '*.so' -exec install_name_tool -change @rpath/libunwind.1.dylib @loader_path/libunwind.1.dylib {} \;
+          find wheel_fix_rpath -name '*.so' -exec install_name_tool -change /opt/homebrew/opt/zstd/lib/libzstd.1.dylib @loader_path/libzstd.1.dylib {} \;
+          cd wheel_fix_rpath && zip -r ../pydiffsol-fixed.whl .
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
