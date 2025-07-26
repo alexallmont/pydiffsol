@@ -1,21 +1,17 @@
 
 use std::sync::{Arc, Mutex};
 
-use crate::{config::ConfigWrapper, enums::*};
+use crate::config::ConfigWrapper;
+use crate::convert::MatrixToPy;
+use crate::enums::{MatrixType, SolverType, SolverMethod};
+use crate::error::PyDiffsolError;
+use crate::jit::JitModule;
 
 use diffsol::{MatrixCommon, OdeEquations, OdeSolverMethod, Vector};
 use diffsol::error::DiffsolError;
 use pyo3::prelude::*;
-use pyo3::exceptions::PyValueError;
-use nalgebra::DMatrix;
-use numpy::{ToPyArray, PyReadonlyArray1, PyArray1, PyArray2};
-use numpy::ndarray::{Array1, ArrayView2, ShapeBuilder};
-
-#[cfg(feature = "diffsol-cranelift")]
-type JitModule = diffsol::CraneliftJitModule;
-
-#[cfg(feature = "diffsol-llvm")]
-type JitModule = diffsol::LlvmModule;
+use numpy::{PyReadonlyArray1, PyArray1, PyArray2};
+use numpy::ndarray::Array1;
 
 #[pyclass]
 struct Ode {
@@ -27,38 +23,6 @@ struct Ode {
 #[pyo3(name = "Ode")]
 #[derive(Clone)]
 pub struct OdeWrapper(Arc<Mutex<Ode>>);
-
-// FIXME separate file
-struct PyDiffsolError(DiffsolError);
-
-impl From<PyDiffsolError> for PyErr {
-    fn from(error: PyDiffsolError) -> Self {
-        PyValueError::new_err(error.0.to_string())
-    }
-}
-
-impl From<DiffsolError> for PyDiffsolError {
-    fn from(other: DiffsolError) -> Self {
-        Self(other)
-    }
-}
-
-// FIXME conversion in separate file
-pub trait MatrixToPy<'py> {
-    fn to_pyarray_view(&self, py: Python<'py>) -> Bound<'py, PyArray2<f64>>;
-}
-
-impl<'py> MatrixToPy<'py> for DMatrix<f64> {
-    fn to_pyarray_view(&self, py: Python<'py>) -> Bound<'py, PyArray2<f64>> {
-        let view = unsafe {
-            ArrayView2::from_shape_ptr(
-                self.shape().strides(self.strides()),
-                self.as_ptr()
-            )
-        };
-        view.to_pyarray(py).into()
-    }
-}
 
 #[pymethods]
 impl OdeWrapper {

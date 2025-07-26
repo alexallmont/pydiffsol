@@ -1,7 +1,10 @@
 use pyo3::prelude::*;
 
-mod enums;
 mod config;
+mod convert;
+mod enums;
+mod error;
+mod jit;
 mod ode;
 
 /// A Python module implemented in Rust.
