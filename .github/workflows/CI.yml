@@ -78,6 +78,15 @@ jobs:
         with:
           name: wheels-windows-${{ matrix.platform.target }}
           path: dist
+      - name: pytest
+        shell: bash
+        run: |
+          set -e
+          python3 -m venv .venv
+          source .venv/Scripts/activate
+          pip install pydiffsol --find-links dist --force-reinstall
+          pip install pytest
+          pytest
 
   macos:
     runs-on: ${{ matrix.platform.runner }}
