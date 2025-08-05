@@ -129,4 +129,56 @@ impl OdeWrapper {
             }
         }
     }
+
+    #[pyo3(signature=(params, times, config = ConfigWrapper::new()))]
+    fn solve_dense<'py>(
+        slf: PyRefMut<'py, Self>,
+        params: PyReadonlyArray1<'py, f64>,
+        times: PyReadonlyArray1<'py, f64>,
+        config: ConfigWrapper
+    ) -> Result<Bound<'py, PyArray2<f64>>, PyDiffsolError> {
+        let self_guard = slf.0.lock().unwrap();
+        let config_guard = config.0.lock().unwrap();
+        let params = params.as_array();
+        let times = times.as_array();
+
+        match self_guard.matrix_type {
+            MatrixType::NalgebraDenseF64 => {
+                match config_guard.linear_solver {
+                    SolverType::Lu => {
+                        let problem = build_diffsl::<NalgebraMat<f64>, NalgebraVec<f64>>(
+                            self_guard.code.as_str(),
+                            &config_guard,
+                            &params.as_slice().unwrap()
+                        )?;
+                        Ok(match config_guard.method {
+                            SolverMethod::Bdf => problem.bdf::<NalgebraLU<f64>>()?.solve_dense(times.as_slice().unwrap())?,
+                            SolverMethod::Esdirk34 => problem.esdirk34::<NalgebraLU<f64>>()?.solve_dense(times.as_slice().unwrap())?,
+                        }.inner().to_pyarray2(slf.py()))
+                    },
+                    SolverType::Klu => {
+                        Err(DiffsolError::Other("KLU not supported for nalgebra".to_string()).into())
+                    }
+                }
+            },
+            MatrixType::FaerSparseF64 => {
+                match config_guard.linear_solver {
+                    SolverType::Lu => {
+                        let problem = build_diffsl::<FaerMat<f64>, FaerVec<f64>>(
+                            self_guard.code.as_str(),
+                            &config_guard,
+                            &params.as_slice().unwrap()
+                        )?;
+                        Ok(match config_guard.method {
+                            SolverMethod::Bdf => problem.bdf::<FaerLU<f64>>()?.solve_dense(times.as_slice().unwrap())?,
+                            SolverMethod::Esdirk34 => problem.esdirk34::<FaerLU<f64>>()?.solve_dense(times.as_slice().unwrap())?,
+                        }.inner().to_pyarray2(slf.py()))
+                    },
+                    SolverType::Klu => {
+                        Err(DiffsolError::Other("KLU not supported for faer".to_string()).into())
+                    }
+                }
+            }
+        }
+    }
 }
