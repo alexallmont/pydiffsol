@@ -24,7 +24,7 @@ fn pydiffsol(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add("lu", enums::SolverType::Lu)?;
     m.add("klu", enums::SolverType::Klu)?;
     m.add("bdf", enums::SolverMethod::Bdf)?;
-    m.add("sdirk", enums::SolverMethod::Sdirk)?;
+    m.add("esdirk34", enums::SolverMethod::Esdirk34)?;
 
     Ok(())
 }
