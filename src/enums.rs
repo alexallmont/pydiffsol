@@ -52,8 +52,8 @@ pub enum SolverMethod {
     #[pyo3(name = "bdf")]
     Bdf,
 
-    #[pyo3(name = "sdirk")]
-    Sdirk,
+    #[pyo3(name = "esdirk34")]
+    Esdirk34,
 }
 
 #[pymethods]
@@ -62,7 +62,7 @@ impl SolverMethod {
     fn from_str(_cls: &Bound<'_, PyType>, value: &str) -> PyResult<Self> {
         match value {
             "bdf" => Ok(SolverMethod::Bdf),
-            "sdirk" => Ok(SolverMethod::Sdirk),
+            "esdirk34" => Ok(SolverMethod::Esdirk34),
             _ => Err(PyValueError::new_err("Invalid SolverMethod value")),
         }
     }

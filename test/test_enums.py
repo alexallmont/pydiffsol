@@ -8,7 +8,7 @@ def test_enums_exist():
     assert str(ds.lu) == "SolverType.lu"
     assert str(ds.klu) == "SolverType.klu"
     assert str(ds.bdf) == "SolverMethod.bdf"
-    assert str(ds.sdirk) == "SolverMethod.sdirk"
+    assert str(ds.esdirk34) == "SolverMethod.esdirk34"
 
 def test_enums_from_string():
     # Implicitly checks PartialEq implementation too
@@ -17,7 +17,7 @@ def test_enums_from_string():
     assert ds.SolverType.from_str("lu") == ds.lu
     assert ds.SolverType.from_str("klu") == ds.klu
     assert ds.SolverMethod.from_str("bdf") == ds.bdf
-    assert ds.SolverMethod.from_str("sdirk") == ds.sdirk
+    assert ds.SolverMethod.from_str("esdirk34") == ds.esdirk34
 
     with pytest.raises(Exception):
         ds.MatrixType.from_str("foo")

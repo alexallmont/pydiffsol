@@ -1,10 +1,18 @@
 use pyo3::prelude::*;
 
-mod enums;
 mod config;
+mod convert;
+mod enums;
+mod error;
+mod jit;
 mod ode;
 
-/// A Python module implemented in Rust.
+/// Get version of this pydiffsol module
+#[pyfunction]
+fn version() -> String {
+    format!("{}", env!("CARGO_PKG_VERSION"))
+}
+
 #[pymodule]
 fn pydiffsol(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
@@ -21,7 +29,10 @@ fn pydiffsol(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add("lu", enums::SolverType::Lu)?;
     m.add("klu", enums::SolverType::Klu)?;
     m.add("bdf", enums::SolverMethod::Bdf)?;
-    m.add("sdirk", enums::SolverMethod::Sdirk)?;
+    m.add("esdirk34", enums::SolverMethod::Esdirk34)?;
+
+    // General utility methods
+    m.add_function(wrap_pyfunction!(version, m)?)?;
 
     Ok(())
 }
