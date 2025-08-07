@@ -35,7 +35,7 @@ def solve():
     ax.plot(ts, ys[1], label="predator")
     ax.set_xlabel("t")
     ax.set_ylabel("population")
-    fig.savefig("book/src/primer/images/prey-predator.png")
+    fig.savefig("docs/images/prey-predator.png")
 
 
 def phase_plane():
@@ -69,8 +69,7 @@ def phase_plane():
         ax.plot(prey, predator, label=f"y0 = {y0}")
     ax.set_xlabel("prey")
     ax.set_ylabel("predator")
-    fig.savefig("book/src/primer/images/prey-predator2.png")
-
+    fig.savefig("docs/images/prey-predator2.png")
 
 if __name__ == "__main__":
     solve()
