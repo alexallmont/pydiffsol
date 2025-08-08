@@ -1,2 +1,3 @@
+pydiffsol==0.1.3
 sphinx>=5
 sphinx-rtd-theme

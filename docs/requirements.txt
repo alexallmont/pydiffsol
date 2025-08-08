@@ -24,8 +24,12 @@ jinja2==3.1.6
     # via sphinx
 markupsafe==3.0.2
     # via jinja2
+numpy==2.3.2
+    # via pydiffsol
 packaging==25.0
     # via sphinx
+pydiffsol==0.1.3
+    # via -r docs/requirements.in
 pygments==2.19.2
     # via sphinx
 requests==2.32.4
