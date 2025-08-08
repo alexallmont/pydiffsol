@@ -25,11 +25,15 @@ fn pydiffsol(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // Per-enum identifiers, e.g. `config.method = ds.bdf`
     m.add("nalgebra_dense_f64", enums::MatrixType::NalgebraDenseF64)?;
+    m.add("faer_dense_f64", enums::MatrixType::FaerDenseF64)?;
     m.add("faer_sparse_f64", enums::MatrixType::FaerSparseF64)?;
+    m.add("default", enums::SolverType::Default)?;
     m.add("lu", enums::SolverType::Lu)?;
     m.add("klu", enums::SolverType::Klu)?;
     m.add("bdf", enums::SolverMethod::Bdf)?;
     m.add("esdirk34", enums::SolverMethod::Esdirk34)?;
+    m.add("tr_bdf2", enums::SolverMethod::TrBdf2)?;
+    m.add("tsit45", enums::SolverMethod::Tsit45)?;
 
     // General utility methods
     m.add_function(wrap_pyfunction!(version, m)?)?;

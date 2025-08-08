@@ -13,7 +13,7 @@ use diffsol::{OdeBuilder, OdeEquations, OdeSolverMethod, OdeSolverProblem};
 use diffsol::{MatrixCommon, matrix::MatrixHost};
 use diffsol::error::DiffsolError;
 use diffsol::{NalgebraMat, NalgebraVec, NalgebraLU};
-use diffsol::{FaerMat, FaerVec, FaerLU};
+use diffsol::{FaerMat, FaerVec, FaerLU, FaerSparseMat, KLU};
 use diffsol::Vector; // for from_slice
 use diffsol::Op; // For nparams
 
@@ -33,7 +33,7 @@ pub struct OdeWrapper(Arc<Mutex<Ode>>);
 
 // Construct a diffsol problem for particular matrix type, given diffsl code,
 // pydiffsol config and params.
-fn build_diffsl<M, V> (code: &str, config: &Config, params: &[f64]) ->
+fn build_diffsl<M, V>(code: &str, config: &Config, params: &[f64]) ->
     Result<OdeSolverProblem<diffsol::DiffSl<M, JitModule>>, DiffsolError>
 where
     M: MatrixHost<T = f64, V = V>,
@@ -91,7 +91,7 @@ impl OdeWrapper {
     ///
     /// Example:
     ///     >>> print(ode.solve(np.array([]), 0.5))
-    #[pyo3(signature=(params, final_time, config = ConfigWrapper::new()))]
+    #[pyo3(signature=(params, final_time, config=ConfigWrapper::new(SolverMethod::Bdf, SolverType::Default, 1e-6)))]
     fn solve<'py>(
         slf: PyRefMut<'py, Self>,
         params: PyReadonlyArray1<'py, f64>,
@@ -101,51 +101,92 @@ impl OdeWrapper {
         let self_guard = slf.0.lock().unwrap();
         let config_guard = config.0.lock().unwrap();
         let params = params.as_array();
+        let solver_type = config_guard.amended_solver_type(self_guard.matrix_type);
 
         match self_guard.matrix_type {
             MatrixType::NalgebraDenseF64 => {
-                match config_guard.linear_solver {
-                    SolverType::Lu => {
-                        let problem = build_diffsl::<NalgebraMat<f64>, NalgebraVec<f64>>(
-                            self_guard.code.as_str(),
-                            &config_guard,
-                            &params.as_slice().unwrap()
-                        )?;
-                        let (ys, ts) = match config_guard.method {
-                            SolverMethod::Bdf => problem.bdf::<NalgebraLU<f64>>()?.solve(final_time)?,
-                            SolverMethod::Esdirk34 => problem.esdirk34::<NalgebraLU<f64>>()?.solve(final_time)?,
-                        };
-                        Ok((
-                            ys.inner().to_pyarray2(slf.py()),
-                            PyArray1::from_owned_array(slf.py(), Array1::from(ts))
-                        ))
+                let problem = build_diffsl::<NalgebraMat<f64>, NalgebraVec<f64>>(
+                    self_guard.code.as_str(),
+                    &config_guard,
+                    &params.as_slice().unwrap()
+                )?;
+                let (ys, ts) = match solver_type {
+                    SolverType::Default => {
+                        match config_guard.method {
+                            SolverMethod::Tsit45 => problem.tsit45()?.solve(final_time),
+                            _ => Err(DiffsolError::Other("Only tsit45 is compatible with Default solver for NalgebraDenseF64".to_string()).into())
+                        }
                     },
-                    SolverType::Klu => {
-                        Err(DiffsolError::Other("KLU not supported for nalgebra".to_string()).into())
-                    }
-                }
+                    SolverType::Lu => {
+                        match config_guard.method {
+                            SolverMethod::Bdf => problem.bdf::<NalgebraLU<f64>>()?.solve(final_time),
+                            SolverMethod::Esdirk34 => problem.esdirk34::<NalgebraLU<f64>>()?.solve(final_time),
+                            SolverMethod::TrBdf2 => problem.tr_bdf2::<NalgebraLU<f64>>()?.solve(final_time),
+                            SolverMethod::Tsit45 => Err(DiffsolError::Other("Lu solver is compatible with tsit45 for NalgebraDenseF64".to_string()).into()),
+                        }
+                    },
+                    SolverType::Klu => Err(DiffsolError::Other("Klu not supported for NalgebraDenseF64".to_string()).into()),
+                }?;
+                Ok((
+                    ys.inner().to_pyarray2(slf.py()),
+                    PyArray1::from_owned_array(slf.py(), Array1::from(ts))
+                ))
             },
-            MatrixType::FaerSparseF64 => {
-                match config_guard.linear_solver {
-                    SolverType::Lu => {
-                        let problem = build_diffsl::<FaerMat<f64>, FaerVec<f64>>(
-                            self_guard.code.as_str(),
-                            &config_guard,
-                            &params.as_slice().unwrap()
-                        )?;
-                        let (ys, ts) = match config_guard.method {
-                            SolverMethod::Bdf => problem.bdf::<FaerLU<f64>>()?.solve(final_time)?,
-                            SolverMethod::Esdirk34 => problem.esdirk34::<FaerLU<f64>>()?.solve(final_time)?,
-                        };
-                        Ok((
-                            ys.inner().to_pyarray2(slf.py()),
-                            PyArray1::from_owned_array(slf.py(), Array1::from(ts))
-                        ))
+            MatrixType::FaerDenseF64 => {
+                let problem = build_diffsl::<FaerMat<f64>, FaerVec<f64>>(
+                    self_guard.code.as_str(),
+                    &config_guard,
+                    &params.as_slice().unwrap()
+                )?;
+                let (ys, ts) = match solver_type {
+                    SolverType::Default => {
+                        match config_guard.method {
+                            SolverMethod::Tsit45 => problem.tsit45()?.solve(final_time),
+                            _ => Err(DiffsolError::Other("Only tsit45 is compatible with Default solver for FaerDenseF64".to_string()).into())
+                        }
                     },
+                    SolverType::Lu => {
+                        match config_guard.method {
+                            SolverMethod::Bdf => problem.bdf::<FaerLU<f64>>()?.solve(final_time),
+                            SolverMethod::Esdirk34 => problem.esdirk34::<FaerLU<f64>>()?.solve(final_time),
+                            SolverMethod::TrBdf2 => problem.tr_bdf2::<FaerLU<f64>>()?.solve(final_time),
+                            SolverMethod::Tsit45 => Err(DiffsolError::Other("Lu solver is not compatible with tsit45 for FaerDenseF64".to_string()).into())
+                        }
+                    },
+                    SolverType::Klu => Err(DiffsolError::Other("Klu solver not supported for FaerDenseF64".to_string()).into()),
+                }?;
+                Ok((
+                    ys.inner().to_pyarray2(slf.py()),
+                    PyArray1::from_owned_array(slf.py(), Array1::from(ts))
+                ))
+            }
+            MatrixType::FaerSparseF64 => {
+                let problem = build_diffsl::<diffsol::FaerSparseMat<f64>, FaerVec<f64>>(
+                    self_guard.code.as_str(),
+                    &config_guard,
+                    &params.as_slice().unwrap()
+                )?;
+                let (ys, ts) = match solver_type {
+                    SolverType::Default => {
+                        match config_guard.method {
+                            SolverMethod::Tsit45 => problem.tsit45()?.solve(final_time),
+                            _ => Err(DiffsolError::Other("Only tsit45 is compatible with Default solver for FaerSparseF64".to_string()).into())
+                        }
+                    },
+                    SolverType::Lu => Err(DiffsolError::Other("Lu solver not supported for FaerSparseF64".to_string()).into()),
                     SolverType::Klu => {
-                        Err(DiffsolError::Other("KLU not supported for faer".to_string()).into())
-                    }
-                }
+                        match config_guard.method {
+                            SolverMethod::Bdf => problem.bdf::<KLU<FaerSparseMat<f64>>>()?.solve(final_time),
+                            SolverMethod::Esdirk34 => problem.esdirk34::<KLU<FaerSparseMat<f64>>>()?.solve(final_time),
+                            SolverMethod::TrBdf2 => problem.tr_bdf2::<KLU<FaerSparseMat<f64>>>()?.solve(final_time),
+                            SolverMethod::Tsit45 => Err(DiffsolError::Other("Klu solver is not compatible with tsit45 for FaerSparseF64".to_string()).into())
+                        }
+                    },
+                }?;
+                Ok((
+                    ys.inner().to_pyarray2(slf.py()),
+                    PyArray1::from_owned_array(slf.py(), Array1::from(ts))
+                ))
             }
         }
     }
@@ -165,7 +206,7 @@ impl OdeWrapper {
     /// :type config: pydiffsol.Config, optional
     /// :return: 2D array of values at times `t_eval`
     /// :rtype: numpy.ndarray
-    #[pyo3(signature=(params, t_eval, config = ConfigWrapper::new()))]
+    #[pyo3(signature=(params, t_eval, config=ConfigWrapper::new(SolverMethod::Bdf, SolverType::Default, 1e-6)))]
     fn solve_dense<'py>(
         slf: PyRefMut<'py, Self>,
         params: PyReadonlyArray1<'py, f64>,
@@ -176,43 +217,83 @@ impl OdeWrapper {
         let config_guard = config.0.lock().unwrap();
         let params = params.as_array();
         let t_eval = t_eval.as_array();
+        let solver_type = config_guard.amended_solver_type(self_guard.matrix_type);
 
         match self_guard.matrix_type {
             MatrixType::NalgebraDenseF64 => {
-                match config_guard.linear_solver {
-                    SolverType::Lu => {
-                        let problem = build_diffsl::<NalgebraMat<f64>, NalgebraVec<f64>>(
-                            self_guard.code.as_str(),
-                            &config_guard,
-                            &params.as_slice().unwrap()
-                        )?;
-                        Ok(match config_guard.method {
-                            SolverMethod::Bdf => problem.bdf::<NalgebraLU<f64>>()?.solve_dense(t_eval.as_slice().unwrap())?,
-                            SolverMethod::Esdirk34 => problem.esdirk34::<NalgebraLU<f64>>()?.solve_dense(t_eval.as_slice().unwrap())?,
-                        }.inner().to_pyarray2(slf.py()))
+                let problem = build_diffsl::<NalgebraMat<f64>, NalgebraVec<f64>>(
+                    self_guard.code.as_str(),
+                    &config_guard,
+                    &params.as_slice().unwrap()
+                )?;
+                let ys = match solver_type {
+                    SolverType::Default => {
+                        match config_guard.method {
+                            SolverMethod::Tsit45 => problem.tsit45()?.solve_dense(t_eval.as_slice().unwrap()),
+                            _ => Err(DiffsolError::Other("Only tsit45 is compatible with Default solver for NalgebraDenseF64".to_string()).into())
+                        }
                     },
-                    SolverType::Klu => {
-                        Err(DiffsolError::Other("KLU not supported for nalgebra".to_string()).into())
-                    }
-                }
+                    SolverType::Lu => {
+                        match config_guard.method {
+                            SolverMethod::Bdf => problem.bdf::<NalgebraLU<f64>>()?.solve_dense(t_eval.as_slice().unwrap()),
+                            SolverMethod::Esdirk34 => problem.esdirk34::<NalgebraLU<f64>>()?.solve_dense(t_eval.as_slice().unwrap()),
+                            SolverMethod::TrBdf2 => problem.tr_bdf2::<NalgebraLU<f64>>()?.solve_dense(t_eval.as_slice().unwrap()),
+                            SolverMethod::Tsit45 => Err(DiffsolError::Other("Lu solver is compatible with tsit45 for NalgebraDenseF64".to_string()).into()),
+                        }
+                    },
+                    SolverType::Klu => Err(DiffsolError::Other("Klu not supported for NalgebraDenseF64".to_string()).into()),
+                }?;
+                Ok(ys.inner().to_pyarray2(slf.py()))
+            },
+            MatrixType::FaerDenseF64 => {
+                let problem = build_diffsl::<FaerMat<f64>, FaerVec<f64>>(
+                    self_guard.code.as_str(),
+                    &config_guard,
+                    &params.as_slice().unwrap()
+                )?;
+                let ys = match solver_type {
+                    SolverType::Default => {
+                        match config_guard.method {
+                            SolverMethod::Tsit45 => problem.tsit45()?.solve_dense(t_eval.as_slice().unwrap()),
+                            _ => Err(DiffsolError::Other("Only tsit45 is compatible with Default solver for FaerDenseF64".to_string()).into())
+                        }
+                    },
+                    SolverType::Lu => {
+                        match config_guard.method {
+                            SolverMethod::Bdf => problem.bdf::<FaerLU<f64>>()?.solve_dense(t_eval.as_slice().unwrap()),
+                            SolverMethod::Esdirk34 => problem.esdirk34::<FaerLU<f64>>()?.solve_dense(t_eval.as_slice().unwrap()),
+                            SolverMethod::TrBdf2 => problem.tr_bdf2::<FaerLU<f64>>()?.solve_dense(t_eval.as_slice().unwrap()),
+                            SolverMethod::Tsit45 => Err(DiffsolError::Other("Lu solver is not compatible with tsit45 for FaerDenseF64".to_string()).into())
+                        }
+                    },
+                    SolverType::Klu => Err(DiffsolError::Other("Klu solver not supported for FaerDenseF64".to_string()).into()),
+                }?;
+                Ok(ys.inner().to_pyarray2(slf.py()))
             },
             MatrixType::FaerSparseF64 => {
-                match config_guard.linear_solver {
-                    SolverType::Lu => {
-                        let problem = build_diffsl::<FaerMat<f64>, FaerVec<f64>>(
-                            self_guard.code.as_str(),
-                            &config_guard,
-                            &params.as_slice().unwrap()
-                        )?;
-                        Ok(match config_guard.method {
-                            SolverMethod::Bdf => problem.bdf::<FaerLU<f64>>()?.solve_dense(t_eval.as_slice().unwrap())?,
-                            SolverMethod::Esdirk34 => problem.esdirk34::<FaerLU<f64>>()?.solve_dense(t_eval.as_slice().unwrap())?,
-                        }.inner().to_pyarray2(slf.py()))
+                let problem = build_diffsl::<diffsol::FaerSparseMat<f64>, FaerVec<f64>>(
+                    self_guard.code.as_str(),
+                    &config_guard,
+                    &params.as_slice().unwrap()
+                )?;
+                let ys = match solver_type {
+                    SolverType::Default => {
+                        match config_guard.method {
+                            SolverMethod::Tsit45 => problem.tsit45()?.solve_dense(t_eval.as_slice().unwrap()),
+                            _ => Err(DiffsolError::Other("Only tsit45 is compatible with Default solver for FaerSparseF64".to_string()).into())
+                        }
                     },
+                    SolverType::Lu => Err(DiffsolError::Other("Lu solver not supported for FaerSparseF64".to_string()).into()),
                     SolverType::Klu => {
-                        Err(DiffsolError::Other("KLU not supported for faer".to_string()).into())
-                    }
-                }
+                        match config_guard.method {
+                            SolverMethod::Bdf => problem.bdf::<KLU<FaerSparseMat<f64>>>()?.solve_dense(t_eval.as_slice().unwrap()),
+                            SolverMethod::Esdirk34 => problem.esdirk34::<KLU<FaerSparseMat<f64>>>()?.solve_dense(t_eval.as_slice().unwrap()),
+                            SolverMethod::TrBdf2 => problem.tr_bdf2::<KLU<FaerSparseMat<f64>>>()?.solve_dense(t_eval.as_slice().unwrap()),
+                            SolverMethod::Tsit45 => Err(DiffsolError::Other("Klu solver is not compatible with tsit45 for FaerSparseF64".to_string()).into())
+                        }
+                    },
+                }?;
+                Ok(ys.inner().to_pyarray2(slf.py()))
             }
         }
     }
