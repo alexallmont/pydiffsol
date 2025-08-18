@@ -11,8 +11,8 @@ pub(crate) struct Config {
 }
 
 impl Config {
-    // See ConfigWrapper::amended_solver_type docstring for purpose of this code
-    pub fn amended_solver_type(&self, matrix_type: MatrixType) -> SolverType {
+    // See ConfigWrapper::solver_for_matrix_type docstring for purpose of this code
+    pub fn solver_for_matrix_type(&self, matrix_type: MatrixType) -> SolverType {
         if self.linear_solver == SolverType::Default {
             if self.method != SolverMethod::Tsit45 {
                 if matrix_type == MatrixType::FaerSparseF64 {
@@ -100,9 +100,9 @@ impl ConfigWrapper {
     ///
     /// If a non-default solver type is specified, then that overrides the
     /// all cases.
-    fn amended_solver_type(&self, matrix_type: MatrixType) -> PyResult<SolverType> {
+    fn solver_for_matrix_type(&self, matrix_type: MatrixType) -> PyResult<SolverType> {
         let guard = self.0.lock().map_err(|_| PyRuntimeError::new_err("Config mutex poisoned"))?;
-        Ok(guard.amended_solver_type(matrix_type))
+        Ok(guard.solver_for_matrix_type(matrix_type))
     }
 
     fn __repr__(&self) -> PyResult<String> {
