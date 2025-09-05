@@ -9,7 +9,7 @@ if [ -f "/etc/debian_version" ]; then
     export LLVM_DIR=/usr/lib/llvm-17
     export LLVM_SYS_170_PREFIX=/usr/lib/llvm-17
     # FIXME experimental suitesparse build
-    echo install libsuitesparse-dev
+    echo APT libsuitesparse-dev
     apt-get install -y libsuitesparse-dev
 else
     # must be AlmaLinux 8
@@ -17,4 +17,7 @@ else
     yum -y install llvm-devel-17.0.6 clang-devel-17.0.6 libzstd-devel zstd ncurses-devel zlib-devel libffi libffi-devel
     export LLVM_DIR=/usr
     export LLVM_SYS_170_PREFIX=/usr
+    # FIXME experimental suitesparse build
+    echo YUM suitesparse-devel
+    yum install -y suitesparse-devel
 fi
