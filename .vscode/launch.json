@@ -14,9 +14,9 @@
             "preLaunchTask": "maturin develop",
         },
         {
+            "name": "Rust: test_basic_api.py",
             "type": "lldb",
             "request": "launch",
-            "name": "Rust: test_basic_api.py",
             "program": ".venv/bin/python",
             "args": [
                 "test/test_basic_api.py"
@@ -28,9 +28,9 @@
             "preLaunchTask": "maturin develop",
         },
         {
+            "name": "Rust: 01_population_dynamics.py",
             "type": "lldb",
             "request": "launch",
-            "name": "Rust: 01_population_dynamics.py",
             "program": ".venv/bin/python",
             "args": [
                 "examples/01_population_dynamics.py"
