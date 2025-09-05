@@ -65,10 +65,15 @@ def _invalid_config_triplets():
 # Positive check for solve and solve_dense supported on this platform
 @pytest.mark.parametrize("matrix_type,method,linear_solver", _valid_config_triplets())
 def test_valid_config_solve(matrix_type, linear_solver, method):
-    # Skip faer_sparse_f64 klu bdf until we've solved underlying diffsol issue
+    # FIXME faer_sparse_f64 klu bdf skipped until underlying diffsol bug resolved
     if matrix_type == ds.faer_sparse_f64 and method == ds.bdf:
-        print("Skipping test_valid_config_solve for", matrix_type, linear_solver, method)
-        return
+        import sys
+        if sys.platform == "darwin":
+            print(
+                "Skipping test_valid_config_solve on macos for",
+                matrix_type, linear_solver, method
+            )
+            return
 
     ode = ds.Ode(DIFFSL_LOGISTIC, matrix_type)
     config = ds.Config()
