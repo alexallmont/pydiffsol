@@ -373,6 +373,13 @@ impl OdeWrapper {
         ))))
     }
 
+    /// Get the DiffSl compiled to generate this ODE
+    #[getter]
+    fn get_code(&self) -> PyResult<String> {
+        let guard = self.0.lock().map_err(|_| PyRuntimeError::new_err("Config mutex poisoned"))?;
+        Ok(guard.code.clone())
+    }
+
     /// Using the provided state, solve the problem up to time `final_time`.
     ///
     /// The number of params must match the expected params in the diffsl code.

@@ -1,16 +1,19 @@
 import numpy as np
 import pydiffsol as ds
 
+LOGISTIC_CODE = \
+"""
+in = [r, k, y0]
+r { 1.0 }
+k { 1.0 }
+y0 { 0.1 }
+u { y0 }
+F { r * u * (1.0 - u / k) }
+"""
+
 def test_basic_api():
     ode = ds.Ode(
-        """
-        in = [r, k, y0]
-        r { 1.0 }
-        k { 1.0 }
-        y0 { 0.1 }
-        u { y0 }
-        F { r * u * (1.0 - u / k) }
-        """,
+        LOGISTIC_CODE,
         matrix_type=ds.nalgebra_dense_f64
     )
 
@@ -54,6 +57,9 @@ def test_basic_api():
     t_eval = np.array([0.0, 0.1, 0.5])
     ys = ode.solve_dense(params, t_eval, config)
     assert np.allclose(ys, [[0.1, 0.109366, 0.154828]], rtol=1e-4)
+
+    # Check that code read back matches original
+    assert ode.code == LOGISTIC_CODE
 
 if __name__ == "__main__":
     test_basic_api()
