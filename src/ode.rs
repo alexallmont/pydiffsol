@@ -38,7 +38,7 @@ where
     let nparams = problem.eqn.nparams();
     if params.len() == nparams {
         problem.eqn.set_params(&params);
-        // FIXME set config rtol
+        problem.rtol = config.rtol;
         Ok(())
     } else {
         Err(DiffsolError::Other(format!(
