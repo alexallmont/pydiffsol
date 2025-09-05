@@ -16,9 +16,12 @@ use diffsol::{DiffSl, OdeBuilder, OdeEquations, OdeSolverMethod, OdeSolverProble
 use diffsol::{MatrixCommon, matrix::MatrixHost};
 use diffsol::error::DiffsolError;
 use diffsol::{NalgebraMat, NalgebraLU};
-use diffsol::{FaerMat, FaerLU, FaerSparseMat, KLU};
+use diffsol::{FaerMat, FaerLU, FaerSparseMat};
 use diffsol::Vector; // for from_slice
 use diffsol::Op; // For nparams
+
+#[cfg(feature = "suitesparse")]
+use diffsol::KLU;
 
 use numpy::{PyReadonlyArray1, PyArray1, PyArray2};
 use numpy::ndarray::Array1;
@@ -285,12 +288,15 @@ impl PySolve for PySolveFaerSparseF64 {
             },
             SolverType::Lu => Err(DiffsolError::Other("Lu solver not supported for FaerSparseF64".to_string()).into()),
             SolverType::Klu => {
+                #[cfg(feature = "suitesparse")]
                 match config.method {
                     SolverMethod::Bdf => self.problem.bdf::<KLU<FaerSparseMat<f64>>>()?.solve(final_time),
                     SolverMethod::Esdirk34 => self.problem.esdirk34::<KLU<FaerSparseMat<f64>>>()?.solve(final_time),
                     SolverMethod::TrBdf2 => self.problem.tr_bdf2::<KLU<FaerSparseMat<f64>>>()?.solve(final_time),
                     SolverMethod::Tsit45 => Err(DiffsolError::Other("Klu solver is not compatible with tsit45 for FaerSparseF64".to_string()).into())
                 }
+                #[cfg(not(feature = "suitesparse"))]
+                Err(DiffsolError::Other("Klu solver is not available in this pydiffsol build; suitesparse is not enabled".to_string()).into())
             },
         }?;
 
@@ -319,12 +325,15 @@ impl PySolve for PySolveFaerSparseF64 {
             },
             SolverType::Lu => Err(DiffsolError::Other("Lu solver not supported for FaerSparseF64".to_string()).into()),
             SolverType::Klu => {
+                #[cfg(feature = "suitesparse")]
                 match config.method {
                     SolverMethod::Bdf => self.problem.bdf::<KLU<FaerSparseMat<f64>>>()?.solve_dense(t_eval.as_slice().unwrap()),
                     SolverMethod::Esdirk34 => self.problem.esdirk34::<KLU<FaerSparseMat<f64>>>()?.solve_dense(t_eval.as_slice().unwrap()),
                     SolverMethod::TrBdf2 => self.problem.tr_bdf2::<KLU<FaerSparseMat<f64>>>()?.solve_dense(t_eval.as_slice().unwrap()),
                     SolverMethod::Tsit45 => Err(DiffsolError::Other("Klu solver is not compatible with tsit45 for FaerSparseF64".to_string()).into())
                 }
+                #[cfg(not(feature = "suitesparse"))]
+                Err(DiffsolError::Other("Klu solver is not available in this pydiffsol build; suitesparse is not enabled".to_string()).into())
             },
         }?;
 

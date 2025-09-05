@@ -15,6 +15,13 @@ fn version() -> String {
     format!("{}", env!("CARGO_PKG_VERSION"))
 }
 
+/// Determine whether Klu functions are available in this build of pydiffsol.
+/// This depends on whether the library was built with suitesparse support.
+#[pyfunction]
+fn is_klu_available() -> bool {
+    cfg!(feature = "suitesparse")
+}
+
 #[pymodule]
 fn pydiffsol(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
@@ -38,6 +45,7 @@ fn pydiffsol(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // General utility methods
     m.add_function(wrap_pyfunction!(version, m)?)?;
+    m.add_function(wrap_pyfunction!(is_klu_available, m)?)?;
 
     Ok(())
 }

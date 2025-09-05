@@ -13,10 +13,11 @@ diffsol-llvm15 = ["diffsol/diffsl-llvm15", "diffsol-llvm"]
 diffsol-llvm16 = ["diffsol/diffsl-llvm16", "diffsol-llvm"]
 diffsol-llvm17 = ["diffsol/diffsl-llvm17", "diffsol-llvm"]
 diffsol-cranelift = ["diffsol/diffsl-cranelift"]
+suitesparse = ["diffsol/suitesparse"]
 
 [dependencies]
 pyo3 = { version = "0.26.0", default-features = false, features = ["abi3-py39", "extension-module"] }
-diffsol = { version = "0.6.6", features = ["suitesparse"] }
+diffsol = { version = "0.6.6" }
 faer = "0.22.6"
 nalgebra = "0.33.2"
 numpy = "0.26.0"
