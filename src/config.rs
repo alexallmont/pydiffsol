@@ -1,7 +1,9 @@
 use std::sync::{Arc, Mutex};
 use pyo3::prelude::*;
 use pyo3::exceptions::PyRuntimeError;
-use crate::enums::*;
+use crate::matrix_type::MatrixType;
+use crate::solver_method::SolverMethod;
+use crate::solver_type::SolverType;
 
 #[pyclass]
 pub(crate) struct Config {

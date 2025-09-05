@@ -3,11 +3,14 @@ use std::sync::{Arc, Mutex};
 
 use crate::config::{Config, ConfigWrapper};
 use crate::convert::MatrixToPy;
-use crate::enums::{MatrixType, SolverType, SolverMethod};
+use crate::matrix_type::MatrixType;
+use crate::solver_method::SolverMethod;
+use crate::solver_type::SolverType;
 use crate::error::PyDiffsolError;
 use crate::jit::JitModule;
 
 use pyo3::prelude::*;
+use pyo3::exceptions::PyRuntimeError;
 
 use diffsol::{DiffSl, OdeBuilder, OdeEquations, OdeSolverMethod, OdeSolverProblem};
 use diffsol::{MatrixCommon, matrix::MatrixHost};
