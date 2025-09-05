@@ -2,6 +2,9 @@
 
 Python bindings for [diffsol](https://github.com/martinjrobins/diffsol)
 
+- **PyPI**: https://pypi.org/project/pydiffsol/
+- **Documentation**: https://pydiffsol.readthedocs.io/en/latest/
+
 ## Example usage
 
 ```py

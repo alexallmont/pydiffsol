@@ -30,3 +30,10 @@ Contents
 * :ref:`genindex`
 
 * :ref:`search`
+
+Links
+-----
+
+- **PyPI**: https://pypi.org/project/pydiffsol/
+- **Source code**: https://github.com/alexallmont/pydiffsol/
+
