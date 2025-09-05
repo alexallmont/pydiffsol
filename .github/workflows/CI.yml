@@ -53,7 +53,7 @@ jobs:
           source .venv/bin/activate
           pip install pydiffsol --find-links dist --force-reinstall
           pip install pytest
-          pytest
+          pytest -s
 
   windows:
     runs-on: ${{ matrix.platform.runner }}
@@ -86,7 +86,7 @@ jobs:
           source .venv/Scripts/activate
           pip install pydiffsol --find-links dist --force-reinstall
           pip install pytest
-          pytest
+          pytest -s
 
   macos:
     runs-on: ${{ matrix.platform.runner }}
@@ -126,7 +126,7 @@ jobs:
           source .venv/bin/activate
           pip install pydiffsol --find-links dist --force-reinstall
           pip install pytest
-          pytest
+          pytest -s
 
   sdist:
     runs-on: ubuntu-latest
