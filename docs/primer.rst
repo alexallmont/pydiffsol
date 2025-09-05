@@ -1,6 +1,6 @@
-Primer
-======
+Examples
+========
 
 .. toctree::
 
-   primer/population_dynamics
+   examples/population_dynamics

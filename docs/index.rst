@@ -24,7 +24,7 @@ Contents
 
    Home <self>
    usage
-   primer
+   examples
    api
 
 * :ref:`genindex`
