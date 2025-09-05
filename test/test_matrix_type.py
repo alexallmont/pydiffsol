@@ -80,7 +80,10 @@ def test_valid_config_solve(matrix_type, linear_solver, method):
     last_y = ys[0][-1]
     assert np.isclose(last_y, 0.142189, rtol=1e-4)
 
-    # FIXME check solve dense
+    # Also check solve_dense works over set times
+    t_eval = np.array([0.0, 0.1, 0.5])
+    ys = ode.solve_dense(np.array([]), t_eval, config)
+    assert np.allclose(ys, [[0.1, 0.109366, 0.154828]], rtol=1e-4)
 
 
 # Negative check for solve and solve_dense not supported on this platform
@@ -95,4 +98,5 @@ def test_invalid_config_solve(matrix_type, linear_solver, method):
     with pytest.raises(Exception):
         _, _ = ode.solve(np.array([]), 0.4, config)
 
-    # FIXME check solve dense
+    with pytest.raises(Exception):
+        _, _ = ode.solve_dense(np.array([]), np.array([0.0, 0.1, 0.5]), config)
