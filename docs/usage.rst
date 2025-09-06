@@ -12,8 +12,8 @@ To use pydiffsol, install using pip:
 
    (.venv) $ pip install pydiffsol
 
-Minimal example
----------------
+Basic Usage
+-----------
 
 .. code-block:: python
 

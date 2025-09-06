@@ -1,75 +1,48 @@
-
 use std::sync::{Arc, Mutex};
 
-use crate::config::{Config, ConfigWrapper};
-use crate::convert::MatrixToPy;
-use crate::enums::{MatrixType, SolverType, SolverMethod};
+use crate::config::ConfigWrapper;
 use crate::error::PyDiffsolError;
-use crate::jit::JitModule;
-
-use pyo3::prelude::*;
-
-use diffsol::{OdeBuilder, OdeEquations, OdeSolverMethod, OdeSolverProblem};
-use diffsol::{MatrixCommon, matrix::MatrixHost};
-use diffsol::error::DiffsolError;
-use diffsol::{NalgebraMat, NalgebraVec, NalgebraLU};
-use diffsol::{FaerMat, FaerVec, FaerLU};
-use diffsol::Vector; // for from_slice
-use diffsol::Op; // For nparams
+use crate::matrix_type::MatrixType;
+use crate::py_solve::{PySolve, py_solve_factory};
+use crate::solver_method::SolverMethod;
+use crate::solver_type::SolverType;
 
 use numpy::{PyReadonlyArray1, PyArray1, PyArray2};
-use numpy::ndarray::Array1;
+use pyo3::prelude::*;
+use pyo3::exceptions::PyRuntimeError;
 
 #[pyclass]
 struct Ode {
     code: String,
-    matrix_type: MatrixType,
+    py_solve: Box<dyn PySolve>,
 }
+unsafe impl Send for Ode {}
+unsafe impl Sync for Ode {}
 
 #[pyclass]
 #[pyo3(name = "Ode")]
 #[derive(Clone)]
 pub struct OdeWrapper(Arc<Mutex<Ode>>);
 
-// Construct a diffsol problem for particular matrix type, given diffsl code,
-// pydiffsol config and params.
-fn build_diffsl<M, V> (code: &str, config: &Config, params: &[f64]) ->
-    Result<OdeSolverProblem<diffsol::DiffSl<M, JitModule>>, DiffsolError>
-where
-    M: MatrixHost<T = f64, V = V>,
-    V: Vector<T = f64>
-{
-    // Compile diffsl for this problem and apply config
-    let mut problem = OdeBuilder::<M>::new()
-        .rtol(config.rtol)
-        .build_from_diffsl::<JitModule>(code)?;
-
-    // Return valid problem if correct number of params specified
-    let params = V::from_slice(&params, V::C::default());
-    let nparams = problem.eqn.nparams();
-    if params.len() == nparams {
-        problem.eqn.set_params(&params);
-        Ok(problem)
-    } else {
-        Err(DiffsolError::Other(format!(
-            "Expecting {} params but got {}",
-            nparams,
-            params.len()
-        )).into())
-    }
-}
-
 #[pymethods]
 impl OdeWrapper {
     /// Construct an ODE solver for specified diffsol using a given matrix type
     #[new]
-    fn new(code: &str, matrix_type: MatrixType) -> PyResult<Self> {
+    fn new(code: &str, matrix_type: MatrixType) -> Result<Self, PyDiffsolError> {
+        let py_solve = py_solve_factory(code, matrix_type)?;
         Ok(OdeWrapper(Arc::new(Mutex::new(
             Ode {
                 code: code.to_string(),
-                matrix_type: matrix_type
+                py_solve
             }
         ))))
+    }
+
+    /// Get the DiffSl compiled to generate this ODE
+    #[getter]
+    fn get_code(&self) -> PyResult<String> {
+        let guard = self.0.lock().map_err(|_| PyRuntimeError::new_err("Config mutex poisoned"))?;
+        Ok(guard.code.clone())
     }
 
     /// Using the provided state, solve the problem up to time `final_time`.
@@ -91,63 +64,26 @@ impl OdeWrapper {
     ///
     /// Example:
     ///     >>> print(ode.solve(np.array([]), 0.5))
-    #[pyo3(signature=(params, final_time, config = ConfigWrapper::new()))]
+    #[pyo3(signature=(params, final_time, config=ConfigWrapper::new(SolverMethod::Bdf, SolverType::Default, 1e-6)))]
     fn solve<'py>(
         slf: PyRefMut<'py, Self>,
         params: PyReadonlyArray1<'py, f64>,
         final_time: f64,
         config: ConfigWrapper
     ) -> Result<(Bound<'py, PyArray2<f64>>, Bound<'py, PyArray1<f64>>), PyDiffsolError> {
-        let self_guard = slf.0.lock().unwrap();
+        let mut self_guard = slf.0.lock().unwrap();
         let config_guard = config.0.lock().unwrap();
         let params = params.as_array();
+        let matrix_type = self_guard.py_solve.matrix_type();
+        let solver_type = config_guard.solver_for_matrix_type(matrix_type);
 
-        match self_guard.matrix_type {
-            MatrixType::NalgebraDenseF64 => {
-                match config_guard.linear_solver {
-                    SolverType::Lu => {
-                        let problem = build_diffsl::<NalgebraMat<f64>, NalgebraVec<f64>>(
-                            self_guard.code.as_str(),
-                            &config_guard,
-                            &params.as_slice().unwrap()
-                        )?;
-                        let (ys, ts) = match config_guard.method {
-                            SolverMethod::Bdf => problem.bdf::<NalgebraLU<f64>>()?.solve(final_time)?,
-                            SolverMethod::Esdirk34 => problem.esdirk34::<NalgebraLU<f64>>()?.solve(final_time)?,
-                        };
-                        Ok((
-                            ys.inner().to_pyarray2(slf.py()),
-                            PyArray1::from_owned_array(slf.py(), Array1::from(ts))
-                        ))
-                    },
-                    SolverType::Klu => {
-                        Err(DiffsolError::Other("KLU not supported for nalgebra".to_string()).into())
-                    }
-                }
-            },
-            MatrixType::FaerSparseF64 => {
-                match config_guard.linear_solver {
-                    SolverType::Lu => {
-                        let problem = build_diffsl::<FaerMat<f64>, FaerVec<f64>>(
-                            self_guard.code.as_str(),
-                            &config_guard,
-                            &params.as_slice().unwrap()
-                        )?;
-                        let (ys, ts) = match config_guard.method {
-                            SolverMethod::Bdf => problem.bdf::<FaerLU<f64>>()?.solve(final_time)?,
-                            SolverMethod::Esdirk34 => problem.esdirk34::<FaerLU<f64>>()?.solve(final_time)?,
-                        };
-                        Ok((
-                            ys.inner().to_pyarray2(slf.py()),
-                            PyArray1::from_owned_array(slf.py(), Array1::from(ts))
-                        ))
-                    },
-                    SolverType::Klu => {
-                        Err(DiffsolError::Other("KLU not supported for faer".to_string()).into())
-                    }
-                }
-            }
-        }
+        self_guard.py_solve.solve(
+            slf.py(),
+            solver_type,
+            &config_guard,
+            &params.as_slice().unwrap(),
+            final_time,
+        )
     }
 
     /// Using the provided state, solve the problem up to time
@@ -165,55 +101,24 @@ impl OdeWrapper {
     /// :type config: pydiffsol.Config, optional
     /// :return: 2D array of values at times `t_eval`
     /// :rtype: numpy.ndarray
-    #[pyo3(signature=(params, t_eval, config = ConfigWrapper::new()))]
+    #[pyo3(signature=(params, t_eval, config=ConfigWrapper::new(SolverMethod::Bdf, SolverType::Default, 1e-6)))]
     fn solve_dense<'py>(
         slf: PyRefMut<'py, Self>,
         params: PyReadonlyArray1<'py, f64>,
         t_eval: PyReadonlyArray1<'py, f64>,
         config: ConfigWrapper
     ) -> Result<Bound<'py, PyArray2<f64>>, PyDiffsolError> {
-        let self_guard = slf.0.lock().unwrap();
+        let mut self_guard = slf.0.lock().unwrap();
         let config_guard = config.0.lock().unwrap();
         let params = params.as_array();
-        let t_eval = t_eval.as_array();
+        let solver_type = config_guard.solver_for_matrix_type(self_guard.py_solve.matrix_type());
 
-        match self_guard.matrix_type {
-            MatrixType::NalgebraDenseF64 => {
-                match config_guard.linear_solver {
-                    SolverType::Lu => {
-                        let problem = build_diffsl::<NalgebraMat<f64>, NalgebraVec<f64>>(
-                            self_guard.code.as_str(),
-                            &config_guard,
-                            &params.as_slice().unwrap()
-                        )?;
-                        Ok(match config_guard.method {
-                            SolverMethod::Bdf => problem.bdf::<NalgebraLU<f64>>()?.solve_dense(t_eval.as_slice().unwrap())?,
-                            SolverMethod::Esdirk34 => problem.esdirk34::<NalgebraLU<f64>>()?.solve_dense(t_eval.as_slice().unwrap())?,
-                        }.inner().to_pyarray2(slf.py()))
-                    },
-                    SolverType::Klu => {
-                        Err(DiffsolError::Other("KLU not supported for nalgebra".to_string()).into())
-                    }
-                }
-            },
-            MatrixType::FaerSparseF64 => {
-                match config_guard.linear_solver {
-                    SolverType::Lu => {
-                        let problem = build_diffsl::<FaerMat<f64>, FaerVec<f64>>(
-                            self_guard.code.as_str(),
-                            &config_guard,
-                            &params.as_slice().unwrap()
-                        )?;
-                        Ok(match config_guard.method {
-                            SolverMethod::Bdf => problem.bdf::<FaerLU<f64>>()?.solve_dense(t_eval.as_slice().unwrap())?,
-                            SolverMethod::Esdirk34 => problem.esdirk34::<FaerLU<f64>>()?.solve_dense(t_eval.as_slice().unwrap())?,
-                        }.inner().to_pyarray2(slf.py()))
-                    },
-                    SolverType::Klu => {
-                        Err(DiffsolError::Other("KLU not supported for faer".to_string()).into())
-                    }
-                }
-            }
-        }
+        self_guard.py_solve.solve_dense(
+            slf.py(),
+            solver_type,
+            &config_guard,
+            &params.as_slice().unwrap(),
+            t_eval,
+        )
     }
 }

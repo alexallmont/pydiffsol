@@ -24,9 +24,16 @@ Contents
 
    Home <self>
    usage
-   primer
+   examples
    api
 
 * :ref:`genindex`
 
 * :ref:`search`
+
+Links
+-----
+
+- **PyPI**: https://pypi.org/project/pydiffsol/
+- **Source code**: https://github.com/alexallmont/pydiffsol/
+

@@ -2,6 +2,9 @@
 
 Python bindings for [diffsol](https://github.com/martinjrobins/diffsol)
 
+- **PyPI**: https://pypi.org/project/pydiffsol/
+- **Documentation**: https://pydiffsol.readthedocs.io/en/latest/
+
 ## Example usage
 
 ```py
@@ -20,6 +23,12 @@ ode = ds.Ode(
 p = np.array([])
 print(ode.solve(p, 0.4))
 ```
+
+## Known issues
+
+- BDF with FaerSparseF64 KLU is not stable on macos; we have found a segfault in
+underlying diffsol. Unit tests are disabled for this combination and it should
+be avoided for the time being but it is still enabled whilst we are diagnosing.
 
 ## Local development
 
