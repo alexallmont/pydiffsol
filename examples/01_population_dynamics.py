@@ -1,10 +1,8 @@
-# Load matplotlib headless to avoid macos UI/window issues when debugging
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
+import fix_matplotlib_debug as _
 
-import numpy as np
 import pydiffsol as ds
+import numpy as np
+import matplotlib.pyplot as plt
 
 def solve():
     ode = ds.Ode(
@@ -35,8 +33,7 @@ def solve():
     ax.plot(ts, ys[1], label="predator")
     ax.set_xlabel("t")
     ax.set_ylabel("population")
-    fig.savefig("docs/images/prey-predator.png")
-
+    fig.savefig("docs/images/prey_predator.png")
 
 def phase_plane():
     ode = ds.Ode(
@@ -69,7 +66,7 @@ def phase_plane():
         ax.plot(prey, predator, label=f"y0 = {y0}")
     ax.set_xlabel("prey")
     ax.set_ylabel("predator")
-    fig.savefig("docs/images/prey-predator2.png")
+    fig.savefig("docs/images/prey_predator2.png")
 
 if __name__ == "__main__":
     solve()

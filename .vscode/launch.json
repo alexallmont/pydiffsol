@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: test_basic_api.py",
+            "name": "debugpy: test_basic_api.py",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/test/test_basic_api.py",
@@ -14,7 +14,7 @@
             "preLaunchTask": "maturin develop",
         },
         {
-            "name": "Rust: test_basic_api.py",
+            "name": "lldb: test_basic_api.py",
             "type": "lldb",
             "request": "launch",
             "program": ".venv/bin/python",
@@ -22,13 +22,10 @@
                 "test/test_basic_api.py"
             ],
             "cwd": "${workspaceFolder}",
-            "initCommands": [
-                "settings set target.process.stop-on-exec false"
-            ],
             "preLaunchTask": "maturin develop",
         },
         {
-            "name": "Rust: 01_population_dynamics.py",
+            "name": "lldb: 01_population_dynamics.py",
             "type": "lldb",
             "request": "launch",
             "program": ".venv/bin/python",
@@ -36,9 +33,17 @@
                 "examples/01_population_dynamics.py"
             ],
             "cwd": "${workspaceFolder}",
-            "initCommands": [
-                "settings set target.process.stop-on-exec false"
+            "preLaunchTask": "maturin develop",
+        },
+        {
+            "name": "lldb: 02_spring_mass_system.py",
+            "type": "lldb",
+            "request": "launch",
+            "program": ".venv/bin/python",
+            "args": [
+                "examples/02_spring_mass_system.py"
             ],
+            "cwd": "${workspaceFolder}",
             "preLaunchTask": "maturin develop",
         }
     ]
