@@ -7,6 +7,7 @@ mod jit;
 mod matrix_type;
 mod ode;
 mod py_solve;
+mod py_solve_test;
 mod solver_method;
 mod solver_type;
 
