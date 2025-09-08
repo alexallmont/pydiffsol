@@ -84,35 +84,18 @@ where
         setup_problem(&mut self.problem, config, params)?;
 
         let (ys, ts) = match solver_type {
-            SolverType::Default => {
-                match config.method {
-                    SolverMethod::Bdf => self.problem.bdf::<<M as DefaultSolver>::LS>()?.solve(final_time),
-                    SolverMethod::Esdirk34 => self.problem.esdirk34::<<M as DefaultSolver>::LS>()?.solve(final_time),
-                    SolverMethod::TrBdf2 => self.problem.tr_bdf2::<<M as DefaultSolver>::LS>()?.solve(final_time),
-                    SolverMethod::Tsit45 => self.problem.tsit45()?.solve(final_time),
-                }
-            },
+            SolverType::Default => config.method.solve::<M, <M as DefaultSolver>::LS>(&mut self.problem, final_time),
             SolverType::Lu => {
                 if !<M as Lu<M>>::valid() {
                     return Err(DiffsolError::Other(format!("Lu solver not supported for {}", self.matrix_type().get_name())).into());
                 }
-                match config.method {
-                    SolverMethod::Bdf => self.problem.bdf::<<M as Lu<M>>::LS>()?.solve(final_time),
-                    SolverMethod::Esdirk34 => self.problem.esdirk34::<<M as Lu<M>>::LS>()?.solve(final_time),
-                    SolverMethod::TrBdf2 => self.problem.tr_bdf2::<<M as Lu<M>>::LS>()?.solve(final_time),
-                    SolverMethod::Tsit45 => self.problem.tsit45()?.solve(final_time),
-                }
+                config.method.solve::<M, <M as Lu<M>>::LS>(&mut self.problem, final_time)
             },
             SolverType::Klu => {
                 if !<M as Klu<M>>::valid() {
                     return Err(DiffsolError::Other(format!("Klu solver not supported for {}", self.matrix_type().get_name())).into());
                 }
-                match config.method {
-                    SolverMethod::Bdf => self.problem.bdf::<<M as Klu<M>>::LS>()?.solve(final_time),
-                    SolverMethod::Esdirk34 => self.problem.esdirk34::<<M as Klu<M>>::LS>()?.solve(final_time),
-                    SolverMethod::TrBdf2 => self.problem.tr_bdf2::<<M as Klu<M>>::LS>()?.solve(final_time),
-                    SolverMethod::Tsit45 => self.problem.tsit45()?.solve(final_time),
-                }   
+                config.method.solve::<M, <M as Klu<M>>::LS>(&mut self.problem, final_time)
             }
         }?;
 

@@ -1,6 +1,11 @@
+use diffsol::error::DiffsolError;
+use diffsol::matrix::MatrixRef;
+use diffsol::{DefaultDenseMatrix, DiffSl, LinearSolver, Matrix, OdeSolverProblem, VectorHost, VectorRef, OdeSolverMethod};
 use pyo3::prelude::*;
 use pyo3::exceptions::PyValueError;
 use pyo3::types::{PyList, PyType};
+
+use crate::jit::JitModule;
 
 #[pyclass(eq)]
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -34,6 +39,26 @@ impl SolverMethod {
             SolverMethod::Esdirk34 => "esdirk34",
             SolverMethod::TrBdf2 => "tr_bdf2",
             SolverMethod::Tsit45 => "tsit45",
+        }
+    }
+    
+    pub(crate) fn solve<M, LS>(
+        &self,
+        problem: &mut OdeSolverProblem<DiffSl<M, JitModule>>,
+        final_time: f64,
+    ) -> Result<(<M::V as DefaultDenseMatrix>::M, Vec<f64>), DiffsolError>
+    where
+        M: Matrix<T=f64>,
+        M::V: VectorHost + DefaultDenseMatrix,
+        LS: LinearSolver<M>,
+        for<'b> &'b M::V: VectorRef<M::V>,
+        for<'b> &'b M: MatrixRef<M>,
+    {
+        match self {
+            SolverMethod::Bdf => problem.bdf::<LS>()?.solve(final_time),
+            SolverMethod::Esdirk34 => problem.esdirk34::<LS>()?.solve(final_time),
+            SolverMethod::TrBdf2 => problem.tr_bdf2::<LS>()?.solve(final_time),
+            SolverMethod::Tsit45 => problem.tsit45()?.solve(final_time),
         }
     }
 }
