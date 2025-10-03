@@ -13,12 +13,14 @@ unzip $WHEEL_FILE -d wheel_fix_rpath
 # Copy dependencies into unzip dir
 cp $LLVM_PATH/lib/libunwind.1.dylib wheel_fix_rpath/pydiffsol
 cp /opt/homebrew/opt/zstd/lib/libzstd.1.dylib wheel_fix_rpath/pydiffsol
+cp /opt/homebrew/lib/libsuitesparseconfig.7.dylib wheel_fix_rpath/pydiffsol
 
 # Fix rpath of wheels .so file so it references local dylibs
 SO_FILE=$(find wheel_fix_rpath -name "*.so")
 install_name_tool -change @rpath/libc++.1.dylib /usr/lib/libc++.1.dylib $SO_FILE
 install_name_tool -change @rpath/libunwind.1.dylib @loader_path/libunwind.1.dylib $SO_FILE
 install_name_tool -change /opt/homebrew/opt/zstd/lib/libzstd.1.dylib @loader_path/libzstd.1.dylib $SO_FILE
+install_name_tool -change /opt/homebrew/opt/suite-sparse/lib/libsuitesparseconfig.7.dylib @loader_path/libsuitesparseconfig.7.dylib $SO_FILE
 
 # Re-zip wheel and remove working dir (otherwise it is copied with artifacts)
 cd wheel_fix_rpath
