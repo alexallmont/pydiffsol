@@ -72,7 +72,6 @@ where
     if params.len() == nparams {
         problem.eqn.set_params(&params);
         problem.rtol = config.rtol;
-        problem.atol = config.atol;
         Ok(())
     } else {
         Err(DiffsolError::Other(format!(
