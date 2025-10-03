@@ -5,6 +5,9 @@
 # libunwind - that were used to build the wheel - back into the generated wheel
 # archive. It fixes rpaths for the .so file so dylibs are found relative to it.
 
+# Trace all commands for verbose logging in CI
+set -x
+
 # Unzip the build wheel, assumes dist folder in CI script
 cd dist
 WHEEL_FILE=$(find . -name "pydiffsol*.whl" -exec basename {} \;)
