@@ -38,6 +38,7 @@ jobs:
           args: --release --out dist --find-interpreter --features diffsol-llvm17 --features suitesparse
           sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
           manylinux: "2_28"
+          container: "quay.io/pypa/manylinux_2_28_x86_64:2025.09.01-1"
           maturin-version: "v1.9.4"
           before-script-linux: source .github/workflows/maturin_linux_setup.sh
       - name: Upload wheels
