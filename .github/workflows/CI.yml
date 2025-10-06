@@ -39,9 +39,8 @@ jobs:
           SCCACHE_VERSION: 0.2.13
           CIBW_BEFORE_ALL_LINUX: "curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y && yum install -y openssl-devel && source .github/workflows/maturin_linux_setup.sh"
           CIBW_BUILD_VERBOSITY: "1" # Make some more noise so that travis doesn't stall
-          CIBW_ENVIRONMENT: 'PATH="$PATH:$HOME/.cargo/bin"'
+          CIBW_ENVIRONMENT: 'PATH="$PATH:$HOME/.cargo/bin" MATURIN_PEP517_ARGS="--find-interpreter --features diffsol-llvm17 --features suitesparse"'
           CIBW_SKIP: "cp27-* cp34-* cp35-* pp* *-win32"
-          CIBW_CONFIG_SETTINGS: "--release --find-interpreter --features diffsol-llvm17 --features suitesparse"
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
