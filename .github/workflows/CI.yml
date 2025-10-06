@@ -33,7 +33,7 @@ jobs:
           python-version: 3.x
       # https://github.com/Daggy1234/polaroid/blob/main/.github/workflows/publish.yml
       - name: wheels Linux
-        uses: joerick/cibuildwheel@v1.10.0
+        uses: pypa/cibuildwheel@v3.2.0
         env:
           CIBW_ARCHS_LINUX: auto64
           SCCACHE_VERSION: 0.2.13
