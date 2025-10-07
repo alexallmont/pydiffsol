@@ -36,7 +36,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: 3.x
-      # https://github.com/Daggy1234/polaroid/blob/main/.github/workflows/publish.yml
       - name: Install LLVM and Clang
         if: runner.os == 'macOS'
         uses: KyleMayes/install-llvm-action@v2
@@ -53,11 +52,11 @@ jobs:
           CIBW_ARCHS_WINDOWS: ${{ matrix.platform.target }}
           SCCACHE_VERSION: 0.2.13
           CIBW_BEFORE_ALL_LINUX: "curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y && yum install -y openssl-devel && source .github/workflows/maturin_linux_setup.sh"
-          CIBW_BUILD_VERBOSITY: "1" # Make some more noise so that travis doesn't stall
+          CIBW_BUILD_VERBOSITY: "1"
           CIBW_ENVIRONMENT_LINUX: 'PATH="$PATH:$HOME/.cargo/bin" MATURIN_PEP517_ARGS="--features diffsol-llvm17 --features suitesparse" RUSTFLAGS="-C linker-features=-lld"'
           CIBW_ENVIRONMENT_MACOS: 'PATH="$PATH:$HOME/.cargo/bin" MACOSX_DEPLOYMENT_TARGET=14.0 MATURIN_PEP517_ARGS="--features diffsol-llvm17"'
           CIBW_ENVIRONMENT_WINDOWS: 'PATH="$PATH:$HOME/.cargo/bin" MATURIN_PEP517_ARGS="--features diffsol-cranelift"'
-          CIBW_SKIP: "pp* *-win32 *-musllinux_*"
+          CIBW_SKIP: "*-win32 *-musllinux_*"
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
