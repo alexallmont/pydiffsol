@@ -61,10 +61,3 @@ different configuration, you need to edit `tasks.json`.
 The python path is hard-coded in `launch.json` to `.venv/bin/activate` (this is
 the default when running `uv` in macos or Linux). If you have pip-installed
 to a different location or running on Windows, you need to edit `launch.json`.
-
-## Licenses
-
-This wheel bundles `libunwind.1.dylib` from LLVM, licensed under the Apache 2.0
-License with LLVM exceptions, and `libzstd.1.dylib` from the Zstandard project,
-licensed under the BSD 3-Clause License. See `LICENSE.libunwind` and
-`LICENSE.zstd` for details.
