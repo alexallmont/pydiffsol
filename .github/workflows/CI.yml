@@ -65,10 +65,12 @@ jobs:
           path: ./wheelhouse/*.whl
       - name: pytest
         shell: bash
+        env:
+          ACTIVATE: ${{ runner.os == 'Windows' && '.venv/Scripts/activate' || '.venv/bin/activate'  }}
         run: |
           set -e
           python3 -m venv .venv
-          ${{ runner.os == 'Windows' && '.venv/Scripts/activate' || '.venv/bin/activate'  }}
+          source $ACTIVATE
           pip install pydiffsol --find-links ./wheelhouse --force-reinstall
           pip install pytest
           pytest -s
