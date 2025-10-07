@@ -1,25 +1,15 @@
 {
     "rust-analyzer.cargo.features": [
         "diffsol-llvm17",
+        "suitesparse",
     ],
-    "rust-analyzer.cargo.extraEnv": {
-        "SUNDIALS_LIBRARY_DIR": "~/.local/lib",
-        "SUNDIALS_INCLUDE_DIR": "~/.local/include",
-        "LLVM_DIR": "/usr/lib/llvm-17",
-        "LLVM_SYS_170_PREFIX": "/usr/lib/llvm-17",
-    },
-    "rust-analyzer.files.excludeDirs": [
+    "rust-analyzer.files.exclude": [
         "**/.git",
         "**/.vscode",
         "**/target",
-        "**/env",
-        "**/doctest_cache",
     ],
     "files.watcherExclude": {
-        "**/.git/objects/**": true,
-        "**/.git/subtree-cache/**": true,
+        "**/.git/**": true,
         "**/target/**": true,
-        "**/env/**": true,
-        "**/doctest_cache/**": true,
     }
 }
