@@ -11,8 +11,10 @@ Python bindings for [diffsol](https://github.com/martinjrobins/diffsol)
 import pydiffsol as ds
 import numpy as np
 
+# DiffSl code and matrix type specified in constructor
 ode = ds.Ode(
     """
+    in = [r]
     r { 1.0 }
     k { 1.0 }
     u { 0.1 }
@@ -20,8 +22,15 @@ ode = ds.Ode(
     """,
     ds.nalgebra_dense_f64
 )
-p = np.array([])
-print(ode.solve(p, 0.4))
+
+# Example overriding r input param with 2.0
+params = np.array([2.0])
+print(ode.solve(params, 0.4))
+
+# Above defaults to bdf. Use a custom config to override with esdirk34
+config = ds.Config()
+config.method = ds.esdirk34
+print(ode.solve(params, 0.4, config))
 ```
 
 ## Known issues
@@ -32,18 +41,26 @@ be avoided for the time being but it is still enabled whilst we are diagnosing.
 
 ## Local development
 
-To build locally, use [maturin](https://www.maturin.rs/installation.html) and
-set `diffsol-llvm` feature to your installed LLVM. Also specify `dev` extras for
-pytest, running examples and docs image generation. For example:
+To build locally, create a venv and use [maturin](https://www.maturin.rs/installation.html)
+to set up your environment, optionally setting `diffsol-llvm` to your installed
+LLVM and enable `suitesparse` if you have it installed (required for sparse
+matrix types). Also specify `dev` extras for pytest, running examples and docs
+image generation. For example:
 
 ```sh
-maturin develop --extras dev --features diffsol-llvm17
+maturin develop --extras dev --features diffsol-llvm17 --features suitesparse
 ```
 
-The included `.vscode` include examples for running tests and examples in
-python and rust debuggers. The config works with `diffsol-llvm17` by default and
-assumes that you have it already installed, for example on macos with
-`brew install llvm@17` or for debian-flavoured linux `apt install llvm-17`.
+The `.vscode` setup includes examples for running tests and examples in python
+via lldb so underlying rust can be debugged. The build task in `tasks.json` runs
+with `diffsol-llvm17` and `suitesparse` and assumes that you have these
+installed, for example on macos with `brew install llvm@17 suite-sparse` or for
+debian-flavoured linux `apt install llvm-17 libsuitesparse-dev`. If you have a
+different configuration, you need to edit `tasks.json`.
+
+The python path is hard-coded in `launch.json` to `.venv/bin/activate` (this is
+the default when running `uv` in macos or Linux). If you have pip-installed
+to a different location or running on Windows, you need to edit `launch.json`.
 
 ## Licenses
 
