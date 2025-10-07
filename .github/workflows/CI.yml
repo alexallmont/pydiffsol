@@ -39,23 +39,13 @@ jobs:
           SCCACHE_VERSION: 0.2.13
           CIBW_BEFORE_ALL_LINUX: "curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y && yum install -y openssl-devel && source .github/workflows/maturin_linux_setup.sh"
           CIBW_BUILD_VERBOSITY: "1" # Make some more noise so that travis doesn't stall
-          CIBW_ENVIRONMENT: 'PATH="$PATH:$HOME/.cargo/bin" MATURIN_PEP517_ARGS="--features diffsol-llvm17 RUSTFLAGS= "-C linker-features=-lld"'
+          CIBW_ENVIRONMENT: 'PATH="$PATH:$HOME/.cargo/bin" MATURIN_PEP517_ARGS="--features diffsol-llvm17" RUSTFLAGS= "-C linker-features=-lld"'
           CIBW_SKIP: "cp27-* cp34-* cp35-* pp* *-win32"
-      - name: Build wheels
-        uses: PyO3/maturin-action@v1
-        with:
-          target: ${{ matrix.platform.target }}
-          args: --release --out dist --find-interpreter --features diffsol-llvm17 --features suitesparse
-          manylinux: "2_28"
-          container: "quay.io/pypa/manylinux_2_28_x86_64:2025.09.06-1"
-          maturin-version: "v1.9.4"
-          before-script-linux: source .github/workflows/maturin_linux_setup.sh
-      
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
           name: wheels-linux-${{ matrix.platform.target }}
-          path: dist
+          path: ./wheelhouse/*.whl
       - name: pytest
         if: ${{ startsWith(matrix.platform.target, 'x86_64') }}
         shell: bash
@@ -63,7 +53,7 @@ jobs:
           set -e
           python3 -m venv .venv
           source .venv/bin/activate
-          pip install pydiffsol --find-links dist --force-reinstall
+          pip install pydiffsol --find-links ./wheelhouse --force-reinstall
           pip install pytest
           pytest -s
 
