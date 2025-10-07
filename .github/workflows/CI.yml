@@ -64,22 +64,11 @@ jobs:
           name: wheels-linux-${{ matrix.platform.target }}
           path: ./wheelhouse/*.whl
       - name: pytest
-        if: runner.os != 'Windows'
         shell: bash
         run: |
           set -e
           python3 -m venv .venv
-          source .venv/bin/activate
-          pip install pydiffsol --find-links ./wheelhouse --force-reinstall
-          pip install pytest
-          pytest -s
-      - name: pytest
-        if: runner.os == 'Windows'
-        shell: bash
-        run: |
-          set -e
-          python3 -m venv .venv
-          source .venv/Scripts/activate
+          ${{ runner.os == 'Windows' && '.venv/Scripts/activate' || '.venv/bin/activate'  }}
           pip install pydiffsol --find-links ./wheelhouse --force-reinstall
           pip install pytest
           pytest -s
