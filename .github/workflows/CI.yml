@@ -56,7 +56,7 @@ jobs:
           CIBW_BUILD_VERBOSITY: "1" # Make some more noise so that travis doesn't stall
           CIBW_ENVIRONMENT_LINUX: 'PATH="$PATH:$HOME/.cargo/bin" MATURIN_PEP517_ARGS="--features diffsol-llvm17 --features suitesparse" RUSTFLAGS="-C linker-features=-lld"'
           CIBW_ENVIRONMENT_MACOS: 'PATH="$PATH:$HOME/.cargo/bin" MATURIN_PEP517_ARGS="--features diffsol-llvm17 --features suitesparse"'
-          CIBW_ENVIRONMENT_WINDOWS: 'PATH="$PATH:$HOME/.cargo/bin" MATURIN_PEP517_ARGS="--features diffsol-cranelift --features suitesparse"'
+          CIBW_ENVIRONMENT_WINDOWS: 'PATH="$PATH:$HOME/.cargo/bin" MATURIN_PEP517_ARGS="--features diffsol-cranelift"'
           CIBW_SKIP: "pp* *-win32 *-musllinux_*"
       - name: Upload wheels
         uses: actions/upload-artifact@v4
@@ -135,7 +135,7 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
     if: ${{ startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' }}
-    needs: [wheels, sdist]
+    needs: [wheels, macos, sdist]
     permissions:
       # Use to sign the release artifacts
       id-token: write
