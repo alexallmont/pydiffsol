@@ -1,5 +1,6 @@
 import numpy as np
 import pydiffsol as ds
+import pytest
 
 LOGISTIC_CODE = \
 """
@@ -12,21 +13,14 @@ F { r * u * (1.0 - u / k) }
 """
 
 def test_basic_api():
-    ode = ds.Ode(
-        LOGISTIC_CODE,
-        matrix_type=ds.nalgebra_dense_f64
-    )
-
-    config = ds.Config()
-    config.method = ds.bdf
-    config.linear_solver = ds.lu
-    config.rtol = 1e-6
+    ode = ds.Ode(LOGISTIC_CODE, matrix_type=ds.nalgebra_dense_f64, ode_solver=ds.bdf, linear_solver=ds.lu)
 
     r = 1.0
     k = 1.0
     y0 = 0.1
     params = np.array([r, k, y0])
-    ys, ts = ode.solve(params, 0.4, config)
+
+    ys, ts = ode.solve(params, 0.4)
 
     assert len(ys) == 1
     assert len(ys[0]) == 28
@@ -39,7 +33,7 @@ def test_basic_api():
 
     # Check that when re-running, that solve generates new arrays, i.e. that ts
     # and ys are new objects and not referring to mutated data.
-    ys2, ts2 = ode.solve(params, 1.0, config)
+    ys2, ts2 = ode.solve(params, 1.0)
 
     # New solve generates more data due to larger t of 1.0
     assert len(ys2[0]) == 34
@@ -55,7 +49,7 @@ def test_basic_api():
 
     # Example using solve_dense to get results at particular times
     t_eval = np.array([0.0, 0.1, 0.5])
-    ys = ode.solve_dense(params, t_eval, config)
+    ys = ode.solve_dense(params, t_eval)
     assert np.allclose(ys, [[0.1, 0.109366, 0.154828]], rtol=1e-4)
 
     # Check that code read back matches original

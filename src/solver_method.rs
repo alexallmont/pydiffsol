@@ -1,7 +1,10 @@
 use diffsol::error::DiffsolError;
-use diffsol::{DefaultDenseMatrix, DiffSl, LinearSolver, Matrix, OdeSolverProblem, VectorHost, VectorRef, matrix::MatrixRef, OdeSolverMethod};
-use pyo3::prelude::*;
+use diffsol::{
+    matrix::MatrixRef, DefaultDenseMatrix, DiffSl, LinearSolver, Matrix, OdeSolverMethod,
+    OdeSolverProblem, VectorHost, VectorRef,
+};
 use pyo3::exceptions::PyValueError;
+use pyo3::prelude::*;
 use pyo3::types::{PyList, PyType};
 
 use crate::jit::JitModule;
@@ -40,14 +43,14 @@ impl SolverMethod {
             SolverMethod::Tsit45 => "tsit45",
         }
     }
-    
+
     pub(crate) fn solve<M, LS>(
         &self,
         problem: &mut OdeSolverProblem<DiffSl<M, JitModule>>,
         final_time: f64,
     ) -> Result<(<M::V as DefaultDenseMatrix>::M, Vec<f64>), DiffsolError>
     where
-        M: Matrix<T=f64>,
+        M: Matrix<T = f64>,
         M::V: VectorHost + DefaultDenseMatrix,
         LS: LinearSolver<M>,
         for<'b> &'b M::V: VectorRef<M::V>,
@@ -60,14 +63,14 @@ impl SolverMethod {
             SolverMethod::Tsit45 => problem.tsit45()?.solve(final_time),
         }
     }
-    
+
     pub(crate) fn solve_dense<M, LS>(
         &self,
         problem: &mut OdeSolverProblem<DiffSl<M, JitModule>>,
         t_eval: &[f64],
     ) -> Result<<M::V as DefaultDenseMatrix>::M, DiffsolError>
     where
-        M: Matrix<T=f64>,
+        M: Matrix<T = f64>,
         M::V: VectorHost + DefaultDenseMatrix,
         LS: LinearSolver<M>,
         for<'b> &'b M::V: VectorRef<M::V>,

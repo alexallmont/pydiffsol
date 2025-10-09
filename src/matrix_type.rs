@@ -1,7 +1,7 @@
 use diffsol::{Matrix, NalgebraMat};
 use pyo3::exceptions::PyValueError;
-use pyo3::types::{PyList, PyType};
 use pyo3::prelude::*;
+use pyo3::types::{PyList, PyType};
 
 #[pyclass(eq)]
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -32,7 +32,7 @@ impl MatrixType {
             MatrixType::FaerSparseF64 => "faer_sparse_f64",
         }
     }
-    
+
     pub(crate) fn from_diffsol<M: Matrix>() -> Option<Self> {
         let id = std::any::TypeId::of::<M>();
         if id == std::any::TypeId::of::<NalgebraMat<f64>>() {
