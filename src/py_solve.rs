@@ -83,7 +83,7 @@ impl Klu<diffsol::FaerSparseMat<f64>> for diffsol::FaerSparseMat<f64> {
 
 #[cfg(not(feature = "suitesparse"))]
 impl Klu<diffsol::FaerSparseMat<f64>> for diffsol::FaerSparseMat<f64> {
-    type LS = diffsol::KLU<diffsol::FaerSparseMat<f64>>;
+    type LS = diffsol::FaerSparseLU<f64>;
     fn valid() -> bool {
         false
     }
