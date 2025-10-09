@@ -1,6 +1,7 @@
 import pydiffsol as ds
 import sys
 
+
 def test_is_klu_available():
     # KLU currently supported on linux
     if sys.platform.startswith("linux"):

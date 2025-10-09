@@ -1,3 +1,4 @@
+use diffsol::{Matrix, NalgebraMat};
 use pyo3::exceptions::PyValueError;
 use pyo3::types::{PyList, PyType};
 use pyo3::prelude::*;
@@ -29,6 +30,19 @@ impl MatrixType {
             MatrixType::NalgebraDenseF64 => "nalgebra_dense_f64",
             MatrixType::FaerDenseF64 => "faer_dense_f64",
             MatrixType::FaerSparseF64 => "faer_sparse_f64",
+        }
+    }
+    
+    pub(crate) fn from_diffsol<M: Matrix>() -> Option<Self> {
+        let id = std::any::TypeId::of::<M>();
+        if id == std::any::TypeId::of::<NalgebraMat<f64>>() {
+            Some(MatrixType::NalgebraDenseF64)
+        } else if id == std::any::TypeId::of::<diffsol::FaerMat<f64>>() {
+            Some(MatrixType::FaerDenseF64)
+        } else if id == std::any::TypeId::of::<diffsol::FaerSparseMat<f64>>() {
+            Some(MatrixType::FaerSparseF64)
+        } else {
+            None
         }
     }
 }
