@@ -14,7 +14,7 @@ impl<'py> MatrixToPy<'py> for nalgebra::DMatrix<f64> {
             self.as_ptr()
         )
     };
-    view.to_pyarray(py).into()
+    view.to_pyarray(py)
   }
 }
 
@@ -27,6 +27,6 @@ impl<'py> MatrixToPy<'py> for faer::Mat<f64> {
             self.as_ptr()
         )
     };
-    view.to_pyarray(py).into()
+    view.to_pyarray(py)
   }
 }

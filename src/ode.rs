@@ -1,9 +1,9 @@
 use std::sync::{Arc, Mutex};
 
-use crate::config::ConfigWrapper;
 use crate::error::PyDiffsolError;
-use crate::matrix_type::MatrixType;
+use crate::ode_config::OdeConfig;
 use crate::py_solve::{PySolve, py_solve_factory};
+use crate::solve_config::SolveConfig;
 use crate::solver_method::SolverMethod;
 use crate::solver_type::SolverType;
 
@@ -28,8 +28,8 @@ pub struct OdeWrapper(Arc<Mutex<Ode>>);
 impl OdeWrapper {
     /// Construct an ODE solver for specified diffsol using a given matrix type
     #[new]
-    fn new(code: &str, matrix_type: MatrixType) -> Result<Self, PyDiffsolError> {
-        let py_solve = py_solve_factory(code, matrix_type)?;
+    fn new(code: &str, config: &OdeConfig) -> Result<Self, PyDiffsolError> {
+        let py_solve = py_solve_factory(code, config)?;
         Ok(OdeWrapper(Arc::new(Mutex::new(
             Ode {
                 code: code.to_string(),
@@ -64,24 +64,20 @@ impl OdeWrapper {
     ///
     /// Example:
     ///     >>> print(ode.solve(np.array([]), 0.5))
-    #[pyo3(signature=(params, final_time, config=ConfigWrapper::new(SolverMethod::Bdf, SolverType::Default, 1e-6)))]
+    #[pyo3(signature=(params, final_time, config=SolveConfig::new(SolverMethod::Bdf, SolverType::Default)))]
     fn solve<'py>(
         slf: PyRefMut<'py, Self>,
         params: PyReadonlyArray1<'py, f64>,
         final_time: f64,
-        config: ConfigWrapper
+        config: SolveConfig
     ) -> Result<(Bound<'py, PyArray2<f64>>, Bound<'py, PyArray1<f64>>), PyDiffsolError> {
         let mut self_guard = slf.0.lock().unwrap();
-        let config_guard = config.0.lock().unwrap();
         let params = params.as_array();
-        let matrix_type = self_guard.py_solve.matrix_type();
-        let solver_type = config_guard.solver_for_matrix_type(matrix_type);
 
         self_guard.py_solve.solve(
             slf.py(),
-            solver_type,
-            &config_guard,
-            &params.as_slice().unwrap(),
+            &config,
+            params.as_slice().unwrap(),
             final_time,
         )
     }
@@ -101,23 +97,20 @@ impl OdeWrapper {
     /// :type config: pydiffsol.Config, optional
     /// :return: 2D array of values at times `t_eval`
     /// :rtype: numpy.ndarray
-    #[pyo3(signature=(params, t_eval, config=ConfigWrapper::new(SolverMethod::Bdf, SolverType::Default, 1e-6)))]
+    #[pyo3(signature=(params, t_eval, config=SolveConfig::new(SolverMethod::Bdf, SolverType::Default)))]
     fn solve_dense<'py>(
         slf: PyRefMut<'py, Self>,
         params: PyReadonlyArray1<'py, f64>,
         t_eval: PyReadonlyArray1<'py, f64>,
-        config: ConfigWrapper
+        config: SolveConfig,
     ) -> Result<Bound<'py, PyArray2<f64>>, PyDiffsolError> {
         let mut self_guard = slf.0.lock().unwrap();
-        let config_guard = config.0.lock().unwrap();
         let params = params.as_array();
-        let solver_type = config_guard.solver_for_matrix_type(self_guard.py_solve.matrix_type());
 
         self_guard.py_solve.solve_dense(
             slf.py(),
-            solver_type,
-            &config_guard,
-            &params.as_slice().unwrap(),
+            &config,
+            params.as_slice().unwrap(),
             t_eval,
         )
     }

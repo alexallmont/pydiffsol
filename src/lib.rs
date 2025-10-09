@@ -1,6 +1,7 @@
 use pyo3::prelude::*;
 
-mod config;
+mod solve_config;
+mod ode_config;
 mod convert;
 mod error;
 mod jit;
@@ -13,7 +14,7 @@ mod solver_type;
 /// Get version of this pydiffsol module
 #[pyfunction]
 fn version() -> String {
-    format!("{}", env!("CARGO_PKG_VERSION"))
+    env!("CARGO_PKG_VERSION").to_string()
 }
 
 /// Determine whether Klu functions are available in this build of pydiffsol.
@@ -30,7 +31,8 @@ fn pydiffsol(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<matrix_type::MatrixType>()?;
     m.add_class::<solver_type::SolverType>()?;
     m.add_class::<solver_method::SolverMethod>()?;
-    m.add_class::<config::ConfigWrapper>()?;
+    m.add_class::<solve_config::SolveConfig>()?;
+    m.add_class::<ode_config::OdeConfig>()?;
     m.add_class::<ode::OdeWrapper>()?;
 
     // Shorthand aliases, e.g. `ds.bdf` rather than `ds.SolverMethod.bdf`
