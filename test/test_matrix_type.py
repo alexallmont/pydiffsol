@@ -11,13 +11,14 @@ ALL_METHODS = NO_LS_METHODS | LS_METHODS
 # linear solver, matrix and method type. These are expanded into triplets below
 # to drive test parameters.
 VALID_METHODS = {
-    ds.nalgebra_dense_f64: {ds.default: ALL_METHODS, ds.lu: LS_METHODS},
-    ds.faer_dense_f64: {ds.default: ALL_METHODS, ds.lu: LS_METHODS},
+    ds.nalgebra_dense_f64: {ds.default: ALL_METHODS, ds.lu: ALL_METHODS},
+    ds.faer_dense_f64: {ds.default: ALL_METHODS, ds.lu: ALL_METHODS},
+    ds.faer_sparse_f64: {ds.default: ALL_METHODS, ds.lu: ALL_METHODS},
 }
 
 # Klu is not supported on all platforms, so tests are conditional on this flag.
 if ds.is_klu_available():
-    VALID_METHODS[ds.faer_sparse_f64] = {ds.default: ALL_METHODS, ds.klu: LS_METHODS}
+    VALID_METHODS[ds.faer_sparse_f64] = {ds.default: ALL_METHODS, ds.klu: ALL_METHODS, ds.lu: ALL_METHODS}
 
 # Simple logistic diffsl code used throughout tests
 DIFFSL_LOGISTIC = \
@@ -75,33 +76,26 @@ def test_valid_config_solve(matrix_type, linear_solver, method):
             )
             return
 
-    ode = ds.Ode(DIFFSL_LOGISTIC, matrix_type)
-    config = ds.Config()
-    config.method = method
-    config.linear_solver = linear_solver
+    ode = ds.Ode(DIFFSL_LOGISTIC, matrix_type=matrix_type, ode_solver=method, linear_solver=linear_solver)
 
     # All valid solver configs should generate approximately the same value
-    ys, _ = ode.solve(np.array([]), 0.4, config)
+    ys, _ = ode.solve(np.array([]), 0.4)
     last_y = ys[0][-1]
     assert np.isclose(last_y, 0.142189, rtol=1e-4)
 
     # Also check solve_dense works over set times
     t_eval = np.array([0.0, 0.1, 0.5])
-    ys = ode.solve_dense(np.array([]), t_eval, config)
+    ys = ode.solve_dense(np.array([]), t_eval)
     assert np.allclose(ys, [[0.1, 0.109366, 0.154828]], rtol=1e-4)
 
 
 # Negative check for solve and solve_dense not supported on this platform
 @pytest.mark.parametrize("matrix_type,method,linear_solver", _invalid_config_triplets())
 def test_invalid_config_solve(matrix_type, linear_solver, method):
-    ode = ds.Ode(DIFFSL_LOGISTIC, matrix_type)
-    config = ds.Config()
-    config.method = method
-    config.linear_solver = linear_solver
-
-    # Any invalid solver configs must throw an exception
     with pytest.raises(Exception):
-        _, _ = ode.solve(np.array([]), 0.4, config)
-
+        ode = ds.Ode(DIFFSL_LOGISTIC, matrix_type=matrix_type, ode_solver=method, linear_solver=linear_solver)
+        
+    ode = ds.Ode(DIFFSL_LOGISTIC)
+    ode.ode_solver = method
     with pytest.raises(Exception):
-        _, _ = ode.solve_dense(np.array([]), np.array([0.0, 0.1, 0.5]), config)
+        ode.linear_solver = linear_solver
