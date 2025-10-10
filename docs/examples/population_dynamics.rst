@@ -59,7 +59,7 @@ Let's solve this system of ODEs using pydiffsol.
    :lines: 3-36
    :language: python
 
-.. image:: ../images/prey_predator.png
+.. image:: ../images/prey_predator.svg
   :width: 640
   :height: 480
   :alt: prey_predator.png
@@ -77,8 +77,8 @@ so we can solve this system for different values of \\(y_0\\) and plot the phase
    :lines: 38-69
    :language: python
 
-.. image:: ../images/prey_predator2.png
+.. image:: ../images/prey_predator2.svg
   :width: 640
   :height: 480
-  :alt: prey_predator2.png
+  :alt: prey_predator2.svg
 

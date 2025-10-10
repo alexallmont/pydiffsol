@@ -31,7 +31,7 @@ We can solve this system of ODEs using Diffsol with the following code:
    :lines: 3-29
    :language: python
 
-.. image:: ../images/spring_mass_system.png
+.. image:: ../images/spring_mass_system.svg
   :width: 640
   :height: 480
-  :alt: spring_mass_system.png
+  :alt: spring_mass_system.svg

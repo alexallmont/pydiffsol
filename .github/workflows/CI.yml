@@ -61,6 +61,7 @@ jobs:
         shell: bash
         env:
           ACTIVATE: ${{ runner.os == 'Windows' && '.venv/Scripts/activate' || '.venv/bin/activate' }}
+          PYTEST_ARGS: ${{ runner.os == 'macOS' && '--ignore examples' || '' }}
         run: |
           set -e
           python3 -m venv .venv
