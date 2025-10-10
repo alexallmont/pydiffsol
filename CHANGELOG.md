@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Support for `tr_bdf2` and `tsit45` solver methods.
-- Build with SuiteSparse for KLU support. Currently macos and Linux only. Use `is_klu_available` method to check if available.
+- Build with SuiteSparse for KLU support for Linux. Use `is_klu_available` method to check if available on running platform.
 - Support for `faer_dense_f64` matrix_type if KLU available.
 - `solve_dense` method to return solution at specified times.
 - Runtime reflection utilities for `SolverMethod`, `MatrixType` and `MatrixType`: get all enums with `all`; `__str__` and `__hash__` dunder methods.

@@ -16,7 +16,7 @@ VALID_METHODS = {
     ds.faer_sparse_f64: {ds.default: ALL_METHODS, ds.lu: ALL_METHODS},
 }
 
-# Klu is not supported on all platforms, so tests are conditional on this flag.
+# See test_klu_available.py to confirm which platforms support KLU
 if ds.is_klu_available():
     VALID_METHODS[ds.faer_sparse_f64] = {ds.default: ALL_METHODS, ds.klu: ALL_METHODS, ds.lu: ALL_METHODS}
 
