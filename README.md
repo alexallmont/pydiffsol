@@ -36,8 +36,7 @@ print(ode.solve(params, 0.4, config))
 ## Known issues
 
 - BDF with FaerSparseF64 KLU is not stable on macos; we have found a segfault in
-underlying diffsol. Unit tests are disabled for this combination and it should
-be avoided for the time being but it is still enabled whilst we are diagnosing.
+underlying diffsol. Unit tests are disabled for this combination.
 
 ## Local development
 
