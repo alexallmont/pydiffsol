@@ -8,7 +8,7 @@ mod ode;
 mod py_solve;
 mod solver_method;
 mod solver_type;
-mod valid;
+mod valid_linear_solver;
 
 /// Get version of this pydiffsol module
 #[pyfunction]

@@ -5,11 +5,11 @@ use diffsol::{
 use numpy::{ndarray::Array1, PyArray1, PyArray2, PyReadonlyArray1};
 use pyo3::{Bound, Python};
 
-use crate::valid::{Klu, Lu};
+use crate::valid_linear_solver::{KluValidator, LuValidator};
 use crate::{convert::MatrixToPy, solver_method::SolverMethod};
 use crate::{
     error::PyDiffsolError, jit::JitModule, matrix_type::MatrixType, solver_type::SolverType,
-    valid::check,
+    valid_linear_solver::validate_linear_solver,
 };
 
 // Each matrix type implements PySolve as bridge between diffsol and Python
@@ -97,7 +97,7 @@ where
 
 impl<M> PySolve for GenericPySolve<M>
 where
-    M: Matrix<T = f64> + DefaultSolver + Lu<M> + Klu<M>,
+    M: Matrix<T = f64> + DefaultSolver + LuValidator<M> + KluValidator<M>,
     for<'b> <<M::V as DefaultDenseMatrix>::M as MatrixCommon>::Inner: MatrixToPy<'b>,
     M::V: VectorHost + DefaultDenseMatrix,
     for<'b> &'b M::V: VectorRef<M::V>,
@@ -108,7 +108,7 @@ where
     }
 
     fn check(&self, linear_solver: SolverType) -> Result<(), PyDiffsolError> {
-        check::<M>(linear_solver)
+        validate_linear_solver::<M>(linear_solver)
     }
 
     fn set_atol(&mut self, atol: f64) {
@@ -142,10 +142,10 @@ where
                 ode_solver.solve::<M, <M as DefaultSolver>::LS>(&mut self.problem, final_time)
             }
             SolverType::Lu => {
-                ode_solver.solve::<M, <M as Lu<M>>::LS>(&mut self.problem, final_time)
+                ode_solver.solve::<M, <M as LuValidator<M>>::LS>(&mut self.problem, final_time)
             }
             SolverType::Klu => {
-                ode_solver.solve::<M, <M as Klu<M>>::LS>(&mut self.problem, final_time)
+                ode_solver.solve::<M, <M as KluValidator<M>>::LS>(&mut self.problem, final_time)
             }
         }?;
 
@@ -172,9 +172,9 @@ where
                 t_eval.as_slice().unwrap(),
             ),
             SolverType::Lu => ode_solver
-                .solve_dense::<M, <M as Lu<M>>::LS>(&mut self.problem, t_eval.as_slice().unwrap()),
+                .solve_dense::<M, <M as LuValidator<M>>::LS>(&mut self.problem, t_eval.as_slice().unwrap()),
             SolverType::Klu => ode_solver
-                .solve_dense::<M, <M as Klu<M>>::LS>(&mut self.problem, t_eval.as_slice().unwrap()),
+                .solve_dense::<M, <M as KluValidator<M>>::LS>(&mut self.problem, t_eval.as_slice().unwrap()),
         }?;
 
         Ok(ys.inner().to_pyarray2(py))
