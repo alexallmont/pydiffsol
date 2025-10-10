@@ -4,6 +4,7 @@ import pydiffsol as ds
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 def solve():
     ode = ds.Ode(
         """
@@ -17,16 +18,15 @@ def solve():
             c * y1 * y2 - d * y2,
         }
         """,
-        ds.nalgebra_dense_f64
+        matrix_type=ds.nalgebra_dense_f64,
+        linear_solver=ds.lu,
+        ode_solver=ds.bdf,
     )
-
-    config = ds.Config()
-    config.method = ds.bdf
-    config.linear_solver = ds.lu
-    config.rtol = 1e-6
+    
+    ode.rtol = 1e-6
 
     params = np.array([])
-    ys, ts = ode.solve(params, 40.0, config)
+    ys, ts = ode.solve(params, 40.0)
 
     fig, ax = plt.subplots()
     ax.plot(ts, ys[0], label="prey")
@@ -34,6 +34,7 @@ def solve():
     ax.set_xlabel("t")
     ax.set_ylabel("population")
     fig.savefig("docs/images/prey_predator.png")
+
 
 def phase_plane():
     ode = ds.Ode(
@@ -50,24 +51,28 @@ def phase_plane():
             c * y1 * y2 - d * y2,
         }
         """,
-        ds.nalgebra_dense_f64
+        matrix_type=ds.nalgebra_dense_f64,
+        linear_solver=ds.lu,
+        ode_solver=ds.bdf,
     )
 
-    config = ds.Config()
-    config.method = ds.bdf
-    config.linear_solver = ds.lu
-    config.rtol = 1e-6
+    ode.rtol = 1e-6
 
     fig, ax = plt.subplots()
     for i in range(5):
         y0 = float(i + 1)
         params = np.array([y0])
-        [prey, predator], _ = ode.solve(params, 40.0, config)
+        [prey, predator], _ = ode.solve(params, 40.0)
         ax.plot(prey, predator, label=f"y0 = {y0}")
     ax.set_xlabel("prey")
     ax.set_ylabel("predator")
     fig.savefig("docs/images/prey_predator2.png")
 
-if __name__ == "__main__":
+
+def test():
     solve()
     phase_plane()
+
+
+if __name__ == "__main__":
+    test()
