@@ -65,8 +65,7 @@ jobs:
           set -e
           python3 -m venv .venv
           source $ACTIVATE
-          pip install pydiffsol --find-links ./wheelhouse --force-reinstall
-          pip install pytest
+          pip install 'pydiffsol[tests]' --find-links ./wheelhouse --force-reinstall
           pytest -s
 
   sdist:

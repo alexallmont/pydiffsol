@@ -11,11 +11,18 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
 ]
+readme = { file = "README_PyPI.md", content-type = "text/markdown" }
+license-files = ["LICENSE", "LICENSE.libunwind", "LICENSE.zstd"]
+
 dependencies = [
     "numpy",
 ]
-readme = { file = "README_PyPI.md", content-type = "text/markdown" }
-license-files = ["LICENSE", "LICENSE.libunwind", "LICENSE.zstd"]
+
+[project.optional-dependencies]
+tests = [
+    "pytest",
+    "matplotlib",
+]
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
