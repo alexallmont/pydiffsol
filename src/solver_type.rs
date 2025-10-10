@@ -1,5 +1,5 @@
-use pyo3::prelude::*;
 use pyo3::exceptions::PyValueError;
+use pyo3::prelude::*;
 use pyo3::types::{PyList, PyType};
 
 #[pyclass(eq)]
@@ -17,11 +17,7 @@ pub enum SolverType {
 
 impl SolverType {
     pub(crate) fn all_enums() -> Vec<SolverType> {
-        vec![
-            SolverType::Default,
-            SolverType::Lu,
-            SolverType::Klu,
-        ]
+        vec![SolverType::Default, SolverType::Lu, SolverType::Klu]
     }
 
     pub(crate) fn get_name(&self) -> &str {
