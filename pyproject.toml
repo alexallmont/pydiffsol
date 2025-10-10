@@ -19,16 +19,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-tests = [
-    "pytest",
-    "matplotlib",
-]
-
-[tool.maturin]
-features = ["pyo3/extension-module"]
-
-[project.optional-dependencies]
 dev = [
     "matplotlib",
     "pytest",
 ]
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
