@@ -4,6 +4,7 @@ import pydiffsol as ds
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 def solve():
     ode = ds.Ode(
         """
@@ -17,7 +18,7 @@ def solve():
             -k/m * x - c/m * v,
         }
         """,
-        ds.nalgebra_dense_f64
+        ds.nalgebra_dense_f64,
     )
 
     params = np.array([])
@@ -28,5 +29,10 @@ def solve():
     ax.set_xlabel("t")
     fig.savefig("docs/images/spring_mass_system.png")
 
-if __name__ == "__main__":
+
+def test():
     solve()
+
+
+if __name__ == "__main__":
+    test()
