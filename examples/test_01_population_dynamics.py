@@ -1,8 +1,8 @@
 import fix_matplotlib_debug as _
 
-import pydiffsol as ds
 import numpy as np
 import matplotlib.pyplot as plt
+import pydiffsol as ds
 
 
 def solve():
