@@ -22,7 +22,7 @@ pub(crate) trait PySolve {
     fn solve<'py>(
         &mut self,
         py: Python<'py>,
-        ode_solver: SolverMethod,
+        method: SolverMethod,
         linear_solver: SolverType,
         params: &[f64],
         final_time: f64,
@@ -31,7 +31,7 @@ pub(crate) trait PySolve {
     fn solve_dense<'py>(
         &mut self,
         py: Python<'py>,
-        ode_solver: SolverMethod,
+        method: SolverMethod,
         linear_solver: SolverType,
         params: &[f64],
         t_eval: PyReadonlyArray1<'py, f64>,
@@ -133,7 +133,7 @@ where
     fn solve<'py>(
         &mut self,
         py: Python<'py>,
-        ode_solver: SolverMethod,
+        method: SolverMethod,
         linear_solver: SolverType,
         params: &[f64],
         final_time: f64,
@@ -142,13 +142,13 @@ where
         self.setup_problem(params)?;
         let (ys, ts) = match linear_solver {
             SolverType::Default => {
-                ode_solver.solve::<M, <M as DefaultSolver>::LS>(&mut self.problem, final_time)
+                method.solve::<M, <M as DefaultSolver>::LS>(&mut self.problem, final_time)
             }
             SolverType::Lu => {
-                ode_solver.solve::<M, <M as LuValidator<M>>::LS>(&mut self.problem, final_time)
+                method.solve::<M, <M as LuValidator<M>>::LS>(&mut self.problem, final_time)
             }
             SolverType::Klu => {
-                ode_solver.solve::<M, <M as KluValidator<M>>::LS>(&mut self.problem, final_time)
+                method.solve::<M, <M as KluValidator<M>>::LS>(&mut self.problem, final_time)
             }
         }?;
 
@@ -161,7 +161,7 @@ where
     fn solve_dense<'py>(
         &mut self,
         py: Python<'py>,
-        ode_solver: SolverMethod,
+        method: SolverMethod,
         linear_solver: SolverType,
         params: &[f64],
         t_eval: PyReadonlyArray1<'py, f64>,
@@ -170,13 +170,13 @@ where
         self.setup_problem(params)?;
 
         let ys = match linear_solver {
-            SolverType::Default => ode_solver.solve_dense::<M, <M as DefaultSolver>::LS>(
+            SolverType::Default => method.solve_dense::<M, <M as DefaultSolver>::LS>(
                 &mut self.problem,
                 t_eval.as_slice().unwrap(),
             ),
-            SolverType::Lu => ode_solver
+            SolverType::Lu => method
                 .solve_dense::<M, <M as LuValidator<M>>::LS>(&mut self.problem, t_eval.as_slice().unwrap()),
-            SolverType::Klu => ode_solver
+            SolverType::Klu => method
                 .solve_dense::<M, <M as KluValidator<M>>::LS>(&mut self.problem, t_eval.as_slice().unwrap()),
         }?;
 

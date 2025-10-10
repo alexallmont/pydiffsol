@@ -76,7 +76,7 @@ def test_valid_config_solve(matrix_type, linear_solver, method):
             )
             return
 
-    ode = ds.Ode(DIFFSL_LOGISTIC, matrix_type=matrix_type, ode_solver=method, linear_solver=linear_solver)
+    ode = ds.Ode(DIFFSL_LOGISTIC, matrix_type=matrix_type, method=method, linear_solver=linear_solver)
 
     # All valid solver configs should generate approximately the same value
     ys, _ = ode.solve(np.array([]), 0.4)
@@ -93,9 +93,9 @@ def test_valid_config_solve(matrix_type, linear_solver, method):
 @pytest.mark.parametrize("matrix_type,method,linear_solver", _invalid_config_triplets())
 def test_invalid_config_solve(matrix_type, linear_solver, method):
     with pytest.raises(Exception):
-        ode = ds.Ode(DIFFSL_LOGISTIC, matrix_type=matrix_type, ode_solver=method, linear_solver=linear_solver)
+        ode = ds.Ode(DIFFSL_LOGISTIC, matrix_type=matrix_type, method=method, linear_solver=linear_solver)
 
     ode = ds.Ode(DIFFSL_LOGISTIC)
-    ode.ode_solver = method
+    ode.method = method
     with pytest.raises(Exception):
         ode.linear_solver = linear_solver

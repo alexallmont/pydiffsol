@@ -20,9 +20,9 @@ def solve():
         """,
         matrix_type=ds.nalgebra_dense_f64,
         linear_solver=ds.lu,
-        ode_solver=ds.bdf,
+        method=ds.bdf,
     )
-    
+
     ode.rtol = 1e-6
 
     params = np.array([])
@@ -53,7 +53,7 @@ def phase_plane():
         """,
         matrix_type=ds.nalgebra_dense_f64,
         linear_solver=ds.lu,
-        ode_solver=ds.bdf,
+        method=ds.bdf,
     )
 
     ode.rtol = 1e-6
