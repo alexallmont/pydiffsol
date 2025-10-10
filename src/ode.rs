@@ -1,3 +1,5 @@
+// Ode Python class, this wraps up a diffsol Problem class
+
 use std::sync::{Arc, Mutex};
 
 use crate::error::PyDiffsolError;
@@ -35,7 +37,11 @@ impl OdeWrapper {
 
 #[pymethods]
 impl OdeWrapper {
-    /// Construct an ODE solver for specified diffsol using a given matrix type
+    /// Construct an ODE solver for specified diffsol using a given matrix type.
+    /// The code is JIT-compiled immediately based on the matrix type, so after
+    /// construction, both code and matrix_type fields are read-only.
+    /// All other fields are editable, for example setting the solver type or
+    /// method, or changing solver tolerances.
     #[new]
     #[pyo3(signature=(code, matrix_type=MatrixType::NalgebraDenseF64, ode_solver=SolverMethod::Bdf, linear_solver=SolverType::Default))]
     fn new(
@@ -60,12 +66,12 @@ impl OdeWrapper {
     }
 
     #[getter]
-    fn get_ode_solver(&self) -> PyResult<SolverMethod> {
+    fn get_solver_method(&self) -> PyResult<SolverMethod> {
         Ok(self.guard()?.ode_solver)
     }
 
     #[setter]
-    fn set_ode_solver(&self, value: SolverMethod) -> PyResult<()> {
+    fn set_solver_method(&self, value: SolverMethod) -> PyResult<()> {
         self.guard()?.ode_solver = value;
         Ok(())
     }

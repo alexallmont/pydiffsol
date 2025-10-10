@@ -1,3 +1,6 @@
+// Validation used by py_solve to determine that solver type and matrix type
+// combinations are valid.
+
 use diffsol::error::DiffsolError;
 
 use crate::{error::PyDiffsolError, matrix_type::MatrixType, solver_type::SolverType};

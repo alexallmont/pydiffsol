@@ -1,3 +1,5 @@
+// Convert diffsol errors to custom pydiffsol error type
+
 use diffsol::error::DiffsolError;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;

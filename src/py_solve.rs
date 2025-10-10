@@ -1,3 +1,6 @@
+// Delegate solver types selected at runtime in Python to concrete solver types
+// in Rust.
+
 use diffsol::{
     error::DiffsolError, matrix::MatrixRef, DefaultDenseMatrix, DefaultSolver, DiffSl, Matrix,
     MatrixCommon, OdeBuilder, OdeEquations, OdeSolverProblem, Op, Vector, VectorHost, VectorRef,

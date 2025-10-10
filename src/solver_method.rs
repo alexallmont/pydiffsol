@@ -1,3 +1,6 @@
+// Solver method Python enum. This is used to select the overarching solver
+// stragegy like bdf or esdirk34 in diffsol.
+
 use diffsol::error::DiffsolError;
 use diffsol::{
     matrix::MatrixRef, DefaultDenseMatrix, DiffSl, LinearSolver, Matrix, OdeSolverMethod,

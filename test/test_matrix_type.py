@@ -94,7 +94,7 @@ def test_valid_config_solve(matrix_type, linear_solver, method):
 def test_invalid_config_solve(matrix_type, linear_solver, method):
     with pytest.raises(Exception):
         ode = ds.Ode(DIFFSL_LOGISTIC, matrix_type=matrix_type, ode_solver=method, linear_solver=linear_solver)
-        
+
     ode = ds.Ode(DIFFSL_LOGISTIC)
     ode.ode_solver = method
     with pytest.raises(Exception):
