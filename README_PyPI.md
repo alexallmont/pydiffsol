@@ -20,7 +20,13 @@ ode = ds.Ode(
     """,
     ds.nalgebra_dense_f64
 )
+
+# Solve with default solver for nalgebra_dense_f64 (bdf)
 p = np.array([])
+print(ode.solve(p, 0.4))
+
+# Above defaults to bdf. Try esdirk34 instead
+ode.method = ds.esdirk34
 print(ode.solve(p, 0.4))
 ```
 
