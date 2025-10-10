@@ -27,10 +27,9 @@ ode = ds.Ode(
 params = np.array([2.0])
 print(ode.solve(params, 0.4))
 
-# Above defaults to bdf. Use a custom config to override with esdirk34
-config = ds.Config()
-config.method = ds.esdirk34
-print(ode.solve(params, 0.4, config))
+# Above defaults to bdf. Try esdirk34 instead
+ode.method = ds.esdirk34
+print(ode.solve(params, 0.4))
 ```
 
 ## Known issues
