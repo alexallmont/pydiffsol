@@ -2,13 +2,13 @@ use diffsol::error::DiffsolError;
 
 use crate::{error::PyDiffsolError, matrix_type::MatrixType, solver_type::SolverType};
 
-pub(crate) fn check<M: diffsol::Matrix + Lu<M> + Klu<M>>(
+pub(crate) fn validate_linear_solver<M: diffsol::Matrix + LuValidator<M> + KluValidator<M>>(
     linear_solver: SolverType,
 ) -> Result<(), PyDiffsolError> {
     match linear_solver {
         SolverType::Default => Ok(()),
         SolverType::Lu => {
-            if !<M as Lu<M>>::valid() {
+            if !<M as LuValidator<M>>::valid() {
                 return Err(DiffsolError::Other(format!(
                     "Lu solver not supported for {}",
                     MatrixType::from_diffsol::<M>().unwrap().get_name()
@@ -18,7 +18,7 @@ pub(crate) fn check<M: diffsol::Matrix + Lu<M> + Klu<M>>(
             Ok(())
         }
         SolverType::Klu => {
-            if !<M as Klu<M>>::valid() {
+            if !<M as KluValidator<M>>::valid() {
                 return Err(DiffsolError::Other(format!(
                     "Klu solver not supported for {}",
                     MatrixType::from_diffsol::<M>().unwrap().get_name()
@@ -30,7 +30,7 @@ pub(crate) fn check<M: diffsol::Matrix + Lu<M> + Klu<M>>(
     }
 }
 
-pub(crate) trait Klu<M: diffsol::Matrix> {
+pub(crate) trait KluValidator<M: diffsol::Matrix> {
     type LS: diffsol::LinearSolver<M>;
     fn valid() -> bool {
         false
@@ -38,7 +38,7 @@ pub(crate) trait Klu<M: diffsol::Matrix> {
 }
 
 #[cfg(feature = "suitesparse")]
-impl Klu<diffsol::FaerSparseMat<f64>> for diffsol::FaerSparseMat<f64> {
+impl KluValidator<diffsol::FaerSparseMat<f64>> for diffsol::FaerSparseMat<f64> {
     type LS = diffsol::KLU<diffsol::FaerSparseMat<f64>>;
     fn valid() -> bool {
         true
@@ -46,49 +46,49 @@ impl Klu<diffsol::FaerSparseMat<f64>> for diffsol::FaerSparseMat<f64> {
 }
 
 #[cfg(not(feature = "suitesparse"))]
-impl Klu<diffsol::FaerSparseMat<f64>> for diffsol::FaerSparseMat<f64> {
+impl KluValidator<diffsol::FaerSparseMat<f64>> for diffsol::FaerSparseMat<f64> {
     type LS = diffsol::FaerSparseLU<f64>;
     fn valid() -> bool {
         false
     }
 }
 
-impl Klu<diffsol::NalgebraMat<f64>> for diffsol::NalgebraMat<f64> {
+impl KluValidator<diffsol::NalgebraMat<f64>> for diffsol::NalgebraMat<f64> {
     type LS = diffsol::NalgebraLU<f64>;
     fn valid() -> bool {
         false
     }
 }
 
-impl Klu<diffsol::FaerMat<f64>> for diffsol::FaerMat<f64> {
+impl KluValidator<diffsol::FaerMat<f64>> for diffsol::FaerMat<f64> {
     type LS = diffsol::FaerLU<f64>;
     fn valid() -> bool {
         false
     }
 }
 
-pub(crate) trait Lu<M: diffsol::Matrix> {
+pub(crate) trait LuValidator<M: diffsol::Matrix> {
     type LS: diffsol::LinearSolver<M>;
     fn valid() -> bool {
         false
     }
 }
 
-impl Lu<diffsol::NalgebraMat<f64>> for diffsol::NalgebraMat<f64> {
+impl LuValidator<diffsol::NalgebraMat<f64>> for diffsol::NalgebraMat<f64> {
     type LS = diffsol::NalgebraLU<f64>;
     fn valid() -> bool {
         true
     }
 }
 
-impl Lu<diffsol::FaerMat<f64>> for diffsol::FaerMat<f64> {
+impl LuValidator<diffsol::FaerMat<f64>> for diffsol::FaerMat<f64> {
     type LS = diffsol::FaerLU<f64>;
     fn valid() -> bool {
         true
     }
 }
 
-impl Lu<diffsol::FaerSparseMat<f64>> for diffsol::FaerSparseMat<f64> {
+impl LuValidator<diffsol::FaerSparseMat<f64>> for diffsol::FaerSparseMat<f64> {
     type LS = diffsol::FaerSparseLU<f64>;
     fn valid() -> bool {
         true
