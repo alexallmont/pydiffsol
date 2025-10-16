@@ -23,6 +23,11 @@ dev = [
     "matplotlib",
     "pytest",
 ]
+bench = [
+    "diffrax",
+    "casadi",
+    "numpy",
+]
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
