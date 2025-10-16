@@ -27,6 +27,7 @@ bench = [
     "diffrax",
     "casadi",
     "numpy",
+    "pandas",
 ]
 
 [tool.maturin]

@@ -1,13 +1,18 @@
 import timeit
 import numpy as np
+import pandas as pd
 from bench.diffrax_robertson_ode import setup as diffrax_setup, bench as diffrax_bench
 from .casadi_robertson_ode import setup as casadi_setup, bench as casadi_bench
 from .diffsol_robertson_ode import setup as diffsol_setup, bench as diffsol_bench
 
 
 ngroups = [1, 10, 20, 50, 100, 1000, 10000]
+ngroups = [500]
 tols = [1e-8]
 t_final = 1e10
+
+# Create DataFrame to store timing results
+results = []
 
 
 diffrax_fns = []
@@ -57,7 +62,40 @@ for ng in ngroups:
         diffsol_esdirk34_time = timeit.timeit(diffsol_esdirk34, number=n) / n
         print("Diffsol ESDIRK34 time: ", diffsol_esdirk34_time)
         print("Speedup over casadi: ", casadi_time / diffsol_bdf_time)
+        
+        # Prepare result row
+        result_row = {
+            'ngroups': ng,
+            'tolerance': tol,
+            'n_runs': n,
+            'casadi_time': casadi_time,
+            'diffsol_bdf_time': diffsol_bdf_time,
+            'diffsol_esdirk34_time': diffsol_esdirk34_time,
+            'speedup_casadi_vs_bdf': casadi_time / diffsol_bdf_time,
+            'diffrax_time': None,
+            'speedup_diffrax_vs_bdf': None
+        }
+        
         if run_diffrax:
             diffrax_time = timeit.timeit(diffrax, number=n) / n
             print("Diffrax time: ", diffrax_time)
             print("Speedup over diffrax: ", diffrax_time / diffsol_bdf_time)
+            result_row['diffrax_time'] = diffrax_time
+            result_row['speedup_diffrax_vs_bdf'] = diffrax_time / diffsol_bdf_time
+        
+        # Add result to list
+        results.append(result_row)
+
+# Create DataFrame from results
+df_results = pd.DataFrame(results)
+
+# Display the results
+print("\n" + "="*60)
+print("BENCHMARK RESULTS SUMMARY")
+print("="*60)
+print(df_results.to_string(index=False))
+
+# Save results to CSV
+csv_filename = f"benchmark_results_robertson_ode_{len(ngroups)}groups_{len(tols)}tols.csv"
+df_results.to_csv(csv_filename, index=False)
+print(f"\nResults saved to: {csv_filename}")
