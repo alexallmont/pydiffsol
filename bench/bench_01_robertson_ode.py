@@ -7,7 +7,6 @@ from .diffsol_robertson_ode import setup as diffsol_setup, bench as diffsol_benc
 
 
 ngroups = [1, 10, 20, 50, 100, 1000, 10000]
-ngroups = [500]
 tols = [1e-8]
 t_final = 1e10
 
