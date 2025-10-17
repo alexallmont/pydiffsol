@@ -6,7 +6,7 @@ from .casadi_robertson_ode import setup as casadi_setup, bench as casadi_bench
 from .diffsol_robertson_ode import setup as diffsol_setup, bench as diffsol_bench
 
 
-ngroups = [1, 10, 20, 50, 100, 1000, 5000]
+ngroups = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048]
 tols = [1e-8]
 t_final = 1e10
 
@@ -53,7 +53,7 @@ for ng in ngroups:
         np.testing.assert_allclose(y_casadi, y_diffsol_bdf, rtol=check_tol, atol=check_tol)
         np.testing.assert_allclose(y_casadi, y_diffsol_esdirk34, rtol=check_tol, atol=check_tol)
 
-        n = 100 // (int(0.01 * ng) + 1)
+        n = 500 // (int(0.01 * ng) + 1)
         print("ngroups: ", ng)
         print("tol: ", tol)
         print("n: ", n)
@@ -98,6 +98,6 @@ print("="*60)
 print(df_results.to_string(index=False))
 
 # Save results to CSV
-csv_filename = f"benchmark_results_robertson_ode_{len(ngroups)}groups_{len(tols)}tols.csv"
+csv_filename = f"benchmark_results_robertson_ode.csv"
 df_results.to_csv(csv_filename, index=False)
 print(f"\nResults saved to: {csv_filename}")
