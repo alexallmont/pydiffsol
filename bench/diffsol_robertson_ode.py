@@ -1,6 +1,7 @@
 import pydiffsol as ds
 import numpy as np
 
+
 def robertson_ode_str(ngroups: int) -> str:
     u_i = (
         f"(0:{ngroups}): x = 1,\n"
@@ -27,40 +28,6 @@ def robertson_ode_str(ngroups: int) -> str:
     return code
 
 
-def robertson_str() -> str:
-    return """
-        in = [k1, k2, k3]
-        k1 { 0.04 }
-        k2 { 10000 }
-        k3 { 30000000 }
-        u_i {
-            x = 1,
-            y = 0,
-            z = 0,
-        }
-        dudt_i {
-            dxdt = 1,
-            dydt = 0,
-            dzdt = 0,
-        }
-        M_i {
-            dxdt,
-            dydt,
-            0,
-        }
-        F_i {
-            -k1 * x + k2 * y * z,
-            k1 * x - k2 * y * z - k3 * y * y,
-            1 - x - y - z,
-        }
-        out_i {
-            x,
-            y,
-            z,
-        }
-        """
-
-
 def setup(ngroups: int, tol: float, method: str):
     if ngroups < 20:
         matrix_type = ds.nalgebra_dense_f64
@@ -73,19 +40,18 @@ def setup(ngroups: int, tol: float, method: str):
     else:
         raise ValueError(f"Unknown method: {method}")
 
-    ode = ds.Ode(robertson_ode_str(ngroups=ngroups),
+    ode = ds.Ode(
+        robertson_ode_str(ngroups=ngroups),
         matrix_type=matrix_type,
         method=method,
     )
     ode.rtol = tol
     ode.atol = tol
-    
+
     return ode
 
 
-def bench(
-    model, t_final: float
-):
+def bench(model, t_final: float):
     params = np.array([])
     ys = model.solve_dense(params, np.array([t_final]))
     return ys[:, -1]
