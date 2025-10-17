@@ -6,7 +6,7 @@ from .casadi_robertson_ode import setup as casadi_setup, bench as casadi_bench
 from .diffsol_robertson_ode import setup as diffsol_setup, bench as diffsol_bench
 
 
-ngroups = [1, 10, 20, 50, 100, 1000, 10000]
+ngroups = [1, 10, 20, 50, 100, 1000, 5000]
 tols = [1e-8]
 t_final = 1e10
 
