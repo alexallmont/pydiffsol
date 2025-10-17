@@ -28,6 +28,7 @@ bench = [
     "casadi",
     "numpy",
     "pandas",
+    "matplotlib",
 ]
 
 [tool.maturin]
