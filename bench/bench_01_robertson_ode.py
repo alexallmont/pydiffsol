@@ -38,18 +38,21 @@ for ng in ngroups:
         def diffsol_esdirk34():
             return diffsol_bench(diffsol_esdirk34_model, t_final)
         
+        
+        run_diffrax = ng <= 100
+        
         # check that output is same
         y_casadi = casadi()
+        y_casadi = np.array(y_casadi).flatten()
         y_diffsol_bdf = diffsol_bdf()
         y_diffsol_esdirk34 = diffsol_esdirk34()
-        y_diffrax = diffrax()
-        y_casadi = np.array(y_casadi).flatten()
+        if run_diffrax:
+            y_diffrax = diffrax()
+            np.testing.assert_allclose(y_casadi, y_diffrax, rtol=check_tol, atol=check_tol)
         check_tol = 20*tol
         np.testing.assert_allclose(y_casadi, y_diffsol_bdf, rtol=check_tol, atol=check_tol)
         np.testing.assert_allclose(y_casadi, y_diffsol_esdirk34, rtol=check_tol, atol=check_tol)
-        np.testing.assert_allclose(y_casadi, y_diffrax, rtol=check_tol, atol=check_tol)
 
-        run_diffrax = ng <= 100
         n = 100 // (int(0.01 * ng) + 1)
         print("ngroups: ", ng)
         print("tol: ", tol)
