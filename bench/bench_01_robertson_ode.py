@@ -46,10 +46,10 @@ for ng in ngroups:
         y_casadi = np.array(y_casadi).flatten()
         y_diffsol_bdf = diffsol_bdf()
         y_diffsol_esdirk34 = diffsol_esdirk34()
+        check_tol = 20*tol
         if run_diffrax:
             y_diffrax = diffrax()
             np.testing.assert_allclose(y_casadi, y_diffrax, rtol=check_tol, atol=check_tol)
-        check_tol = 20*tol
         np.testing.assert_allclose(y_casadi, y_diffsol_bdf, rtol=check_tol, atol=check_tol)
         np.testing.assert_allclose(y_casadi, y_diffsol_esdirk34, rtol=check_tol, atol=check_tol)
 
