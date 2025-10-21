@@ -23,7 +23,7 @@ jobs:
             target: x86_64
           - runner: windows-latest
             target: AMD64
-          - runner: macos-14
+          - runner: macos-15
             target: arm64
 
     steps:
