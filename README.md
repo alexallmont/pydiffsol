@@ -54,7 +54,7 @@ via lldb so underlying rust can be debugged. The build task in `tasks.json` runs
 with `diffsol-llvm17` and `suitesparse` and assumes that you have these
 installed, for example on macos with `brew install llvm@17 suite-sparse` or for
 debian-flavoured linux `apt install llvm-17 libsuitesparse-dev`. If you have a
-different configuration, you need to edit `tasks.json`.
+different configuration, you may need to edit `tasks.json` and `settings.json`.
 
 The python path is hard-coded in `launch.json` to `.venv/bin/activate` (this is
 the default when running `uv` in macos or Linux). If you have pip-installed
