@@ -56,7 +56,7 @@ Let's solve this system of ODEs using pydiffsol.
 
 .. literalinclude:: ../../examples/01_population_dynamics.py
    :encoding: latin-1
-   :lines: 3-36
+   :lines: 4,6-9,11-39
    :language: python
 
 .. image:: ../images/prey_predator.svg
@@ -74,7 +74,7 @@ so we can solve this system for different values of \\(y_0\\) and plot the phase
 
 .. literalinclude:: ../../examples/01_population_dynamics.py
    :encoding: latin-1
-   :lines: 38-69
+   :lines: 41-72
    :language: python
 
 .. image:: ../images/prey_predator2.svg

@@ -1,7 +1,10 @@
-import numpy as np
+# This example is used in docs/examples/population_dynamics.rst.
+# Ensure that code changes are reflected in rst literalinclude blocks.
+
 import matplotlib
-matplotlib.use("SVG")
+matplotlib.use("SVG") # Ensure tests can run headless and in debug
 import matplotlib.pyplot as plt
+import numpy as np
 import pydiffsol as ds
 
 
@@ -69,10 +72,12 @@ def phase_plane():
     fig.savefig("docs/images/prey_predator2.svg")
 
 
-def test():
+# Smoke test docs code
+def test_population_dynamics_docs():
     solve()
     phase_plane()
 
 
 if __name__ == "__main__":
-    test()
+    solve()
+    phase_plane()

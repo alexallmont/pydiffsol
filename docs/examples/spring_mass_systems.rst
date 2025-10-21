@@ -28,7 +28,7 @@ We can solve this system of ODEs using Diffsol with the following code:
 
 .. literalinclude:: ../../examples/02_spring_mass_system.py
    :encoding: latin-1
-   :lines: 3-29
+   :lines: 4,6-9,11-33
    :language: python
 
 .. image:: ../images/spring_mass_system.svg
