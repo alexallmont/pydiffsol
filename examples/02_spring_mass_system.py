@@ -1,10 +1,10 @@
 # This example is used in docs/examples/spring_mass_systems.rst.
 # Ensure that code changes are reflected in rst literalinclude blocks.
 
+import numpy as np
 import matplotlib
 matplotlib.use("SVG") # Ensure tests can run headless and in debug
 import matplotlib.pyplot as plt
-import numpy as np
 import pydiffsol as ds
 
 
