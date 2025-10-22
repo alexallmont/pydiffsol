@@ -39,6 +39,15 @@ jobs:
       - name: Install SuiteSparse
         if: runner.os == 'macOS'
         run: brew install suite-sparse
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.2.0
         env:
@@ -67,7 +76,7 @@ jobs:
           python3 -m venv .venv
           source $ACTIVATE
           pip install 'pydiffsol[dev]' --find-links ./wheelhouse --force-reinstall
-          pytest -s $PYTEST_DIRS
+          pytest -s -v $PYTEST_DIRS
 
   sdist:
     runs-on: ubuntu-latest
