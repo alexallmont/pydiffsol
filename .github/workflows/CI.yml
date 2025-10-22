@@ -21,12 +21,6 @@ jobs:
       pre_build_ok: ${{ steps.result.outputs.pre_build_ok }}
     steps:
       - uses: actions/checkout@v5
-      - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v2
-        with:
-          version: "17.0"
-      - name: Install SuiteSparse
-        run: brew install suite-sparse
       - name: Install maturin
         uses: threeal/pipx-install-action@v1.0.0
         with:
@@ -51,7 +45,7 @@ jobs:
         run: |
           uv venv
           source .venv/bin/activate
-          maturin develop --uv --features diffsol-llvm17 --extras dev
+          maturin develop --uv --features diffsol-cranelift --extras dev
           set +e # Error trapping disabled so job finishes for post-job caching
           pytest -s -v
           if [ "$?" = "0" ]; then
