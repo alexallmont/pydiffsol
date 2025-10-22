@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   pre_build_checks:
-    name: Pre build checks and validation
+    name: Pre build checks
     runs-on: macos-14
     outputs:
       pre_build_ok: ${{ steps.result.outputs.pre_build_ok }}
@@ -59,7 +59,18 @@ jobs:
           else
             echo "pre_build_ok=false" >> "$GITHUB_OUTPUT"
           fi
+          # Report success regardless of failure so caching completes
           set -e
+
+  # As pre_build_checks does not flag failure, report in this separate job
+  report_failure:
+    runs-on: ubuntu-latest
+    name: Report build failure
+    needs: pre_build_checks
+    if: needs.pre_build_checks.outputs.pre_build_ok == 'false'
+    run: |
+      echo "Build prerequisites failed, see 'Pre build checks' results"
+      exit 1
 
   wheels:
     runs-on: ${{ matrix.platform.runner }}
