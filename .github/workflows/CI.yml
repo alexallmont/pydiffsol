@@ -64,13 +64,16 @@ jobs:
 
   # As pre_build_checks does not flag failure, report in this separate job
   report_failure:
-    runs-on: ubuntu-latest
     name: Report build failure
+    runs-on: ubuntu-latest
     needs: pre_build_checks
     if: needs.pre_build_checks.outputs.pre_build_ok == 'false'
-    run: |
-      echo "Build prerequisites failed, see 'Pre build checks' results"
-      exit 1
+    steps:
+      - name: Report failure
+        shell: bash
+        run: |
+          echo "Build prerequisites failed, see 'Pre build checks' results"
+          exit 1
 
   wheels:
     runs-on: ${{ matrix.platform.runner }}
