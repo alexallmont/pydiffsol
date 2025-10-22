@@ -14,8 +14,57 @@ permissions:
   contents: read
 
 jobs:
+  pre_build_checks:
+    name: Pre build checks and validation
+    runs-on: macos-14
+    outputs:
+      pre_build_ok: ${{ steps.result.outputs.pre_build_ok }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install LLVM and Clang
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: "17.0"
+      - name: Install SuiteSparse
+        run: brew install suite-sparse
+      - name: Install maturin
+        uses: threeal/pipx-install-action@v1.0.0
+        with:
+          packages: maturin
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: Build and test
+        id: result
+        shell: bash
+        run: |
+          uv venv
+          source .venv/bin/activate
+          maturin develop --uv
+          set +e # Error trapping disabled so job finishes for post-job caching
+          pytest -s -v
+          if [ "$?" = "0" ]; then
+            echo "pre_build_ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "pre_build_ok=false" >> "$GITHUB_OUTPUT"
+          fi
+          set -e
+
   wheels:
     runs-on: ${{ matrix.platform.runner }}
+    needs: pre_build_checks
+    if: needs.pre_build_checks.outputs.pre_build_ok == 'true'
     strategy:
       matrix:
         platform:
@@ -23,7 +72,7 @@ jobs:
             target: x86_64
           - runner: windows-latest
             target: AMD64
-          - runner: macos-15
+          - runner: macos-14
             target: arm64
 
     steps:
@@ -71,6 +120,8 @@ jobs:
 
   sdist:
     runs-on: ubuntu-latest
+    needs: pre_build_checks
+    if: needs.pre_build_checks.outputs.pre_build_ok == 'true'
     steps:
       - uses: actions/checkout@v4
       - name: Build sdist
