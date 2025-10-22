@@ -51,7 +51,7 @@ jobs:
         run: |
           uv venv
           source .venv/bin/activate
-          maturin develop --uv
+          maturin develop --uv --features diffsol-llvm17 --extras dev
           set +e # Error trapping disabled so job finishes for post-job caching
           pytest -s -v
           if [ "$?" = "0" ]; then
