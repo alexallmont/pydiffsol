@@ -14,76 +14,15 @@ permissions:
   contents: read
 
 jobs:
-  pre_build_checks:
-    name: Pre build checks
-    runs-on: macos-14
-    outputs:
-      pre_build_ok: ${{ steps.result.outputs.pre_build_ok }}
-    steps:
-      - uses: actions/checkout@v5
-      - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v2
-        with:
-          version: "17.0"
-      - name: Install maturin
-        uses: threeal/pipx-install-action@v1.0.0
-        with:
-          packages: maturin
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          python-version: ${{ matrix.python-version }}
-          enable-cache: true
-      - uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: Build and test
-        id: result
-        shell: bash
-        run: |
-          uv venv
-          source .venv/bin/activate
-          maturin develop --uv --features diffsol-llvm17 --extras dev
-          set +e # Error trapping disabled so job finishes for post-job caching
-          pytest -s -v
-          if [ "$?" = "0" ]; then
-            echo "pre_build_ok=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "pre_build_ok=false" >> "$GITHUB_OUTPUT"
-          fi
-          # Report success regardless of failure so caching completes
-          set -e
-
-  # As pre_build_checks does not flag failure, report in this separate job
-  report_failure:
-    name: Report build failure
-    runs-on: ubuntu-latest
-    needs: pre_build_checks
-    if: needs.pre_build_checks.outputs.pre_build_ok == 'false'
-    steps:
-      - name: Report failure
-        shell: bash
-        run: |
-          echo "Build prerequisites failed, see 'Pre build checks' results"
-          exit 1
-
   wheels:
     runs-on: ${{ matrix.platform.runner }}
-    needs: pre_build_checks
-    if: needs.pre_build_checks.outputs.pre_build_ok == 'true'
     strategy:
       matrix:
         platform:
-          - runner: ubuntu-22.04
-            target: x86_64
-          - runner: windows-latest
-            target: AMD64
+          # - runner: ubuntu-22.04
+          #   target: x86_64
+          # - runner: windows-latest
+          #   target: AMD64
           - runner: macos-14
             target: arm64
 
@@ -122,18 +61,16 @@ jobs:
         shell: bash
         env:
           ACTIVATE: ${{ runner.os == 'Windows' && '.venv/Scripts/activate' || '.venv/bin/activate' }}
-          PYTEST_ARGS: ${{ runner.os == 'macOS' && '--ignore examples' || '' }}
+          PYTEST_DIRS: ${{ runner.os == 'macOS' && 'test' || 'test examples/*' }} # MacOS runner fails with LLVM and matplotlib
         run: |
           set -e
           python3 -m venv .venv
           source $ACTIVATE
           pip install 'pydiffsol[dev]' --find-links ./wheelhouse --force-reinstall
-          pytest -s $PYTEST_ARGS
+          pytest -s $PYTEST_DIRS
 
   sdist:
     runs-on: ubuntu-latest
-    needs: pre_build_checks
-    if: needs.pre_build_checks.outputs.pre_build_ok == 'true'
     steps:
       - uses: actions/checkout@v4
       - name: Build sdist

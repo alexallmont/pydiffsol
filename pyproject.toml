@@ -26,11 +26,3 @@ dev = [
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
-
-# Paths for examples added explicitly for documentation smoke testing
-[tool.pytest.ini_options]
-testpaths = [
-    #"examples/*.py", # FIXME re-enable before merge to main
-    "examples/fixme_ci_break_test.py", # FIXME delete before merge to main
-    "test/"
-]
