@@ -1,6 +1,6 @@
 [package]
 name = "pydiffsol"
-version = "0.1.3"
+version = "0.2.0"
 edition = "2021"
 
 [lib]
@@ -13,13 +13,14 @@ diffsol-llvm15 = ["diffsol/diffsl-llvm15", "diffsol-llvm"]
 diffsol-llvm16 = ["diffsol/diffsl-llvm16", "diffsol-llvm"]
 diffsol-llvm17 = ["diffsol/diffsl-llvm17", "diffsol-llvm"]
 diffsol-cranelift = ["diffsol/diffsl-cranelift"]
+suitesparse = ["diffsol/suitesparse"]
 
 [dependencies]
-pyo3 = { version = "0.25.0", default-features = false, features = ["abi3-py39", "extension-module"] }
+pyo3 = { version = "0.26.0", default-features = false, features = ["abi3-py39", "extension-module"] }
 diffsol = { version = "0.6.6" }
 faer = "0.22.6"
 nalgebra = "0.33.2"
-numpy = "0.25.0"
+numpy = "0.26.0"
 
 [dev-dependencies]
 pyo3 = { version = "*", features = ["auto-initialize"] }

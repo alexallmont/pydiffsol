@@ -20,13 +20,12 @@ ode = ds.Ode(
     """,
     ds.nalgebra_dense_f64
 )
+
+# Solve with default solver for nalgebra_dense_f64 (bdf)
 p = np.array([])
 print(ode.solve(p, 0.4))
+
+# Above defaults to bdf. Try esdirk34 instead
+ode.method = ds.esdirk34
+print(ode.solve(p, 0.4))
 ```
-
-## Licenses
-
-This wheel bundles `libunwind.1.dylib` from LLVM, licensed under the Apache 2.0
-License with LLVM exceptions, and `libzstd.1.dylib` from the Zstandard project,
-licensed under the BSD 3-Clause License. See `LICENSE.libunwind` and
-`LICENSE.zstd` for details.

@@ -1,10 +1,12 @@
-# Load matplotlib headless to avoid macos UI/window issues when debugging
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
+# This example is used in docs/examples/population_dynamics.rst.
+# Ensure that code changes are reflected in rst literalinclude blocks.
 
 import numpy as np
+import matplotlib
+matplotlib.use("SVG") # Ensure tests can run headless and in debug
+import matplotlib.pyplot as plt
 import pydiffsol as ds
+
 
 def solve():
     ode = ds.Ode(
@@ -19,23 +21,22 @@ def solve():
             c * y1 * y2 - d * y2,
         }
         """,
-        ds.nalgebra_dense_f64
+        matrix_type=ds.nalgebra_dense_f64,
+        linear_solver=ds.lu,
+        method=ds.bdf,
     )
 
-    config = ds.Config()
-    config.method = ds.bdf
-    config.linear_solver = ds.lu
-    config.rtol = 1e-6
+    ode.rtol = 1e-6
 
     params = np.array([])
-    ys, ts = ode.solve(params, 40.0, config)
+    ys, ts = ode.solve(params, 40.0)
 
     fig, ax = plt.subplots()
     ax.plot(ts, ys[0], label="prey")
     ax.plot(ts, ys[1], label="predator")
     ax.set_xlabel("t")
     ax.set_ylabel("population")
-    fig.savefig("docs/images/prey-predator.png")
+    fig.savefig("docs/images/prey_predator.svg")
 
 
 def phase_plane():
@@ -53,23 +54,29 @@ def phase_plane():
             c * y1 * y2 - d * y2,
         }
         """,
-        ds.nalgebra_dense_f64
+        matrix_type=ds.nalgebra_dense_f64,
+        linear_solver=ds.lu,
+        method=ds.bdf,
     )
 
-    config = ds.Config()
-    config.method = ds.bdf
-    config.linear_solver = ds.lu
-    config.rtol = 1e-6
+    ode.rtol = 1e-6
 
     fig, ax = plt.subplots()
     for i in range(5):
         y0 = float(i + 1)
         params = np.array([y0])
-        [prey, predator], _ = ode.solve(params, 40.0, config)
+        [prey, predator], _ = ode.solve(params, 40.0)
         ax.plot(prey, predator, label=f"y0 = {y0}")
     ax.set_xlabel("prey")
     ax.set_ylabel("predator")
-    fig.savefig("docs/images/prey-predator2.png")
+    fig.savefig("docs/images/prey_predator2.svg")
+
+
+# Smoke test docs code
+def test_population_dynamics_docs():
+    solve()
+    phase_plane()
+
 
 if __name__ == "__main__":
     solve()

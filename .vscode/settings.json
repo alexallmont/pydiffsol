@@ -1,0 +1,15 @@
+{
+    "rust-analyzer.cargo.features": [
+        "diffsol-llvm17",
+        "suitesparse",
+    ],
+    "rust-analyzer.files.exclude": [
+        "**/.git",
+        "**/.vscode",
+        "**/target",
+    ],
+    "files.watcherExclude": {
+        "**/.git/**": true,
+        "**/target/**": true,
+    }
+}
