@@ -52,7 +52,7 @@ jobs:
           CIBW_ENVIRONMENT_WINDOWS: 'PATH="$PATH:$HOME/.cargo/bin" MATURIN_PEP517_ARGS="--features diffsol-cranelift"'
           CIBW_SKIP: "*-win32 *-musllinux_*"
       - name: Upload wheels
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: wheels-${{ matrix.platform.runner }}-${{ matrix.platform.target }}
           path: ./wheelhouse/*.whl
@@ -79,7 +79,7 @@ jobs:
       - name: Remove wheels, just keep sdist
         run: rm -rf dist/*.whl
       - name: Upload sdist
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: wheels-sdist
           path: dist
