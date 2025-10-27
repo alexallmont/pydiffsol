@@ -24,13 +24,13 @@ class RobertsonOde(eqx.Module):
         f2 = k2 * y[ys] ** 2
         return jnp.vstack([f0, f1, f2]).flatten()
 
-    
+
 def setup(ngroups: int):
     robertson = RobertsonOde(ngroups=ngroups)
     return robertson
 
 
-@partial(jax.jit, static_argnames=['model', 'ngroups', 'tol'])
+@partial(jax.jit, static_argnames=["model", "ngroups", "tol"])
 def bench(model, ngroups: int, tol: float, t_final: float) -> jnp.ndarray:
     terms = diffrax.ODETerm(model)
     stepsize_controller = diffrax.PIDController(rtol=tol, atol=tol)
