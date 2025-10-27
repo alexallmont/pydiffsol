@@ -25,6 +25,7 @@ Contents
    Home <self>
    usage
    examples
+   bench 
    api
 
 * :ref:`genindex`
