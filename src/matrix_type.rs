@@ -1,3 +1,5 @@
+// Matrix type Python enum
+
 use diffsol::{Matrix, NalgebraMat};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -49,9 +51,12 @@ impl MatrixType {
 
 #[pymethods]
 impl MatrixType {
+    /// Create MatrixType from string name
+    /// :param name: string representation of matrix type
+    /// :return: valid MatrixType or exception if name is invalid
     #[classmethod]
-    fn from_str(_cls: &Bound<'_, PyType>, value: &str) -> PyResult<Self> {
-        match value {
+    fn from_str(_cls: &Bound<'_, PyType>, name: &str) -> PyResult<Self> {
+        match name {
             "nalgebra_dense_f64" => Ok(MatrixType::NalgebraDenseF64),
             "faer_dense_f64" => Ok(MatrixType::FaerDenseF64),
             "faer_sparse_f64" => Ok(MatrixType::FaerSparseF64),
@@ -59,6 +64,8 @@ impl MatrixType {
         }
     }
 
+    /// Get all available matrix types
+    /// :return: list of MatrixType
     #[classmethod]
     fn all<'py>(cls: &Bound<'py, PyType>) -> PyResult<Bound<'py, PyList>> {
         PyList::new(cls.py(), MatrixType::all_enums())

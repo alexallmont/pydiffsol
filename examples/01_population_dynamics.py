@@ -1,8 +1,11 @@
-import fix_matplotlib_debug as _
+# This example is used in docs/examples/population_dynamics.rst.
+# Ensure that code changes are reflected in rst literalinclude blocks.
 
-import pydiffsol as ds
 import numpy as np
+import matplotlib
+matplotlib.use("SVG") # Ensure tests can run headless and in debug
 import matplotlib.pyplot as plt
+import pydiffsol as ds
 
 
 def solve():
@@ -20,9 +23,9 @@ def solve():
         """,
         matrix_type=ds.nalgebra_dense_f64,
         linear_solver=ds.lu,
-        ode_solver=ds.bdf,
+        method=ds.bdf,
     )
-    
+
     ode.rtol = 1e-6
 
     params = np.array([])
@@ -33,7 +36,7 @@ def solve():
     ax.plot(ts, ys[1], label="predator")
     ax.set_xlabel("t")
     ax.set_ylabel("population")
-    fig.savefig("docs/images/prey_predator.png")
+    fig.savefig("docs/images/prey_predator.svg")
 
 
 def phase_plane():
@@ -53,7 +56,7 @@ def phase_plane():
         """,
         matrix_type=ds.nalgebra_dense_f64,
         linear_solver=ds.lu,
-        ode_solver=ds.bdf,
+        method=ds.bdf,
     )
 
     ode.rtol = 1e-6
@@ -66,13 +69,15 @@ def phase_plane():
         ax.plot(prey, predator, label=f"y0 = {y0}")
     ax.set_xlabel("prey")
     ax.set_ylabel("predator")
-    fig.savefig("docs/images/prey_predator2.png")
+    fig.savefig("docs/images/prey_predator2.svg")
 
 
-def test():
+# Smoke test docs code
+def test_population_dynamics_docs():
     solve()
     phase_plane()
 
 
 if __name__ == "__main__":
-    test()
+    solve()
+    phase_plane()

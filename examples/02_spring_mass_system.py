@@ -1,8 +1,11 @@
-import fix_matplotlib_debug as _
+# This example is used in docs/examples/spring_mass_systems.rst.
+# Ensure that code changes are reflected in rst literalinclude blocks.
 
-import pydiffsol as ds
 import numpy as np
+import matplotlib
+matplotlib.use("SVG") # Ensure tests can run headless and in debug
 import matplotlib.pyplot as plt
+import pydiffsol as ds
 
 
 def solve():
@@ -27,12 +30,13 @@ def solve():
     fig, ax = plt.subplots()
     ax.plot(ts, ys[0], label="x")
     ax.set_xlabel("t")
-    fig.savefig("docs/images/spring_mass_system.png")
+    fig.savefig("docs/images/spring_mass_system.svg")
 
 
-def test():
+# Smoke test docs code
+def test_spring_mass_systems_docs():
     solve()
 
 
 if __name__ == "__main__":
-    test()
+    solve()

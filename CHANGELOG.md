@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Wheels built using `cibuildwheel` rather than maturin for neater build matrix and resolving dylib issues.
+- Config class removed. This is now rolled into Ode class for friendlier interface.
 - Support for `tr_bdf2` and `tsit45` solver methods.
 - Build with SuiteSparse for KLU support for Linux. Use `is_klu_available` method to check if available on running platform.
 - Support for `faer_dense_f64` matrix_type if KLU available.

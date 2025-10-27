@@ -19,7 +19,7 @@ def test_config(rtol, atol):
     assert ode.rtol == rtol
     ode.atol = atol
     assert ode.atol == atol
-    
+
     r = 1.0
     k = 1.0
     y0 = 0.1

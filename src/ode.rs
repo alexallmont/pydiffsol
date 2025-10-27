@@ -1,3 +1,5 @@
+// Ode Python class, this wraps up a diffsol Problem class
+
 use std::sync::{Arc, Mutex};
 
 use crate::error::PyDiffsolError;
@@ -14,7 +16,7 @@ use pyo3::prelude::*;
 struct Ode {
     code: String,
     linear_solver: SolverType,
-    ode_solver: SolverMethod,
+    method: SolverMethod,
     py_solve: Box<dyn PySolve>,
 }
 unsafe impl Send for Ode {}
@@ -35,13 +37,17 @@ impl OdeWrapper {
 
 #[pymethods]
 impl OdeWrapper {
-    /// Construct an ODE solver for specified diffsol using a given matrix type
+    /// Construct an ODE solver for specified diffsol using a given matrix type.
+    /// The code is JIT-compiled immediately based on the matrix type, so after
+    /// construction, both code and matrix_type fields are read-only.
+    /// All other fields are editable, for example setting the solver type or
+    /// method, or changing solver tolerances.
     #[new]
-    #[pyo3(signature=(code, matrix_type=MatrixType::NalgebraDenseF64, ode_solver=SolverMethod::Bdf, linear_solver=SolverType::Default))]
+    #[pyo3(signature=(code, matrix_type=MatrixType::NalgebraDenseF64, method=SolverMethod::Bdf, linear_solver=SolverType::Default))]
     fn new(
         code: &str,
         matrix_type: MatrixType,
-        ode_solver: SolverMethod,
+        method: SolverMethod,
         linear_solver: SolverType,
     ) -> Result<Self, PyDiffsolError> {
         let py_solve = py_solve_factory(code, matrix_type)?;
@@ -49,7 +55,7 @@ impl OdeWrapper {
         Ok(OdeWrapper(Arc::new(Mutex::new(Ode {
             code: code.to_string(),
             py_solve,
-            ode_solver,
+            method,
             linear_solver,
         }))))
     }
@@ -60,13 +66,13 @@ impl OdeWrapper {
     }
 
     #[getter]
-    fn get_ode_solver(&self) -> PyResult<SolverMethod> {
-        Ok(self.guard()?.ode_solver)
+    fn get_method(&self) -> PyResult<SolverMethod> {
+        Ok(self.guard()?.method)
     }
 
     #[setter]
-    fn set_ode_solver(&self, value: SolverMethod) -> PyResult<()> {
-        self.guard()?.ode_solver = value;
+    fn set_method(&self, value: SolverMethod) -> PyResult<()> {
+        self.guard()?.method = value;
         Ok(())
     }
 
@@ -139,10 +145,10 @@ impl OdeWrapper {
         let params = params.as_array();
 
         let linear_solver = self_guard.linear_solver;
-        let ode_solver = self_guard.ode_solver;
+        let method = self_guard.method;
         self_guard.py_solve.solve(
             slf.py(),
-            ode_solver,
+            method,
             linear_solver,
             params.as_slice().unwrap(),
             final_time,
@@ -174,11 +180,11 @@ impl OdeWrapper {
         let params = params.as_array();
 
         let linear_solver = self_guard.linear_solver;
-        let ode_solver = self_guard.ode_solver;
+        let method = self_guard.method;
 
         self_guard.py_solve.solve_dense(
             slf.py(),
-            ode_solver,
+            method,
             linear_solver,
             params.as_slice().unwrap(),
             t_eval,

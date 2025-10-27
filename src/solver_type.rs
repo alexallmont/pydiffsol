@@ -1,3 +1,7 @@
+// Solver type Python enum. This refers to the internal solver mechanism, either
+// LU or KLU in diffsol, with default selecting whichever is most appropriate
+// given the matrix type.
+
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyList, PyType};

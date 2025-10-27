@@ -66,7 +66,7 @@ def _invalid_config_triplets():
 # Positive check for solve and solve_dense supported on this platform
 @pytest.mark.parametrize("matrix_type,method,linear_solver", _valid_config_triplets())
 def test_valid_config_solve(matrix_type, linear_solver, method):
-    # FIXME faer_sparse_f64 klu bdf skipped until underlying diffsol bug resolved
+    # TODO faer_sparse_f64 klu bdf skipped until underlying diffsol bug resolved
     if matrix_type == ds.faer_sparse_f64 and method == ds.bdf:
         import sys
         if sys.platform == "darwin":
@@ -76,7 +76,7 @@ def test_valid_config_solve(matrix_type, linear_solver, method):
             )
             return
 
-    ode = ds.Ode(DIFFSL_LOGISTIC, matrix_type=matrix_type, ode_solver=method, linear_solver=linear_solver)
+    ode = ds.Ode(DIFFSL_LOGISTIC, matrix_type=matrix_type, method=method, linear_solver=linear_solver)
 
     # All valid solver configs should generate approximately the same value
     ys, _ = ode.solve(np.array([]), 0.4)
@@ -93,9 +93,9 @@ def test_valid_config_solve(matrix_type, linear_solver, method):
 @pytest.mark.parametrize("matrix_type,method,linear_solver", _invalid_config_triplets())
 def test_invalid_config_solve(matrix_type, linear_solver, method):
     with pytest.raises(Exception):
-        ode = ds.Ode(DIFFSL_LOGISTIC, matrix_type=matrix_type, ode_solver=method, linear_solver=linear_solver)
-        
+        ode = ds.Ode(DIFFSL_LOGISTIC, matrix_type=matrix_type, method=method, linear_solver=linear_solver)
+
     ode = ds.Ode(DIFFSL_LOGISTIC)
-    ode.ode_solver = method
+    ode.method = method
     with pytest.raises(Exception):
         ode.linear_solver = linear_solver

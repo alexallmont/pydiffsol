@@ -1,3 +1,5 @@
+// Conversion methods from diffsol matrix to Python 2D array
+
 use numpy::ndarray::{ArrayView2, ShapeBuilder};
 use numpy::{PyArray2, ToPyArray};
 use pyo3::prelude::*;

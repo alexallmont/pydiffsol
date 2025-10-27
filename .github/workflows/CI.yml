@@ -25,7 +25,6 @@ jobs:
             target: AMD64
           - runner: macos-14
             target: arm64
-
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -61,13 +60,13 @@ jobs:
         shell: bash
         env:
           ACTIVATE: ${{ runner.os == 'Windows' && '.venv/Scripts/activate' || '.venv/bin/activate' }}
+          PYTEST_DIRS: ${{ runner.os == 'macOS' && 'test' || 'test examples/*' }} # MacOS runner fails with LLVM and matplotlib
         run: |
           set -e
           python3 -m venv .venv
           source $ACTIVATE
-          pip install pydiffsol --find-links ./wheelhouse --force-reinstall
-          pip install pytest
-          pytest -s
+          pip install 'pydiffsol[dev]' --find-links ./wheelhouse --force-reinstall
+          pytest -s -v $PYTEST_DIRS
 
   sdist:
     runs-on: ubuntu-latest
@@ -91,12 +90,9 @@ jobs:
     if: ${{ startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' }}
     needs: [wheels, sdist]
     permissions:
-      # Use to sign the release artifacts
-      id-token: write
-      # Used to upload release artifacts
-      contents: write
-      # Used to generate artifact attestation
-      attestations: write
+      id-token: write # Use to sign the release artifacts
+      contents: write # Used to upload release artifacts
+      attestations: write # Used to generate artifact attestation
     steps:
       - uses: actions/download-artifact@v4
       - name: Generate artifact attestation
