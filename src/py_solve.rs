@@ -1,24 +1,16 @@
-use crate::config::Config;
-use crate::convert::MatrixToPy;
-use crate::error::PyDiffsolError;
-use crate::jit::JitModule;
-use crate::matrix_type::MatrixType;
-use crate::solver_method::SolverMethod;
-use crate::solver_type::SolverType;
+use diffsol::{
+    error::DiffsolError, matrix::MatrixRef, DefaultDenseMatrix, DefaultSolver, DiffSl, Matrix,
+    MatrixCommon, OdeBuilder, OdeEquations, OdeSolverProblem, Op, Vector, VectorHost, VectorRef,
+};
+use numpy::{ndarray::Array1, PyArray1, PyArray2, PyReadonlyArray1};
+use pyo3::{Bound, Python};
 
-use diffsol::{DiffSl, OdeBuilder, OdeEquations, OdeSolverMethod, OdeSolverProblem};
-use diffsol::{MatrixCommon, matrix::MatrixHost};
-use diffsol::error::DiffsolError;
-use diffsol::{NalgebraMat, NalgebraLU};
-use diffsol::{FaerMat, FaerLU, FaerSparseMat};
-use diffsol::Vector; // for from_slice
-use diffsol::Op; // For nparams
-use numpy::{PyReadonlyArray1, PyArray1, PyArray2};
-use numpy::ndarray::Array1;
-use pyo3::prelude::*;
-
-#[cfg(feature = "suitesparse")]
-use diffsol::KLU;
+use crate::valid::{Klu, Lu};
+use crate::{convert::MatrixToPy, solver_method::SolverMethod};
+use crate::{
+    error::PyDiffsolError, jit::JitModule, matrix_type::MatrixType, solver_type::SolverType,
+    valid::check,
+};
 
 // Each matrix type implements PySolve as bridge between diffsol and Python
 pub(crate) trait PySolve {
@@ -27,8 +19,8 @@ pub(crate) trait PySolve {
     fn solve<'py>(
         &mut self,
         py: Python<'py>,
-        solver_type: SolverType,
-        config: &Config,
+        ode_solver: SolverMethod,
+        linear_solver: SolverType,
         params: &[f64],
         final_time: f64,
     ) -> Result<(Bound<'py, PyArray2<f64>>, Bound<'py, PyArray1<f64>>), PyDiffsolError>;
@@ -36,320 +28,153 @@ pub(crate) trait PySolve {
     fn solve_dense<'py>(
         &mut self,
         py: Python<'py>,
-        solver_type: SolverType,
-        config: &Config,
+        ode_solver: SolverMethod,
+        linear_solver: SolverType,
         params: &[f64],
         t_eval: PyReadonlyArray1<'py, f64>,
     ) -> Result<Bound<'py, PyArray2<f64>>, PyDiffsolError>;
+
+    fn check(&self, linear_solver: SolverType) -> Result<(), PyDiffsolError>;
+    fn set_rtol(&mut self, rtol: f64);
+    fn rtol(&self) -> f64;
+    fn set_atol(&mut self, atol: f64);
+    fn atol(&self) -> f64;
 }
 
 // Public factory method for generating an instance based on matrix type
 pub(crate) fn py_solve_factory(
     code: &str,
-    matrix_type: MatrixType
+    matrix_type: MatrixType,
 ) -> Result<Box<dyn PySolve>, PyDiffsolError> {
     let py_solve: Box<dyn PySolve> = match matrix_type {
-        MatrixType::NalgebraDenseF64 => Box::new(PySolveNalgabraF64::new(code)?),
-        MatrixType::FaerDenseF64 => Box::new(PySolveFaerDenseF64::new(code)?),
-        MatrixType::FaerSparseF64 => Box::new(PySolveFaerSparseF64::new(code)?),
+        MatrixType::NalgebraDenseF64 => {
+            Box::new(GenericPySolve::<diffsol::NalgebraMat<f64>>::new(code)?)
+        }
+        MatrixType::FaerDenseF64 => Box::new(GenericPySolve::<diffsol::FaerMat<f64>>::new(code)?),
+        MatrixType::FaerSparseF64 => {
+            Box::new(GenericPySolve::<diffsol::FaerSparseMat<f64>>::new(code)?)
+        }
     };
     Ok(py_solve)
 }
 
-// Called before solve or solve_dense to ensure config and params are set
-fn setup_problem<M>(
-    problem: &mut OdeSolverProblem<diffsol::DiffSl<M, JitModule>>,
-    config: &Config,
-    params: &[f64],
-) -> Result<(), PyDiffsolError>
+pub(crate) struct GenericPySolve<M>
 where
-    M: MatrixHost<T = f64>,
+    M: Matrix<T = f64>,
+    M::V: VectorHost,
 {
-    let params = M::V::from_slice(&params, M::C::default());
+    problem: OdeSolverProblem<DiffSl<M, JitModule>>,
+}
 
-    // Attempt to set problem from params and config
-    let nparams = problem.eqn.nparams();
-    if params.len() == nparams {
-        problem.eqn.set_params(&params);
-        problem.rtol = config.rtol;
-        Ok(())
-    } else {
-        Err(DiffsolError::Other(format!(
-            "Expecting {} params but got {}",
-            nparams,
-            params.len()
-        )).into())
+impl<M> GenericPySolve<M>
+where
+    M: Matrix<T = f64>,
+    M::V: VectorHost,
+{
+    pub fn new(code: &str) -> Result<Self, PyDiffsolError> {
+        let problem = OdeBuilder::<M>::new().build_from_diffsl::<JitModule>(code)?;
+        Ok(GenericPySolve { problem })
+    }
+
+    pub(crate) fn setup_problem(&mut self, params: &[f64]) -> Result<(), PyDiffsolError> {
+        let params = M::V::from_slice(params, M::C::default());
+
+        // Attempt to set problem from params and config
+        let nparams = self.problem.eqn.nparams();
+        if params.len() == nparams {
+            self.problem.eqn.set_params(&params);
+            Ok(())
+        } else {
+            Err(DiffsolError::Other(format!(
+                "Expecting {} params but got {}",
+                nparams,
+                params.len()
+            ))
+            .into())
+        }
     }
 }
 
-//
-// NalgabraF64 implementation
-//
-struct PySolveNalgabraF64 {
-    problem: OdeSolverProblem<DiffSl<NalgebraMat<f64>, JitModule>>,
-}
-
-impl PySolveNalgabraF64 {
-    fn new(code: &str) -> Result<Self, DiffsolError> {
-        Ok(
-            PySolveNalgabraF64{
-                problem: OdeBuilder::<NalgebraMat<f64>>::new()
-                    .build_from_diffsl::<JitModule>(code)?
-            }
-        )
-    }
-}
-
-impl PySolve for PySolveNalgabraF64 {
+impl<M> PySolve for GenericPySolve<M>
+where
+    M: Matrix<T = f64> + DefaultSolver + Lu<M> + Klu<M>,
+    for<'b> <<M::V as DefaultDenseMatrix>::M as MatrixCommon>::Inner: MatrixToPy<'b>,
+    M::V: VectorHost + DefaultDenseMatrix,
+    for<'b> &'b M::V: VectorRef<M::V>,
+    for<'b> &'b M: MatrixRef<M>,
+{
     fn matrix_type(&self) -> MatrixType {
-        MatrixType::NalgebraDenseF64
+        MatrixType::from_diffsol::<M>().expect("Unknown matrix type")
+    }
+
+    fn check(&self, linear_solver: SolverType) -> Result<(), PyDiffsolError> {
+        check::<M>(linear_solver)
+    }
+
+    fn set_atol(&mut self, atol: f64) {
+        self.problem.atol.fill(atol);
+    }
+
+    fn atol(&self) -> f64 {
+        self.problem.atol[0]
+    }
+
+    fn set_rtol(&mut self, rtol: f64) {
+        self.problem.rtol = rtol;
+    }
+
+    fn rtol(&self) -> f64 {
+        self.problem.rtol
     }
 
     fn solve<'py>(
         &mut self,
         py: Python<'py>,
-        solver_type: SolverType,
-        config: &Config,
+        ode_solver: SolverMethod,
+        linear_solver: SolverType,
         params: &[f64],
         final_time: f64,
     ) -> Result<(Bound<'py, PyArray2<f64>>, Bound<'py, PyArray1<f64>>), PyDiffsolError> {
-        setup_problem(&mut self.problem, config, params)?;
-
-        let (ys, ts) = match solver_type {
+        self.check(linear_solver)?;
+        self.setup_problem(params)?;
+        let (ys, ts) = match linear_solver {
             SolverType::Default => {
-                match config.method {
-                    SolverMethod::Tsit45 => self.problem.tsit45()?.solve(final_time),
-                    _ => Err(DiffsolError::Other("Only tsit45 is compatible with Default solver for NalgebraDenseF64".to_string()).into())
-                }
-            },
-            SolverType::Lu => {
-                match config.method {
-                    SolverMethod::Bdf => self.problem.bdf::<NalgebraLU<f64>>()?.solve(final_time),
-                    SolverMethod::Esdirk34 => self.problem.esdirk34::<NalgebraLU<f64>>()?.solve(final_time),
-                    SolverMethod::TrBdf2 => self.problem.tr_bdf2::<NalgebraLU<f64>>()?.solve(final_time),
-                    SolverMethod::Tsit45 => Err(DiffsolError::Other("Lu solver is compatible with tsit45 for NalgebraDenseF64".to_string()).into()),
-                }
-            },
-            SolverType::Klu => Err(DiffsolError::Other("Klu not supported for NalgebraDenseF64".to_string()).into()),
-        }?;
-
-        Ok((
-            ys.inner().to_pyarray2(py),
-            PyArray1::from_owned_array(py, Array1::from(ts))
-        ))
-    }
-
-    fn solve_dense<'py>(
-        &mut self,
-        py: Python<'py>,
-        solver_type: SolverType,
-        config: &Config,
-        params: &[f64],
-        t_eval: PyReadonlyArray1<'py, f64>,
-    ) -> Result<Bound<'py, PyArray2<f64>>, PyDiffsolError> {
-        setup_problem(&mut self.problem, config, params)?;
-
-        let ys = match solver_type {
-            SolverType::Default => {
-                match config.method {
-                    SolverMethod::Tsit45 => self.problem.tsit45()?.solve_dense(t_eval.as_slice().unwrap()),
-                    _ => Err(DiffsolError::Other("Only tsit45 is compatible with Default solver for NalgebraDenseF64".to_string()).into())
-                }
-            },
-            SolverType::Lu => {
-                match config.method {
-                    SolverMethod::Bdf => self.problem.bdf::<NalgebraLU<f64>>()?.solve_dense(t_eval.as_slice().unwrap()),
-                    SolverMethod::Esdirk34 => self.problem.esdirk34::<NalgebraLU<f64>>()?.solve_dense(t_eval.as_slice().unwrap()),
-                    SolverMethod::TrBdf2 => self.problem.tr_bdf2::<NalgebraLU<f64>>()?.solve_dense(t_eval.as_slice().unwrap()),
-                    SolverMethod::Tsit45 => Err(DiffsolError::Other("Lu solver is compatible with tsit45 for NalgebraDenseF64".to_string()).into()),
-                }
-            },
-            SolverType::Klu => Err(DiffsolError::Other("Klu not supported for NalgebraDenseF64".to_string()).into()),
-        }?;
-
-        Ok(ys.inner().to_pyarray2(py))
-    }
-
-}
-
-//
-// FaerDenseF64 implementation
-//
-struct PySolveFaerDenseF64 {
-    problem: OdeSolverProblem<DiffSl<FaerMat<f64>, JitModule>>,
-}
-
-impl PySolveFaerDenseF64 {
-    fn new(code: &str) -> Result<Self, DiffsolError> {
-        Ok(
-            PySolveFaerDenseF64{
-                problem: OdeBuilder::<FaerMat<f64>>::new()
-                    .build_from_diffsl::<JitModule>(code)?
+                ode_solver.solve::<M, <M as DefaultSolver>::LS>(&mut self.problem, final_time)
             }
-        )
-    }
-}
-
-impl PySolve for PySolveFaerDenseF64 {
-    fn matrix_type(&self) -> MatrixType {
-        MatrixType::FaerDenseF64
-    }
-
-    fn solve<'py>(
-        &mut self,
-        py: Python<'py>,
-        solver_type: SolverType,
-        config: &Config,
-        params: &[f64],
-        final_time: f64,
-    ) -> Result<(Bound<'py, PyArray2<f64>>, Bound<'py, PyArray1<f64>>), PyDiffsolError> {
-        setup_problem(&mut self.problem, config, params)?;
-
-        let (ys, ts) = match solver_type {
-            SolverType::Default => {
-                match config.method {
-                    SolverMethod::Tsit45 => self.problem.tsit45()?.solve(final_time),
-                    _ => Err(DiffsolError::Other("Only tsit45 is compatible with Default solver for FaerDenseF64".to_string()).into())
-                }
-            },
             SolverType::Lu => {
-                match config.method {
-                    SolverMethod::Bdf => self.problem.bdf::<FaerLU<f64>>()?.solve(final_time),
-                    SolverMethod::Esdirk34 => self.problem.esdirk34::<FaerLU<f64>>()?.solve(final_time),
-                    SolverMethod::TrBdf2 => self.problem.tr_bdf2::<FaerLU<f64>>()?.solve(final_time),
-                    SolverMethod::Tsit45 => Err(DiffsolError::Other("Lu solver is not compatible with tsit45 for FaerDenseF64".to_string()).into())
-                }
-            },
-            SolverType::Klu => Err(DiffsolError::Other("Klu solver not supported for FaerDenseF64".to_string()).into()),
-        }?;
-
-        Ok((
-            ys.inner().to_pyarray2(py),
-            PyArray1::from_owned_array(py, Array1::from(ts))
-        ))
-    }
-
-    fn solve_dense<'py>(
-        &mut self,
-        py: Python<'py>,
-        solver_type: SolverType,
-        config: &Config,
-        params: &[f64],
-        t_eval: PyReadonlyArray1<'py, f64>,
-    ) -> Result<Bound<'py, PyArray2<f64>>, PyDiffsolError> {
-        setup_problem(&mut self.problem, config, params)?;
-
-        let ys = match solver_type {
-            SolverType::Default => {
-                match config.method {
-                    SolverMethod::Tsit45 => self.problem.tsit45()?.solve_dense(t_eval.as_slice().unwrap()),
-                    _ => Err(DiffsolError::Other("Only tsit45 is compatible with Default solver for FaerDenseF64".to_string()).into())
-                }
-            },
-            SolverType::Lu => {
-                match config.method {
-                    SolverMethod::Bdf => self.problem.bdf::<FaerLU<f64>>()?.solve_dense(t_eval.as_slice().unwrap()),
-                    SolverMethod::Esdirk34 => self.problem.esdirk34::<FaerLU<f64>>()?.solve_dense(t_eval.as_slice().unwrap()),
-                    SolverMethod::TrBdf2 => self.problem.tr_bdf2::<FaerLU<f64>>()?.solve_dense(t_eval.as_slice().unwrap()),
-                    SolverMethod::Tsit45 => Err(DiffsolError::Other("Lu solver is not compatible with tsit45 for FaerDenseF64".to_string()).into())
-                }
-            },
-            SolverType::Klu => Err(DiffsolError::Other("Klu solver not supported for FaerDenseF64".to_string()).into()),
-        }?;
-
-        Ok(ys.inner().to_pyarray2(py))
-    }
-}
-
-//
-// FaerSparseF64 implementation
-//
-struct PySolveFaerSparseF64 {
-    problem: OdeSolverProblem<DiffSl<FaerSparseMat<f64>, JitModule>>,
-}
-
-impl PySolveFaerSparseF64 {
-    fn new(code: &str) -> Result<Self, DiffsolError> {
-        Ok(
-            PySolveFaerSparseF64{
-                problem: OdeBuilder::<FaerSparseMat<f64>>::new()
-                    .build_from_diffsl::<JitModule>(code)?
+                ode_solver.solve::<M, <M as Lu<M>>::LS>(&mut self.problem, final_time)
             }
-        )
-    }
-}
-
-impl PySolve for PySolveFaerSparseF64 {
-    fn matrix_type(&self) -> MatrixType {
-        MatrixType::FaerSparseF64
-    }
-
-    fn solve<'py>(
-        &mut self,
-        py: Python<'py>,
-        solver_type: SolverType,
-        config: &Config,
-        params: &[f64],
-        final_time: f64,
-    ) -> Result<(Bound<'py, PyArray2<f64>>, Bound<'py, PyArray1<f64>>), PyDiffsolError> {
-        setup_problem(&mut self.problem, config, params)?;
-
-        let (ys, ts) = match solver_type {
-            SolverType::Default => {
-                match config.method {
-                    SolverMethod::Tsit45 => self.problem.tsit45()?.solve(final_time),
-                    _ => Err(DiffsolError::Other("Only tsit45 is compatible with Default solver for FaerSparseF64".to_string()).into())
-                }
-            },
-            SolverType::Lu => Err(DiffsolError::Other("Lu solver not supported for FaerSparseF64".to_string()).into()),
             SolverType::Klu => {
-                #[cfg(feature = "suitesparse")]
-                match config.method {
-                    SolverMethod::Bdf => self.problem.bdf::<KLU<FaerSparseMat<f64>>>()?.solve(final_time),
-                    SolverMethod::Esdirk34 => self.problem.esdirk34::<KLU<FaerSparseMat<f64>>>()?.solve(final_time),
-                    SolverMethod::TrBdf2 => self.problem.tr_bdf2::<KLU<FaerSparseMat<f64>>>()?.solve(final_time),
-                    SolverMethod::Tsit45 => Err(DiffsolError::Other("Klu solver is not compatible with tsit45 for FaerSparseF64".to_string()).into())
-                }
-                #[cfg(not(feature = "suitesparse"))]
-                Err(DiffsolError::Other("Klu solver is not available in this pydiffsol build; suitesparse is not enabled".to_string()).into())
-            },
+                ode_solver.solve::<M, <M as Klu<M>>::LS>(&mut self.problem, final_time)
+            }
         }?;
 
         Ok((
             ys.inner().to_pyarray2(py),
-            PyArray1::from_owned_array(py, Array1::from(ts))
+            PyArray1::from_owned_array(py, Array1::from(ts)),
         ))
     }
 
     fn solve_dense<'py>(
         &mut self,
         py: Python<'py>,
-        solver_type: SolverType,
-        config: &Config,
+        ode_solver: SolverMethod,
+        linear_solver: SolverType,
         params: &[f64],
         t_eval: PyReadonlyArray1<'py, f64>,
     ) -> Result<Bound<'py, PyArray2<f64>>, PyDiffsolError> {
-        setup_problem(&mut self.problem, config, params)?;
+        self.check(linear_solver)?;
+        self.setup_problem(params)?;
 
-        let ys = match solver_type {
-            SolverType::Default => {
-                match config.method {
-                    SolverMethod::Tsit45 => self.problem.tsit45()?.solve_dense(t_eval.as_slice().unwrap()),
-                    _ => Err(DiffsolError::Other("Only tsit45 is compatible with Default solver for FaerSparseF64".to_string()).into())
-                }
-            },
-            SolverType::Lu => Err(DiffsolError::Other("Lu solver not supported for FaerSparseF64".to_string()).into()),
-            SolverType::Klu => {
-                #[cfg(feature = "suitesparse")]
-                match config.method {
-                    SolverMethod::Bdf => self.problem.bdf::<KLU<FaerSparseMat<f64>>>()?.solve_dense(t_eval.as_slice().unwrap()),
-                    SolverMethod::Esdirk34 => self.problem.esdirk34::<KLU<FaerSparseMat<f64>>>()?.solve_dense(t_eval.as_slice().unwrap()),
-                    SolverMethod::TrBdf2 => self.problem.tr_bdf2::<KLU<FaerSparseMat<f64>>>()?.solve_dense(t_eval.as_slice().unwrap()),
-                    SolverMethod::Tsit45 => Err(DiffsolError::Other("Klu solver is not compatible with tsit45 for FaerSparseF64".to_string()).into())
-                }
-                #[cfg(not(feature = "suitesparse"))]
-                Err(DiffsolError::Other("Klu solver is not available in this pydiffsol build; suitesparse is not enabled".to_string()).into())
-            },
+        let ys = match linear_solver {
+            SolverType::Default => ode_solver.solve_dense::<M, <M as DefaultSolver>::LS>(
+                &mut self.problem,
+                t_eval.as_slice().unwrap(),
+            ),
+            SolverType::Lu => ode_solver
+                .solve_dense::<M, <M as Lu<M>>::LS>(&mut self.problem, t_eval.as_slice().unwrap()),
+            SolverType::Klu => ode_solver
+                .solve_dense::<M, <M as Klu<M>>::LS>(&mut self.problem, t_eval.as_slice().unwrap()),
         }?;
 
         Ok(ys.inner().to_pyarray2(py))
