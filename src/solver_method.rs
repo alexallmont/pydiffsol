@@ -12,6 +12,12 @@ use pyo3::types::{PyList, PyType};
 
 use crate::jit::JitModule;
 
+/// Enumerates the possible ODE solver methods for diffsol. See the solver descriptions in the diffsol documentation (https://github.com/martinjrobins/diffsol) for more details.
+/// 
+/// :attr bdf: Backward Differentiation Formula (BDF) method for stiff ODEs and singular mass matrices
+/// :attr esdirk34: Explicit Singly Diagonally Implicit Runge-Kutta (ESDIRK) method for moderately stiff ODEs and singular mass matrices.
+/// :attr tr_bdf2: Trapezoidal Backward Differentiation Formula of order 2 (TR-BDF2) method for moderately stiff ODEs and singular mass matrices.
+/// :attr tsit45: Tsitouras 4/5th order Explicit Runge-Kutta (TSIT45) method for non-stiff ODEs. This is an explicit method, it cannot handle singular mass matrices and does not require a linear solver.
 #[pyclass(eq)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum SolverMethod {

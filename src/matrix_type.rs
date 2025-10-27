@@ -5,6 +5,11 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyList, PyType};
 
+/// Enumerates the possible matrix types for diffsol
+/// 
+/// :attr nalgebra_dense_f64: dense matrix using nalgebra crate (https://nalgebra.rs/) with f64 elements
+/// :attr faer_dense_f64: dense matrix using faer crate (https://faer.veganb.tw/) with f64 elements
+/// :attr faer_sparse_f64: sparse matrix using faer crate (https://faer.veganb.tw/) with f64 elements
 #[pyclass(eq)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum MatrixType {
