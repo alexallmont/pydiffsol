@@ -1,7 +1,7 @@
 import timeit
 import numpy as np
 import pandas as pd
-from bench.diffrax_robertson_ode import setup as diffrax_setup, bench as diffrax_bench
+from .diffrax_robertson_ode import setup as diffrax_setup, bench as diffrax_bench
 from .casadi_robertson_ode import setup as casadi_setup, bench as casadi_bench
 from .diffsol_robertson_ode import setup as diffsol_setup, bench as diffsol_bench
 
