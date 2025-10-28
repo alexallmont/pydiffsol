@@ -60,11 +60,13 @@ impl OdeWrapper {
         }))))
     }
 
+    /// Matrix type used in the ODE solver. This is fixed after construction.
     #[getter]
     fn get_matrix_type(&self) -> PyResult<MatrixType> {
         Ok(self.guard()?.py_solve.matrix_type())
     }
 
+    /// Ode solver method, default Bdf (backward differentiation formula).
     #[getter]
     fn get_method(&self) -> PyResult<SolverMethod> {
         Ok(self.guard()?.method)
@@ -76,6 +78,8 @@ impl OdeWrapper {
         Ok(())
     }
 
+    /// Linear solver type used in the ODE solver. Set to default to use the
+    /// solver's default choice, which is typically an LU solver.
     #[getter]
     fn get_linear_solver(&self) -> PyResult<SolverType> {
         Ok(self.guard()?.linear_solver)
@@ -88,6 +92,7 @@ impl OdeWrapper {
         Ok(())
     }
 
+    /// Relative tolerance for the solver, default 1e-6. Governs the error relative to the solution size.
     #[getter]
     fn get_rtol(&self) -> PyResult<f64> {
         Ok(self.guard()?.py_solve.rtol())
@@ -99,6 +104,7 @@ impl OdeWrapper {
         Ok(())
     }
 
+    /// Absolute tolerance for the solver, default 1e-6. Governs the error as the solution goes to zero.
     #[getter]
     fn get_atol(&self) -> PyResult<f64> {
         Ok(self.guard()?.py_solve.atol())
@@ -127,8 +133,6 @@ impl OdeWrapper {
     /// :type params: numpy.ndarray
     /// :param final_time: end time of solver
     /// :type final_time: float
-    /// :param config: optional solver configuration
-    /// :type config: pydiffsol.Config, optional
     /// :return: `(ys, ts)` tuple where `ys` is a 2D array of values at times
     ///     `ts` chosen by the solver
     /// :rtype: Tuple[numpy.ndarray, numpy.ndarray]
@@ -166,8 +170,6 @@ impl OdeWrapper {
     /// :type params: numpy.ndarray
     /// :param t_eval: 1D array of solver times
     /// :type params: numpy.ndarray
-    /// :param config: optional solver configuration
-    /// :type config: pydiffsol.Config, optional
     /// :return: 2D array of values at times `t_eval`
     /// :rtype: numpy.ndarray
     #[pyo3(signature=(params, t_eval))]
