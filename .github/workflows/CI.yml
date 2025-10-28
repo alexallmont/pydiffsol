@@ -60,12 +60,12 @@ jobs:
         shell: bash
         env:
           ACTIVATE: ${{ runner.os == 'Windows' && '.venv/Scripts/activate' || '.venv/bin/activate' }}
-          PYTEST_DIRS: ${{ runner.os == 'macOS' && 'test' || 'test examples/*' }} # MacOS runner fails with LLVM and matplotlib
+          PYTEST_DIRS: ${{ runner.os == 'macOS' && 'test' || 'test examples/* bench/*' }} # MacOS runner fails with LLVM and matplotlib
         run: |
           set -e
           python3 -m venv .venv
           source $ACTIVATE
-          pip install 'pydiffsol[dev]' --find-links ./wheelhouse --force-reinstall
+          pip install 'pydiffsol[dev, bench]' --find-links ./wheelhouse --force-reinstall
           pytest -s -v $PYTEST_DIRS
 
   sdist:
