@@ -1,9 +1,9 @@
 Robertson ODE Benchmark
 =======================
 
-This is a benchmark on a stiff ODE system, using the classic testcase, the Robertson (1966) problem, 
-which models the  kinetics of an autocatalytic reaction. This testscase can be written as an ODE 
-given by the following set of equations:
+This is a benchmark on a stiff ODE system, using the classic test case, the Robertson (1966) problem, 
+which models the kinetics of an autocatalytic reaction. 
+This test case can be written as an ODE given by the following set of equations:
 
 .. math:: 
    :nowrap:
@@ -85,10 +85,10 @@ The benchmarks were run on:
      
 The results are shown below:
 
-.. image:: ../images/benchmark_robertson_ode_macbook.svg
+.. image:: ../images/benchmark_robertson_ode_rack_server.svg
   :width: 800
   :height: 600
-  :alt: benchmark_robertson_ode_macbook.svg
+  :alt: benchmark_robertson_ode_rack_server.svg
 
 .. image:: ../images/benchmark_robertson_ode_macbook.svg
   :width: 800

@@ -5,6 +5,9 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
+# Enable 64-bit precision in JAX, required solving problems
+# with tolerances of 1e-8
+# (see https://docs.kidger.site/diffrax/examples/stiff_ode/)
 jax.config.update("jax_enable_x64", True)
 
 
