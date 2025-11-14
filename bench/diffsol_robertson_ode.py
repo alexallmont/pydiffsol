@@ -30,9 +30,9 @@ def robertson_ode_str(ngroups: int) -> str:
 
 def setup(ngroups: int, tol: float, method: str):
     if ngroups < 20:
-        matrix_type = ds.nalgebra_dense_f64
+        matrix_type = ds.nalgebra_dense
     else:
-        matrix_type = ds.faer_sparse_f64
+        matrix_type = ds.faer_sparse
     if method == "bdf":
         method = ds.bdf
     elif method == "esdirk34":

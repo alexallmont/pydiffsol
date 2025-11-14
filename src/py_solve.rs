@@ -50,11 +50,11 @@ pub(crate) fn py_solve_factory(
     matrix_type: MatrixType,
 ) -> Result<Box<dyn PySolve>, PyDiffsolError> {
     let py_solve: Box<dyn PySolve> = match matrix_type {
-        MatrixType::NalgebraDenseF64 => {
+        MatrixType::NalgebraDense => {
             Box::new(GenericPySolve::<diffsol::NalgebraMat<f64>>::new(code)?)
         }
-        MatrixType::FaerDenseF64 => Box::new(GenericPySolve::<diffsol::FaerMat<f64>>::new(code)?),
-        MatrixType::FaerSparseF64 => {
+        MatrixType::FaerDense => Box::new(GenericPySolve::<diffsol::FaerMat<f64>>::new(code)?),
+        MatrixType::FaerSparse => {
             Box::new(GenericPySolve::<diffsol::FaerSparseMat<f64>>::new(code)?)
         }
     };

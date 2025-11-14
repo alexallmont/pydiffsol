@@ -43,7 +43,7 @@ impl OdeWrapper {
     /// All other fields are editable, for example setting the solver type or
     /// method, or changing solver tolerances.
     #[new]
-    #[pyo3(signature=(code, matrix_type=MatrixType::NalgebraDenseF64, method=SolverMethod::Bdf, linear_solver=SolverType::Default))]
+    #[pyo3(signature=(code, matrix_type=MatrixType::NalgebraDense, method=SolverMethod::Bdf, linear_solver=SolverType::Default))]
     fn new(
         code: &str,
         matrix_type: MatrixType,

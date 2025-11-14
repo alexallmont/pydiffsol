@@ -13,7 +13,7 @@ F { r * u * (1.0 - u / k) }
 """
 
 def test_basic_api():
-    ode = ds.Ode(LOGISTIC_CODE, matrix_type=ds.nalgebra_dense_f64, method=ds.bdf, linear_solver=ds.lu)
+    ode = ds.Ode(LOGISTIC_CODE, matrix_type=ds.nalgebra_dense, method=ds.bdf, linear_solver=ds.lu)
 
     r = 1.0
     k = 1.0
