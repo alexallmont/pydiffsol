@@ -1,9 +1,26 @@
 // Matrix type Python enum
 
-use diffsol::{Matrix, NalgebraMat};
+use diffsol::Matrix;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyList, PyType};
+
+pub(crate) trait MatrixKind {
+    const MATRIX_TYPE: MatrixType;
+}
+
+impl<T: diffsol::Scalar> MatrixKind for diffsol::NalgebraMat<T> {
+    const MATRIX_TYPE: MatrixType = MatrixType::NalgebraDense;
+}
+
+impl<T: diffsol::Scalar> MatrixKind for diffsol::FaerMat<T> {
+    const MATRIX_TYPE: MatrixType = MatrixType::FaerDense;
+}
+
+impl<T: diffsol::Scalar> MatrixKind for diffsol::FaerSparseMat<T> {
+    const MATRIX_TYPE: MatrixType = MatrixType::FaerSparse;
+}
+
 
 /// Enumerates the possible matrix types for diffsol
 ///
@@ -40,17 +57,9 @@ impl MatrixType {
         }
     }
 
-    pub(crate) fn from_diffsol<M: Matrix>() -> Option<Self> {
-        let id = std::any::TypeId::of::<M>();
-        if id == std::any::TypeId::of::<NalgebraMat<f64>>() {
-            Some(MatrixType::NalgebraDense)
-        } else if id == std::any::TypeId::of::<diffsol::FaerMat<f64>>() {
-            Some(MatrixType::FaerDense)
-        } else if id == std::any::TypeId::of::<diffsol::FaerSparseMat<f64>>() {
-            Some(MatrixType::FaerSparse)
-        } else {
-            None
-        }
+    pub(crate) fn from_diffsol<M: Matrix + MatrixKind>() -> Option<Self> {
+        // FIXME remove Some, make pub(crate)
+        Some(M::MATRIX_TYPE)
     }
 }
 

@@ -11,7 +11,7 @@ use pyo3::{Bound, Python};
 use crate::valid_linear_solver::{KluValidator, LuValidator};
 use crate::{convert::MatrixToPy, solver_method::SolverMethod};
 use crate::{
-    error::PyDiffsolError, jit::JitModule, matrix_type::MatrixType, solver_type::SolverType,
+    error::PyDiffsolError, jit::JitModule, matrix_type::MatrixType, matrix_type::MatrixKind, solver_type::SolverType,
     valid_linear_solver::validate_linear_solver,
 };
 
@@ -100,7 +100,7 @@ where
 
 impl<M> PySolve for GenericPySolve<M>
 where
-    M: Matrix<T = f64> + DefaultSolver + LuValidator<M> + KluValidator<M>,
+    M: Matrix<T = f64> + DefaultSolver + LuValidator<M> + KluValidator<M> + MatrixKind,
     for<'b> <<M::V as DefaultDenseMatrix>::M as MatrixCommon>::Inner: MatrixToPy<'b>,
     M::V: VectorHost + DefaultDenseMatrix,
     for<'b> &'b M::V: VectorRef<M::V>,
