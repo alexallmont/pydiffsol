@@ -1,11 +1,11 @@
-import casadi
+import bench.casadi_models as casadi_models
 import numpy as np
 
 
 def setup_robertson_ode(ngroups: int):
-    x = casadi.MX.sym("x", ngroups)
-    y = casadi.MX.sym("y", ngroups)
-    z = casadi.MX.sym("z", ngroups)
+    x = casadi_models.MX.sym("x", ngroups)
+    y = casadi_models.MX.sym("y", ngroups)
+    z = casadi_models.MX.sym("z", ngroups)
     k1 = 0.04
     k2 = 30000000
     k3 = 10000
@@ -16,16 +16,16 @@ def setup_robertson_ode(ngroups: int):
     f2 = k2 * y**2
 
     ode = {}  # ODE declaration
-    ode["x"] = casadi.vertcat(x, y, z)  # states
-    ode["ode"] = casadi.vertcat(f0, f1, f2)  # right-hand side
+    ode["x"] = casadi_models.vertcat(x, y, z)  # states
+    ode["ode"] = casadi_models.vertcat(f0, f1, f2)  # right-hand side
     x0 = np.zeros(3 * ngroups)
     x0[:ngroups] = 1.0
     return (ode, 1e10, x0)
 
 
 def setup_lokta_volterra_ode():
-    x = casadi.MX.sym("x")
-    y = casadi.MX.sym("y")
+    x = casadi_models.MX.sym("x")
+    y = casadi_models.MX.sym("y")
     a = 2.0 / 3.0
     b = 4.0 / 3.0
     c = 1.0
@@ -36,8 +36,8 @@ def setup_lokta_volterra_ode():
     f1 = -c * y + d * x * y
 
     ode = {}  # ODE declaration
-    ode["x"] = casadi.vertcat(x, y)  # states
-    ode["ode"] = casadi.vertcat(f0, f1)  # right-hand side
+    ode["x"] = casadi_models.vertcat(x, y)  # states
+    ode["ode"] = casadi_models.vertcat(f0, f1)  # right-hand side
     x0 = np.ones(2)
     return (ode, 10.0, x0)
 
@@ -49,7 +49,7 @@ def setup(ngroups: int, tol: float, problem: str):
         (ode, t_final, x0) = setup_lokta_volterra_ode()
     else:
         raise ValueError(f"Unknown problem: {problem}")
-    F = casadi.integrator(
+    F = casadi_models.integrator(
         "F", "cvodes", ode, 0.0, t_final, {"abstol": tol, "reltol": tol}
     )
     return F, x0

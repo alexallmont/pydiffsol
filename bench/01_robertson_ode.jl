@@ -1,4 +1,4 @@
-include("diffeq.jl")
+include("diffeq_models.jl")
 using BenchmarkTools
 using DataFrames
 using CSV

@@ -2,9 +2,9 @@ import timeit
 import numpy as np
 import pandas as pd
 import time
-from bench.diffrax import setup as diffrax_setup, bench as diffrax_bench
-from bench.casadi import setup as casadi_setup, bench as casadi_bench
-from bench.diffsol import setup as diffsol_setup, bench as diffsol_bench
+from diffrax_models import setup as diffrax_setup, bench as diffrax_bench
+from casadi_models import setup as casadi_setup, bench as casadi_bench
+from diffsol_models import setup as diffsol_setup, bench as diffsol_bench
 
 
 def bench(torun):
