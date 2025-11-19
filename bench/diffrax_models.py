@@ -1,5 +1,5 @@
 from functools import partial
-import bench.diffrax_models as diffrax_models
+import diffrax
 import equinox as eqx  # https://github.com/patrick-kidger/equinox
 import jax
 import jax.numpy as jnp
@@ -47,16 +47,16 @@ def setup(ngroups: int, tol: float, method: str, problem: str):
         t_final = 1e10
         y0 = jnp.concatenate([jnp.ones(ngroups), jnp.zeros(2 * ngroups)])
         problem = RobertsonOde(ngroups=ngroups)
-    elif problem == "lokta_volterra_ode":
+    elif problem == "lotka_volterra_ode":
         y0 = jnp.ones(2)
         t_final = 10.0
         problem = LotkaVolterra(ngroups=1)
     else:
         raise ValueError(f"Unknown problem: {problem}")
     if method == "kvaerno5":
-        solver = diffrax_models.Kvaerno5()
+        solver = diffrax.Kvaerno5()
     elif method == "tsit5":
-        solver = diffrax_models.Tsit5()
+        solver = diffrax.Tsit5()
     else:
         raise ValueError(f"Unknown method: {method}")
     return (problem, tol, t_final, solver, HashableArrayWrapper(y0))
@@ -81,13 +81,13 @@ class HashableArrayWrapper:
 @partial(jax.jit, static_argnames=["model"])
 def bench(model) -> jnp.ndarray:
     (model, tol, t_final, solver, y0) = model
-    terms = diffrax_models.ODETerm(model)
-    stepsize_controller = diffrax_models.PIDController(rtol=tol, atol=tol)
+    terms = diffrax.ODETerm(model)
+    stepsize_controller = diffrax.PIDController(rtol=tol, atol=tol)
 
     t0 = 0.0
     t1 = t_final
     dt0 = None
-    sol = diffrax_models.diffeqsolve(
+    sol = diffrax.diffeqsolve(
         terms,
         solver,
         t0,

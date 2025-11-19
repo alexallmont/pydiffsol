@@ -66,7 +66,7 @@ def setup(ngroups: int, tol: float, method: str, problem: str):
 
     if problem == "robertson_ode":
         code, t_final = robertson_ode_str(ngroups=ngroups)
-    elif problem == "lokta_volterra_ode":
+    elif problem == "lotka_volterra_ode":
         code, t_final = lokta_volterra_ode_str()
     else:
         raise ValueError(f"Unknown problem: {problem}")

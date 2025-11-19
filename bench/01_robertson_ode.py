@@ -137,7 +137,7 @@ def bench(torun):
         result_row = {
             "problem": problem,
             "ngroups": ng,
-            "tolerance": tol,
+            "tol": tol,
             "n_runs": n,
             "casadi_setup_time": casadi_setup_time,
             "casadi_time": casadi_time,
@@ -201,9 +201,9 @@ def test_robertson_ode_bench():
 if __name__ == "__main__":
     bench(
         torun=[
-            (ng, tol, "lokta_volterra_ode")
+            (ng, tol, "lotka_volterra_ode")
             for ng in [1]
-            for tol in [1e2, 1e-4, 1e-6, 1e-8]
+            for tol in [1e-2, 1e-4, 1e-6, 1e-8]
         ]
         + [
             (ng, tol, "robertson_ode")
