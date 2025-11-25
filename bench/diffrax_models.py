@@ -1,46 +1,14 @@
 from functools import partial
 import diffrax
-import equinox as eqx  # https://github.com/patrick-kidger/equinox
 import jax
 import jax.numpy as jnp
-import numpy as np
+from diffrax_lotka_volterra import LotkaVolterra
+from diffrax_robertson import RobertsonOde
 
 # Enable 64-bit precision in JAX, required solving problems
 # with tolerances of 1e-8
 # (see https://docs.kidger.site/diffrax/examples/stiff_ode/)
 jax.config.update("jax_enable_x64", True)
-
-
-class RobertsonOde(eqx.Module):
-    ngroups: int
-
-    def __call__(self, t, y, args):
-        k1 = 0.04
-        k2 = 30000000.0
-        k3 = 10000.0
-
-        xs = slice(0, self.ngroups)
-        ys = slice(self.ngroups, 2 * self.ngroups)
-        zs = slice(2 * self.ngroups, 3 * self.ngroups)
-        f0 = -k1 * y[xs] + k3 * y[ys] * y[zs]
-        f1 = k1 * y[xs] - k2 * y[ys] ** 2 - k3 * y[ys] * y[zs]
-        f2 = k2 * y[ys] ** 2
-        return jnp.vstack([f0, f1, f2]).flatten()
-
-
-class LotkaVolterra(eqx.Module):
-    ngroups: int
-
-    def __call__(self, t, y, args):
-        a = 2.0 / 3.0
-        b = 4.0 / 3.0
-        c = 1.0
-        d = 1.0
-
-        f0 = a * y[0] - b * y[0] * y[1]
-        f1 = -c * y[1] + d * y[0] * y[1]
-        return jnp.vstack([f0, f1]).flatten()
-
 
 def setup(ngroups: int, tol: float, method: str, problem: str):
     if problem == "robertson_ode":
