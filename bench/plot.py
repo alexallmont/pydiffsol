@@ -49,14 +49,9 @@ def plot():
     for method in [
         "casadi_time",
         "diffsol_bdf_time",
-        "diffsol_esdirk34_time",
-        "diffsol_tr_bdf2_time",
         "diffsol_tsit5_time",
-        "diffrax_kvaerno5_time",
         "diffrax_tsit5_time",
         "diffeq_bdf_time",
-        "diffeq_kencarp3_time",
-        "diffeq_tr_bdf2_time",
         "diffeq_tsit5_time",
     ]:
         if method in df.columns:

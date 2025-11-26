@@ -32,13 +32,15 @@ Solvers
 -------
 
 We benchmark the following solvers:
-- Diffsol BDF method
-- Diffsol ESDirk34 method
+- Diffsol's BDF, ESDIRK34 & TR-BDF2 methods
 - CasADi's CVODE solver
-- Diffrax's Kvaerno5 solver
+- Diffrax's Kvaerno5 & Tsit5 solvers
+- Julia's DifferentialEquations.jl FBDF, KenCarp3, & TRBDF2 methods
   
-In terms of methods, both the Diffsol BDF and CasADi CVODE are implicit BDF methods so are closest in
-comparison. Both the Diffsol ESDirk34 and Diffrax Kvaerno5 are implicit Runge-Kutta methods, with the latter being of higher order.
+The following solvers are similar so should be compared against each other:
+- Diffsol BDF, CasADi CVODE & DifferentialEquations.jl FBDF methods. 
+- Diffsol's TR-BDF2 and DifferentialEquations.jl TRBDF2.
+- Diffsol's ESDIRK34, DifferentialEquations.jl KenCarp3 and Diffrax's Tsit5 methods are different methods, but are all SDIRK implicit Runge-Kutta methods of similar order.
 
 Benchmark Setup
 -----------------
@@ -48,7 +50,11 @@ The actual benchmark is performed in a function called `bench`.
 
 The code for the Diffsol solvers is shown below:
 
-.. literalinclude:: ../../bench/diffsol_robertson_ode.py
+.. literalinclude:: ../../bench/diffsol_robertson.py
+   :encoding: latin-1
+   :language: python
+   
+.. literalinclude:: ../../bench/diffsol_models.py
    :encoding: latin-1
    :language: python
    
@@ -56,7 +62,11 @@ Note that for `ngroup < 20`` it uses the nalgebra dense matrix and LU solver, an
    
 The code for the CasADi solver is shown below:
 
-.. literalinclude:: ../../bench/casadi_robertson_ode.py
+.. literalinclude:: ../../bench/casadi_robertson.py
+   :encoding: latin-1
+   :language: python
+   
+.. literalinclude:: ../../bench/casadi_models.py
    :encoding: latin-1
    :language: python
    
@@ -65,16 +75,35 @@ The code for the Diffrax solver is shown below:
 .. literalinclude:: ../../bench/diffrax_robertson_ode.py
    :encoding: latin-1
    :language: python
+   
+.. literalinclude:: ../../bench/diffrax_models.py
+   :encoding: latin-1
+   :language: python
+   
+The code for the DifferentialEquations.jl solvers is shown below:
+
+.. literalinclude:: ../../bench/diffeq_robertson.jl
+   :encoding: latin-1
+   :language: julia
+
+.. literalinclude:: ../../bench/diffeq_models.jl
+   :encoding: latin-1
+   :language: julia
 
 Differences between implementations
 --------------------------------
 
-There are a few key differences between the Diffrax, Casadi and Diffsol implementations that may affect the performance of the solvers. The main differences are:
+There are a few key differences between the Diffrax, Casadi, Diffsol and DifferentialEquations.jl implementations that may affect the performance of the solvers. The main differences are:
 
-- The Casadi implementation uses sparse matrices, whereas the Diffsol implementation uses dense matrices for ngroups < 20, and sparse matrices for ngroups >= 20. This will provide an advantage for Diffsol for smaller problems.
-- I'm unsure if the Diffrax implementation uses sparse or dense matrices, but it is most likely dense as JAX only has experimental support for sparse matrices. Treating the Jacobian as dense will be a disadvantage for Diffrax for larger problems as the Jacobian is very sparse.
-- The Diffsol BDF and Casadi CVODE solvers both use variable order BDF methods, whereas the Diffsol ESDirk34 and Diffrax Kvaerno5 solvers use fixed order implicit Runge-Kutta methods.
-- Each library was allowed to use multiple threads according to their default settings. The only part of the Diffsol implementation that takes advantage of multiple threads is the faer sparse LU solver and matrix. Both the nalgebra LU solver, matrix, and the DiffSL generated code are all single-threaded. Diffrax uses JAX, which takes advantage of multiple threads (CPU only, no GPUs were used in these benchmarks). The Casadi implementation also uses multiple threads.
+- **Sparse vs Dense matrices:** The Casadi implementation uses sparse matrices, whereas the Diffsol and DifferentialEquations.jl implementations use dense matrices for ngroups < 20, 
+  and sparse matrices for ngroups >= 20. This will provide an advantage for Diffsol for smaller problems. The Diffrax implementation uses dense matrices. 
+  Treating the Jacobian as dense will be a disadvantage for Diffrax for larger problems as the Jacobian is very sparse for larger problem sizes.
+- **Multithreading**: For the Macbook M2 Pro run, each library was free to use multiple threads according to their default settings. 
+  For the rack server, each library was limited to using 20 threads (using `RAYON_NUM_THREADS=20 OMP_NUM_THREADS=20 JULIA_NUM_THREADS=20`).
+  The only part of the Diffsol implementation that takes advantage of multiple threads is the faer sparse LU solver and matrix. 
+  Both the nalgebra LU solver, matrix, and the DiffSL generated code are all single-threaded. 
+  Diffrax uses JAX, which takes advantage of multiple threads (CPU only, no GPUs were used in these benchmarks). Casadi uses multithreading via OpenMP and the Sundials solver. 
+  It is unclear if DifferentialEquations.jl uses multithreading for single ODE runs, although it supports use multiple threads for ensemble runs.
 
 Results
 -------
@@ -107,3 +136,6 @@ As the problem sizes get larger the dense solver used by Diffrax becomes less ef
 The performance of Casadi improve rapidly relative to Diffsol as the problem size increases, and for `n > 256` it becomes faster than the Diffsol BDF method for the rack server. 
 For the macbook the Casadi solver never becomes faster than the Diffsol BDF method, instead the two methods converge in performance. This is likely due to the better multi-threading
 performance of the CVODE solver used by Casadi on the rack server, which has more CPU cores available.
+
+The DifferentialEquations.jl implementations are slower than the Diffsol impolementation across all problem sizes, and slower than Casadi at larger problem sizes. 
+Anthough the DifferentialEquations.jl FBDF method is faster than Casadi for smaller problems.
