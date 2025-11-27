@@ -13,7 +13,6 @@ We can solve the one-dimensional heat equation using Diffsol with the following 
 
 .. literalinclude:: ../../examples/03_heat_equation.py
    :encoding: latin-1
-   :lines: 4,6-9,11-33
    :language: python
 
 The plot of the solution is shown below:
