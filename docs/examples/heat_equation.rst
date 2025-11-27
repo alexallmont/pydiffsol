@@ -17,7 +17,23 @@ We can solve the one-dimensional heat equation using Diffsol with the following 
    :language: python
 
 The plot of the solution is shown below:
-.. image:: ../images/spring_mass_system.svg
+.. image:: ../images/heat_equation.svg
   :width: 640
   :height: 480
-  :alt: spring_mass_system.svg
+  :alt: heat_equation.svg
+
+Let's calculate two variables by adding the temperature in celcius to the output of the model. This can be done by adding one line to the `out_i` section in the model::
+        
+    out_i {
+        u_i,
+        u_i - 273.15
+    }
+
+The plot of the solution in this case looks as follows:
+ 
+.. image:: ../images/heat_equation_kelvin_and_celius.svg
+  :width: 640
+  :height: 480
+  :alt: heat_equation_kelvin_and_celius.svg
+
+As you can see, the two temperatures, one using Kelvin and one using Celsius, are concatenated into one array. One needs to manually split the array to separate the two variables.

@@ -43,6 +43,6 @@ def solve():
     ax.plot(ys[:,-1], label="x")
     ax.set_xlabel("x")
     ax.set_ylabel("T")
-    fig.savefig("../docs/images/heat_equation_celius.png")
+    fig.savefig("../docs/images/heat_equation.svg")
 
 solve()
