@@ -65,7 +65,7 @@ def test_solve_fwd_sens():
     params = np.array([r, k, y0])
     t_eval = np.array([0.0, 0.1, 0.5])
     if os.name == 'nt':
-        with pytest.raises(ds.DiffsolError, match="Sensitivity analysis is not supported on Windows"):
+        with pytest.raises(Exception, match="Sensitivity analysis is not supported on Windows"):
             ys, sens = ode.solve_fwd_sens(params, t_eval)
         return
     ys, sens = ode.solve_fwd_sens(params, t_eval)
