@@ -6,6 +6,7 @@ use diffsol::{
     matrix::MatrixRef, DefaultDenseMatrix, DiffSl, LinearSolver, Matrix, OdeSolverMethod,
     OdeSolverProblem, VectorHost, VectorRef,
 };
+use diffsol::{DefaultSolver, SensitivitiesOdeSolverMethod};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyList, PyType};
@@ -13,7 +14,7 @@ use pyo3::types::{PyList, PyType};
 use crate::jit::JitModule;
 
 /// Enumerates the possible ODE solver methods for diffsol. See the solver descriptions in the diffsol documentation (https://github.com/martinjrobins/diffsol) for more details.
-/// 
+///
 /// :attr bdf: Backward Differentiation Formula (BDF) method for stiff ODEs and singular mass matrices
 /// :attr esdirk34: Explicit Singly Diagonally Implicit Runge-Kutta (ESDIRK) method for moderately stiff ODEs and singular mass matrices.
 /// :attr tr_bdf2: Trapezoidal Backward Differentiation Formula of order 2 (TR-BDF2) method for moderately stiff ODEs and singular mass matrices.
@@ -90,6 +91,37 @@ impl SolverMethod {
             SolverMethod::Esdirk34 => problem.esdirk34::<LS>()?.solve_dense(t_eval),
             SolverMethod::TrBdf2 => problem.tr_bdf2::<LS>()?.solve_dense(t_eval),
             SolverMethod::Tsit45 => problem.tsit45()?.solve_dense(t_eval),
+        }
+    }
+
+    #[allow(clippy::type_complexity)]
+    pub(crate) fn solve_fwd_sens<M, LS>(
+        &self,
+        problem: &mut OdeSolverProblem<DiffSl<M, JitModule>>,
+        t_eval: &[f64],
+    ) -> Result<
+        (
+            <M::V as DefaultDenseMatrix>::M,
+            Vec<<M::V as DefaultDenseMatrix>::M>,
+        ),
+        DiffsolError,
+    >
+    where
+        M: Matrix<T = f64> + DefaultSolver,
+        M::V: VectorHost + DefaultDenseMatrix,
+        LS: LinearSolver<M>,
+        for<'b> &'b M::V: VectorRef<M::V>,
+        for<'b> &'b M: MatrixRef<M>,
+    {
+        match self {
+            SolverMethod::Bdf => problem.bdf_sens::<LS>()?.solve_dense_sensitivities(t_eval),
+            SolverMethod::Esdirk34 => problem
+                .esdirk34_sens::<LS>()?
+                .solve_dense_sensitivities(t_eval),
+            SolverMethod::TrBdf2 => problem
+                .tr_bdf2_sens::<LS>()?
+                .solve_dense_sensitivities(t_eval),
+            SolverMethod::Tsit45 => problem.tsit45_sens()?.solve_dense_sensitivities(t_eval),
         }
     }
 }

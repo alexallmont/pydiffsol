@@ -19,6 +19,7 @@ use crate::{
 pub(crate) trait PySolve {
     fn matrix_type(&self) -> MatrixType;
 
+    #[allow(clippy::type_complexity)]
     fn solve<'py>(
         &mut self,
         py: Python<'py>,
@@ -36,6 +37,16 @@ pub(crate) trait PySolve {
         params: &[f64],
         t_eval: PyReadonlyArray1<'py, f64>,
     ) -> Result<Bound<'py, PyArray2<f64>>, PyDiffsolError>;
+
+    #[allow(clippy::type_complexity)]
+    fn solve_fwd_sens<'py>(
+        &mut self,
+        py: Python<'py>,
+        method: SolverMethod,
+        linear_solver: SolverType,
+        params: &[f64],
+        t_eval: PyReadonlyArray1<'py, f64>,
+    ) -> Result<(Bound<'py, PyArray2<f64>>, Vec<Bound<'py, PyArray2<f64>>>), PyDiffsolError>;
 
     fn check(&self, linear_solver: SolverType) -> Result<(), PyDiffsolError>;
     fn set_rtol(&mut self, rtol: f64);
@@ -174,12 +185,50 @@ where
                 &mut self.problem,
                 t_eval.as_slice().unwrap(),
             ),
-            SolverType::Lu => method
-                .solve_dense::<M, <M as LuValidator<M>>::LS>(&mut self.problem, t_eval.as_slice().unwrap()),
-            SolverType::Klu => method
-                .solve_dense::<M, <M as KluValidator<M>>::LS>(&mut self.problem, t_eval.as_slice().unwrap()),
+            SolverType::Lu => method.solve_dense::<M, <M as LuValidator<M>>::LS>(
+                &mut self.problem,
+                t_eval.as_slice().unwrap(),
+            ),
+            SolverType::Klu => method.solve_dense::<M, <M as KluValidator<M>>::LS>(
+                &mut self.problem,
+                t_eval.as_slice().unwrap(),
+            ),
         }?;
 
         Ok(ys.inner().to_pyarray2(py))
+    }
+
+    fn solve_fwd_sens<'py>(
+        &mut self,
+        py: Python<'py>,
+        method: SolverMethod,
+        linear_solver: SolverType,
+        params: &[f64],
+        t_eval: PyReadonlyArray1<'py, f64>,
+    ) -> Result<(Bound<'py, PyArray2<f64>>, Vec<Bound<'py, PyArray2<f64>>>), PyDiffsolError> {
+        self.check(linear_solver)?;
+        self.setup_problem(params)?;
+
+        let (ys, sens) = match linear_solver {
+            SolverType::Default => method.solve_fwd_sens::<M, <M as DefaultSolver>::LS>(
+                &mut self.problem,
+                t_eval.as_slice().unwrap(),
+            ),
+            SolverType::Lu => method.solve_fwd_sens::<M, <M as LuValidator<M>>::LS>(
+                &mut self.problem,
+                t_eval.as_slice().unwrap(),
+            ),
+            SolverType::Klu => method.solve_fwd_sens::<M, <M as KluValidator<M>>::LS>(
+                &mut self.problem,
+                t_eval.as_slice().unwrap(),
+            ),
+        }?;
+
+        Ok((
+            ys.inner().to_pyarray2(py),
+            sens.into_iter()
+                .map(|s| s.inner().to_pyarray2(py))
+                .collect(),
+        ))
     }
 }

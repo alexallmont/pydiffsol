@@ -55,5 +55,33 @@ def test_basic_api():
     # Check that code read back matches original
     assert ode.code == LOGISTIC_CODE
 
+def test_solve_fwd_sens():
+    ode = ds.Ode(LOGISTIC_CODE, matrix_type=ds.nalgebra_dense_f64, method=ds.bdf, linear_solver=ds.lu)
+
+    r = 1.0
+    k = 1.0
+    y0 = 0.1
+    params = np.array([r, k, y0])
+    t_eval = np.array([0.0, 0.1, 0.5])
+    ys, sens = ode.solve_fwd_sens(params, t_eval)
+    assert ys.shape == (1, 3)
+    assert len(sens) == 3
+    assert sens[0].shape == (1, 3)
+    assert sens[1].shape == (1, 3)
+    assert sens[2].shape == (1, 3)
+    u = k * y0
+    v = (y0 + (k - y0) * np.exp(-r * t_eval))
+    expect = u / v
+    np.testing.assert_allclose(ys[0], expect, rtol=1e-4)
+    expect_sens = np.array([
+        (v * 0.0 - u * -t_eval * (k - y0) * np.exp(-r * t_eval)) / v**2,
+        (v * y0 - u * np.exp(-r * t_eval)) / v**2,
+        (v * k - u * (1.0 - np.exp(-r * t_eval))) / v**2
+    ])
+    for sens_i, expect_i, param_name in zip(sens, expect_sens, ['r', 'k', 'y0']):
+        np.testing.assert_allclose(sens_i[0], expect_i, rtol=1e-4, err_msg=f"Sensitivity mismatch for param {param_name}")
+
+
+
 if __name__ == "__main__":
     test_basic_api()

@@ -7,7 +7,7 @@ use pyo3::prelude::*;
 use pyo3::types::{PyList, PyType};
 
 /// Enumerates the possible linear solver types for diffsol
-/// 
+///
 /// :attr default: use the solver's default linear solver choice, typically LU
 /// :attr lu: use LU decomposition linear solver (dense or sparse as appropriate)
 /// :attr klu: use KLU sparse linear solver

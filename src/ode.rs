@@ -139,6 +139,7 @@ impl OdeWrapper {
     ///
     /// Example:
     ///     >>> print(ode.solve(np.array([]), 0.5))
+    #[allow(clippy::type_complexity)]
     #[pyo3(signature=(params, final_time))]
     fn solve<'py>(
         slf: PyRefMut<'py, Self>,
@@ -185,6 +186,38 @@ impl OdeWrapper {
         let method = self_guard.method;
 
         self_guard.py_solve.solve_dense(
+            slf.py(),
+            method,
+            linear_solver,
+            params.as_slice().unwrap(),
+            t_eval,
+        )
+    }
+
+    /// Using the provided state, solve the problem up to time `t_eval[t_eval.len()-1]`.
+    /// Returns 2D array of solution values at timepoints given by `t_eval`.
+    /// Also returns a list of 2D arrays of sensitivities at the same timepoints
+    /// as the solution.
+    /// The number of params must match the expected params in the diffsl code.
+    /// The config may be optionally specified to override solver settings.
+    /// :param params: 1D array of solver parameters
+    /// :type params: numpy.ndarray
+    /// :param t_eval: 1D array of solver times
+    /// :type params: numpy.ndarray
+    /// :return: 2D array of values at times `t_eval` and a list of 2D arrays of sensitivities at the same timepoints
+    /// :rtype: (numpy.ndarray, List[numpy.ndarray])
+    #[allow(clippy::type_complexity)]
+    #[pyo3(signature=(params, t_eval))]
+    fn solve_fwd_sens<'py>(
+        slf: PyRefMut<'py, Self>,
+        params: PyReadonlyArray1<'py, f64>,
+        t_eval: PyReadonlyArray1<'py, f64>,
+    ) -> Result<(Bound<'py, PyArray2<f64>>, Vec<Bound<'py, PyArray2<f64>>>), PyDiffsolError> {
+        let mut self_guard = slf.0.lock().unwrap();
+        let params = params.as_array();
+        let linear_solver = self_guard.linear_solver;
+        let method = self_guard.method;
+        self_guard.py_solve.solve_fwd_sens(
             slf.py(),
             method,
             linear_solver,
