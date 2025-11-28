@@ -1,6 +1,7 @@
 import numpy as np
 import pydiffsol as ds
 import pytest
+import os
 
 LOGISTIC_CODE = \
 """
@@ -63,6 +64,10 @@ def test_solve_fwd_sens():
     y0 = 0.1
     params = np.array([r, k, y0])
     t_eval = np.array([0.0, 0.1, 0.5])
+    if os.name == 'nt':
+        with pytest.raises(ds.DiffsolError, match="Sensitivity analysis is not supported on Windows"):
+            ys, sens = ode.solve_fwd_sens(params, t_eval)
+        return
     ys, sens = ode.solve_fwd_sens(params, t_eval)
     assert ys.shape == (1, 3)
     assert len(sens) == 3

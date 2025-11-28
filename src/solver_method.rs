@@ -113,6 +113,8 @@ impl SolverMethod {
         for<'b> &'b M::V: VectorRef<M::V>,
         for<'b> &'b M: MatrixRef<M>,
     {
+        // not for windows
+        #[cfg(not(target_os = "windows"))]
         match self {
             SolverMethod::Bdf => problem.bdf_sens::<LS>()?.solve_dense_sensitivities(t_eval),
             SolverMethod::Esdirk34 => problem
@@ -122,6 +124,11 @@ impl SolverMethod {
                 .tr_bdf2_sens::<LS>()?
                 .solve_dense_sensitivities(t_eval),
             SolverMethod::Tsit45 => problem.tsit45_sens()?.solve_dense_sensitivities(t_eval),
+        }
+        // raise error on windows as sensitivities are not supported
+        #[cfg(target_os = "windows")]
+        {
+            Err(DiffsolError::Other("Sensitivity analysis is not supported on Windows, please use a linux or macOS system.".to_string()))
         }
     }
 }
