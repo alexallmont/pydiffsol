@@ -86,6 +86,46 @@ def test_solve_fwd_sens():
     for sens_i, expect_i, param_name in zip(sens, expect_sens, ['r', 'k', 'y0']):
         np.testing.assert_allclose(sens_i[0], expect_i, rtol=1e-4, err_msg=f"Sensitivity mismatch for param {param_name}")
 
+        
+def test_solve_sum_squares_adjoint():
+    ode = ds.Ode(LOGISTIC_CODE, matrix_type=ds.nalgebra_dense_f64, method=ds.bdf, linear_solver=ds.lu)
+
+    r = 1.0
+    k = 1.0
+    y0 = 0.1
+    params = np.array([r, k, y0])
+    t_eval = np.array([0.0, 0.1, 0.5])
+    data_params = np.array([0.9 * r, 0.9 * k, 0.9 * y0])
+    data = ode.solve_dense(data_params, t_eval)
+    if os.name == 'nt':
+        with pytest.raises(Exception, match="Adjoint sensitivity analysis is not supported on Windows"):
+            ys, sens = ode.solve_sum_squares_adj(params, data, t_eval)
+        return
+    ys, sens = ode.solve_sum_squares_adj(params, data, t_eval)
+    
+    assert isinstance(ys, float)
+    assert sens.shape == (3,)
+
+    u = k * y0
+    v = (y0 + (k - y0) * np.exp(-r * t_eval))
+    expect_y = u / v
+    expect_sum_squares = np.sum((expect_y - data)**2)
+    np.testing.assert_allclose(ys, expect_sum_squares, rtol=1e-4)
+
+    expect_sens = np.array([
+        (v * 0.0 - u * -t_eval * (k - y0) * np.exp(-r * t_eval)) / v**2,
+        (v * y0 - u * np.exp(-r * t_eval)) / v**2,
+        (v * k - u * (1.0 - np.exp(-r * t_eval))) / v**2
+    ])
+    
+    # l = sum((y - data)^2)
+    # dl/dp = sum(2 * (y - data) * dy/dp)
+    expect_dsum_squares_dp = np.array([
+        np.sum(2.0 * (expect_y - data) * expect_sens[0]),
+        np.sum(2.0 * (expect_y - data) * expect_sens[1]),
+        np.sum(2.0 * (expect_y - data) * expect_sens[2]),
+    ])
+    np.testing.assert_allclose(sens, expect_dsum_squares_dp, rtol=1e-4, err_msg=f"Adjoint sensitivity mismatch")
 
 
 if __name__ == "__main__":

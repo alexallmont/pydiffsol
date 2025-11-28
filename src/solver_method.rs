@@ -4,14 +4,20 @@
 use diffsol::error::DiffsolError;
 use diffsol::{
     matrix::MatrixRef, DefaultDenseMatrix, DiffSl, LinearSolver, Matrix, OdeSolverMethod,
-    OdeSolverProblem, VectorHost, VectorRef,
+    OdeSolverProblem, Vector, VectorHost, VectorRef,
 };
-use diffsol::{DefaultSolver, SensitivitiesOdeSolverMethod};
+use diffsol::{
+    AdjointOdeSolverMethod, Checkpointing, DefaultSolver, DenseMatrix, MatrixCommon,
+    OdeSolverState, Op, SensitivitiesOdeSolverMethod, VectorViewMut,
+};
+use numpy::ndarray::ArrayView2;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyList, PyType};
 
 use crate::jit::JitModule;
+use crate::solver_type::SolverType;
+use crate::valid_linear_solver::{KluValidator, LuValidator};
 
 /// Enumerates the possible ODE solver methods for diffsol. See the solver descriptions in the diffsol documentation (https://github.com/martinjrobins/diffsol) for more details.
 ///
@@ -129,6 +135,155 @@ impl SolverMethod {
         #[cfg(target_os = "windows")]
         {
             Err(DiffsolError::Other("Sensitivity analysis is not supported on Windows, please use a linux or macOS system.".to_string()))
+        }
+    }
+
+    pub(crate) fn solve_sum_squares_adj<'a, M, LS>(
+        &self,
+        problem: &mut OdeSolverProblem<DiffSl<M, JitModule>>,
+        data: ArrayView2<'a, f64>,
+        t_eval: &[f64],
+        backwards_method: SolverMethod,
+        backwards_linear_solver: SolverType,
+    ) -> Result<(M::T, M::V), DiffsolError>
+    where
+        M: Matrix<T = f64> + DefaultSolver + LuValidator<M> + KluValidator<M>,
+        M::V: VectorHost + DefaultDenseMatrix,
+        LS: LinearSolver<M>,
+        for<'b> &'b M::V: VectorRef<M::V>,
+        for<'b> &'b M: MatrixRef<M>,
+    {
+        // not for windows
+        #[cfg(not(target_os = "windows"))]
+        match self {
+            SolverMethod::Bdf => self._solve_sum_squares_adj(
+                problem.bdf::<LS>()?,
+                data,
+                t_eval,
+                backwards_method,
+                backwards_linear_solver,
+            ),
+            SolverMethod::Esdirk34 => self._solve_sum_squares_adj(
+                problem.esdirk34::<LS>()?,
+                data,
+                t_eval,
+                backwards_method,
+                backwards_linear_solver,
+            ),
+            SolverMethod::TrBdf2 => self._solve_sum_squares_adj(
+                problem.tr_bdf2::<LS>()?,
+                data,
+                t_eval,
+                backwards_method,
+                backwards_linear_solver,
+            ),
+            SolverMethod::Tsit45 => self._solve_sum_squares_adj(
+                problem.tsit45()?,
+                data,
+                t_eval,
+                backwards_method,
+                backwards_linear_solver,
+            ),
+        }
+        // raise error on windows as adjoint sensitivities are not supported
+        #[cfg(target_os = "windows")]
+        {
+            Err(DiffsolError::Other("Adjoint sensitivity analysis is not supported on Windows, please use a linux or macOS system.".to_string()))
+        }
+    }
+
+    pub(crate) fn _solve_sum_squares_adj<'data, 'solver, M, S>(
+        &self,
+        mut solver: S,
+        data: ArrayView2<'data, f64>,
+        t_eval: &[f64],
+        backwards_method: SolverMethod,
+        backwards_linear_solver: SolverType,
+    ) -> Result<(M::T, M::V), DiffsolError>
+    where
+        M: Matrix<T = f64> + DefaultSolver + LuValidator<M> + KluValidator<M>,
+        M::V: VectorHost + DefaultDenseMatrix,
+        S: OdeSolverMethod<'solver, DiffSl<M, JitModule>>,
+        for<'b> &'b M::V: VectorRef<M::V>,
+        for<'b> &'b M: MatrixRef<M>,
+    {
+        let (chk, ys) = solver.solve_dense_with_checkpointing(t_eval, None)?;
+        let eqn = solver.problem().eqn();
+        let ctx = eqn.context();
+        let mut g_m = <M::V as DefaultDenseMatrix>::M::zeros(eqn.nout(), t_eval.len(), ctx.clone());
+        let mut y = 0.0;
+        for j in 0..g_m.ncols() {
+            let ys_col = ys.column(j);
+            // TODO: can we avoid this allocation? (I can't see how right now)
+            let mut tmp = M::V::from_slice(data.column(j).as_slice().unwrap(), ctx.clone());
+            // tmp = 2 * ys_col - 2 * tmp
+            tmp.axpy_v(2.0, &ys_col, -2.0);
+            g_m.column_mut(j).copy_from(&tmp);
+
+            // y = (1/4) * dot(tmp, tmp) + y
+            y += (1.0 / 4.0) * tmp.norm(2).powi(2);
+        }
+        let mut y_sens = match backwards_linear_solver {
+            SolverType::Default => backwards_method
+                .solve_adjoint_backwards::<M, <M as DefaultSolver>::LS, S>(
+                    solver.problem(),
+                    chk,
+                    &g_m,
+                    t_eval,
+                    Some(1),
+                )?,
+            SolverType::Lu => backwards_method
+                .solve_adjoint_backwards::<M, <M as LuValidator<M>>::LS, S>(
+                    solver.problem(),
+                    chk,
+                    &g_m,
+                    t_eval,
+                    Some(1),
+                )?,
+            SolverType::Klu => backwards_method
+                .solve_adjoint_backwards::<M, <M as KluValidator<M>>::LS, S>(
+                    solver.problem(),
+                    chk,
+                    &g_m,
+                    t_eval,
+                    Some(1),
+                )?,
+        };
+        Ok((y, y_sens.pop().unwrap()))
+    }
+
+    pub(crate) fn solve_adjoint_backwards<'solver, M, LS, S>(
+        &self,
+        problem: &'solver OdeSolverProblem<DiffSl<M, JitModule>>,
+        checkpointing: Checkpointing<'solver, DiffSl<M, JitModule>, S>,
+        g_m: &<M::V as DefaultDenseMatrix>::M,
+        t_eval: &[f64],
+        nout_override: Option<usize>,
+    ) -> Result<Vec<M::V>, DiffsolError>
+    where
+        M: Matrix<T = f64> + DefaultSolver,
+        M::V: VectorHost + DefaultDenseMatrix,
+        S: OdeSolverMethod<'solver, DiffSl<M, JitModule>>,
+        LS: LinearSolver<M>,
+        for<'b> &'b M::V: VectorRef<M::V>,
+        for<'b> &'b M: MatrixRef<M>,
+    {
+        match self {
+            SolverMethod::Bdf => problem
+                .bdf_solver_adjoint::<LS, _>(checkpointing, nout_override)?
+                .solve_adjoint_backwards_pass(t_eval, &[g_m])
+                .map(|res| res.into_common().sg),
+            SolverMethod::Esdirk34 => problem
+                .esdirk34_solver_adjoint::<LS, _>(checkpointing, nout_override)?
+                .solve_adjoint_backwards_pass(t_eval, &[g_m])
+                .map(|res| res.into_common().sg),
+            SolverMethod::TrBdf2 => problem
+                .tr_bdf2_solver_adjoint::<LS, _>(checkpointing, nout_override)?
+                .solve_adjoint_backwards_pass(t_eval, &[g_m])
+                .map(|res| res.into_common().sg),
+            SolverMethod::Tsit45 => Err(DiffsolError::Other(
+                "Tsit45 solver does not support adjoint sensitivity analysis.".to_string(),
+            )),
         }
     }
 }
