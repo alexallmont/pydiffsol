@@ -98,7 +98,7 @@ def test_solve_sum_squares_adjoint():
     data_params = np.array([0.9 * r, 0.9 * k, 0.9 * y0])
     data = ode.solve_dense(data_params, t_eval)
     if os.name == 'nt':
-        with pytest.raises(Exception, match="Adjoint sensitivity analysis is not supported on Windows"):
+        with pytest.raises(Exception, match="Sensitivity analysis is not supported on Windows"):
             ys, sens = ode.solve_sum_squares_adj(params, data, t_eval)
         return
     ys, sens = ode.solve_sum_squares_adj(params, data, t_eval)
