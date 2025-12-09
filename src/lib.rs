@@ -23,6 +23,11 @@ fn is_klu_available() -> bool {
     cfg!(feature = "suitesparse")
 }
 
+#[pyfunction]  
+fn is_sens_available() -> bool {  
+    cfg!(not(target_os = "windows"))
+}
+
 #[pymodule]
 fn pydiffsol(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Register all Python API classes

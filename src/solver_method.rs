@@ -15,6 +15,7 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyList, PyType};
 
+use crate::is_sens_available;
 use crate::jit::JitModule;
 use crate::solver_type::SolverType;
 use crate::valid_linear_solver::{KluValidator, LuValidator};
@@ -99,6 +100,15 @@ impl SolverMethod {
             SolverMethod::Tsit45 => problem.tsit45()?.solve_dense(t_eval),
         }
     }
+    
+    fn check_sens_available() -> Result<(), DiffsolError> {
+        if !is_sens_available() {
+            return Err(DiffsolError::Other(
+                "Sensitivity analysis is not supported on Windows, please use a linux or macOS system.".to_string(),
+            ));
+        }
+        Ok(())
+    }
 
     #[allow(clippy::type_complexity)]
     pub(crate) fn solve_fwd_sens<M, LS>(
@@ -119,8 +129,7 @@ impl SolverMethod {
         for<'b> &'b M::V: VectorRef<M::V>,
         for<'b> &'b M: MatrixRef<M>,
     {
-        // not for windows
-        #[cfg(not(target_os = "windows"))]
+        Self::check_sens_available()?;
         match self {
             SolverMethod::Bdf => problem.bdf_sens::<LS>()?.solve_dense_sensitivities(t_eval),
             SolverMethod::Esdirk34 => problem
@@ -130,11 +139,6 @@ impl SolverMethod {
                 .tr_bdf2_sens::<LS>()?
                 .solve_dense_sensitivities(t_eval),
             SolverMethod::Tsit45 => problem.tsit45_sens()?.solve_dense_sensitivities(t_eval),
-        }
-        // raise error on windows as sensitivities are not supported
-        #[cfg(target_os = "windows")]
-        {
-            Err(DiffsolError::Other("Sensitivity analysis is not supported on Windows, please use a linux or macOS system.".to_string()))
         }
     }
 
@@ -153,8 +157,7 @@ impl SolverMethod {
         for<'b> &'b M::V: VectorRef<M::V>,
         for<'b> &'b M: MatrixRef<M>,
     {
-        // not for windows
-        #[cfg(not(target_os = "windows"))]
+        Self::check_sens_available()?;
         match self {
             SolverMethod::Bdf => self._solve_sum_squares_adj(
                 problem.bdf::<LS>()?,
@@ -184,11 +187,6 @@ impl SolverMethod {
                 backwards_method,
                 backwards_linear_solver,
             ),
-        }
-        // raise error on windows as adjoint sensitivities are not supported
-        #[cfg(target_os = "windows")]
-        {
-            Err(DiffsolError::Other("Adjoint sensitivity analysis is not supported on Windows, please use a linux or macOS system.".to_string()))
         }
     }
 
