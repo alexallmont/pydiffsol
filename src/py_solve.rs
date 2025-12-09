@@ -1,15 +1,20 @@
 // Delegate solver types selected at runtime in Python to concrete solver types
 // in Rust.
 
+use diffsol::VectorCommon;
 use diffsol::{
     error::DiffsolError, matrix::MatrixRef, DefaultDenseMatrix, DefaultSolver, DiffSl, Matrix,
     MatrixCommon, OdeBuilder, OdeEquations, OdeSolverProblem, Op, Vector, VectorHost, VectorRef,
 };
+use numpy::PyReadonlyArray2;
 use numpy::{ndarray::Array1, PyArray1, PyArray2, PyReadonlyArray1};
 use pyo3::{Bound, Python};
 
 use crate::valid_linear_solver::{KluValidator, LuValidator};
-use crate::{convert::MatrixToPy, solver_method::SolverMethod};
+use crate::{
+    convert::{MatrixToPy, VectorToPy},
+    solver_method::SolverMethod,
+};
 use crate::{
     error::PyDiffsolError, jit::JitModule, matrix_type::MatrixType, solver_type::SolverType,
     valid_linear_solver::validate_linear_solver,
@@ -19,6 +24,7 @@ use crate::{
 pub(crate) trait PySolve {
     fn matrix_type(&self) -> MatrixType;
 
+    #[allow(clippy::type_complexity)]
     fn solve<'py>(
         &mut self,
         py: Python<'py>,
@@ -36,6 +42,30 @@ pub(crate) trait PySolve {
         params: &[f64],
         t_eval: PyReadonlyArray1<'py, f64>,
     ) -> Result<Bound<'py, PyArray2<f64>>, PyDiffsolError>;
+
+    #[allow(clippy::type_complexity)]
+    fn solve_fwd_sens<'py>(
+        &mut self,
+        py: Python<'py>,
+        method: SolverMethod,
+        linear_solver: SolverType,
+        params: &[f64],
+        t_eval: PyReadonlyArray1<'py, f64>,
+    ) -> Result<(Bound<'py, PyArray2<f64>>, Vec<Bound<'py, PyArray2<f64>>>), PyDiffsolError>;
+
+    #[allow(clippy::type_complexity)]
+    #[allow(clippy::too_many_arguments)]
+    fn solve_sum_squares_adj<'py>(
+        &mut self,
+        py: Python<'py>,
+        method: SolverMethod,
+        linear_solver: SolverType,
+        backwards_method: SolverMethod,
+        backwards_linear_solver: SolverType,
+        params: &[f64],
+        data: PyReadonlyArray2<'py, f64>,
+        t_eval: PyReadonlyArray1<'py, f64>,
+    ) -> Result<(f64, Bound<'py, PyArray1<f64>>), PyDiffsolError>;
 
     fn check(&self, linear_solver: SolverType) -> Result<(), PyDiffsolError>;
     fn set_rtol(&mut self, rtol: f64);
@@ -102,6 +132,7 @@ impl<M> PySolve for GenericPySolve<M>
 where
     M: Matrix<T = f64> + DefaultSolver + LuValidator<M> + KluValidator<M>,
     for<'b> <<M::V as DefaultDenseMatrix>::M as MatrixCommon>::Inner: MatrixToPy<'b>,
+    for<'b> <M::V as VectorCommon>::Inner: VectorToPy<'b>,
     M::V: VectorHost + DefaultDenseMatrix,
     for<'b> &'b M::V: VectorRef<M::V>,
     for<'b> &'b M: MatrixRef<M>,
@@ -174,12 +205,91 @@ where
                 &mut self.problem,
                 t_eval.as_slice().unwrap(),
             ),
-            SolverType::Lu => method
-                .solve_dense::<M, <M as LuValidator<M>>::LS>(&mut self.problem, t_eval.as_slice().unwrap()),
-            SolverType::Klu => method
-                .solve_dense::<M, <M as KluValidator<M>>::LS>(&mut self.problem, t_eval.as_slice().unwrap()),
+            SolverType::Lu => method.solve_dense::<M, <M as LuValidator<M>>::LS>(
+                &mut self.problem,
+                t_eval.as_slice().unwrap(),
+            ),
+            SolverType::Klu => method.solve_dense::<M, <M as KluValidator<M>>::LS>(
+                &mut self.problem,
+                t_eval.as_slice().unwrap(),
+            ),
         }?;
 
         Ok(ys.inner().to_pyarray2(py))
+    }
+
+    fn solve_fwd_sens<'py>(
+        &mut self,
+        py: Python<'py>,
+        method: SolverMethod,
+        linear_solver: SolverType,
+        params: &[f64],
+        t_eval: PyReadonlyArray1<'py, f64>,
+    ) -> Result<(Bound<'py, PyArray2<f64>>, Vec<Bound<'py, PyArray2<f64>>>), PyDiffsolError> {
+        self.check(linear_solver)?;
+        self.setup_problem(params)?;
+
+        let (ys, sens) = match linear_solver {
+            SolverType::Default => method.solve_fwd_sens::<M, <M as DefaultSolver>::LS>(
+                &mut self.problem,
+                t_eval.as_slice().unwrap(),
+            ),
+            SolverType::Lu => method.solve_fwd_sens::<M, <M as LuValidator<M>>::LS>(
+                &mut self.problem,
+                t_eval.as_slice().unwrap(),
+            ),
+            SolverType::Klu => method.solve_fwd_sens::<M, <M as KluValidator<M>>::LS>(
+                &mut self.problem,
+                t_eval.as_slice().unwrap(),
+            ),
+        }?;
+
+        Ok((
+            ys.inner().to_pyarray2(py),
+            sens.into_iter()
+                .map(|s| s.inner().to_pyarray2(py))
+                .collect(),
+        ))
+    }
+
+    fn solve_sum_squares_adj<'py>(
+        &mut self,
+        py: Python<'py>,
+        method: SolverMethod,
+        linear_solver: SolverType,
+        backwards_method: SolverMethod,
+        backwards_linear_solver: SolverType,
+        params: &[f64],
+        data: PyReadonlyArray2<'py, f64>,
+        t_eval: PyReadonlyArray1<'py, f64>,
+    ) -> Result<(f64, Bound<'py, PyArray1<f64>>), PyDiffsolError> {
+        self.check(linear_solver)?;
+        self.setup_problem(params)?;
+
+        let (y, y_sens) = match linear_solver {
+            SolverType::Default => method.solve_sum_squares_adj::<M, <M as DefaultSolver>::LS>(
+                &mut self.problem,
+                data.as_array(),
+                t_eval.as_slice().unwrap(),
+                backwards_method,
+                backwards_linear_solver,
+            ),
+            SolverType::Lu => method.solve_sum_squares_adj::<M, <M as LuValidator<M>>::LS>(
+                &mut self.problem,
+                data.as_array(),
+                t_eval.as_slice().unwrap(),
+                backwards_method,
+                backwards_linear_solver,
+            ),
+            SolverType::Klu => method.solve_sum_squares_adj::<M, <M as KluValidator<M>>::LS>(
+                &mut self.problem,
+                data.as_array(),
+                t_eval.as_slice().unwrap(),
+                backwards_method,
+                backwards_linear_solver,
+            ),
+        }?;
+
+        Ok((y, y_sens.inner().to_pyarray1(py)))
     }
 }
