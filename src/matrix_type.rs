@@ -24,9 +24,9 @@ impl<T: diffsol::Scalar> MatrixKind for diffsol::FaerSparseMat<T> {
 
 /// Enumerates the possible matrix types for diffsol
 ///
-/// :attr nalgebra_dense: dense matrix using nalgebra crate (https://nalgebra.rs/) with f64 elements
-/// :attr faer_dense: dense matrix using faer crate (https://faer.veganb.tw/) with f64 elements
-/// :attr faer_sparse: sparse matrix using faer crate (https://faer.veganb.tw/) with f64 elements
+/// :attr nalgebra_dense: dense matrix using nalgebra crate (https://nalgebra.rs/)
+/// :attr faer_dense: dense matrix using faer crate (https://faer.veganb.tw/)
+/// :attr faer_sparse: sparse matrix using faer crate (https://faer.veganb.tw/)
 #[pyclass(eq)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum MatrixType {

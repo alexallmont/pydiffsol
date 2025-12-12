@@ -12,15 +12,19 @@ diffsol-llvm = []
 diffsol-llvm15 = ["diffsol/diffsl-llvm15", "diffsol-llvm"]
 diffsol-llvm16 = ["diffsol/diffsl-llvm16", "diffsol-llvm"]
 diffsol-llvm17 = ["diffsol/diffsl-llvm17", "diffsol-llvm"]
+diffsol-llvm18 = ["diffsol/diffsl-llvm18", "diffsol-llvm"]
+diffsol-llvm19 = ["diffsol/diffsl-llvm19", "diffsol-llvm"]
+diffsol-llvm20 = ["diffsol/diffsl-llvm20", "diffsol-llvm"]
+diffsol-llvm21 = ["diffsol/diffsl-llvm21", "diffsol-llvm"]
 diffsol-cranelift = ["diffsol/diffsl-cranelift"]
 suitesparse = ["diffsol/suitesparse"]
 
 [dependencies]
-pyo3 = { version = "0.26.0", default-features = false, features = ["abi3-py39", "extension-module"] }
-diffsol = { version = "0.8.0" }
+pyo3 = { version = "0.27.2", default-features = false, features = ["abi3-py39", "extension-module"] }
+diffsol = { version = "0.8.4" }
 faer = "0.23.2"
 nalgebra = "0.34.1"
-numpy = "0.26.0"
+numpy = "0.27.1"
 
 [dev-dependencies]
 pyo3 = { version = "*", features = ["auto-initialize"] }
