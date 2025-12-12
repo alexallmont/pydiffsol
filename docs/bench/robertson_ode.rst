@@ -15,7 +15,6 @@ This test case can be written as an ODE given by the following set of equations:
 
 with initial conditions:
 
-   :nowrap:
    \begin{align}
    x(0) &= 1 \\
    y(0) &= 0 \\
@@ -83,11 +82,9 @@ The code for the Diffrax solver is shown below:
 The code for the DifferentialEquations.jl solvers is shown below:
 
 .. literalinclude:: ../../bench/diffeq_robertson.jl
-   :encoding: latin-1
    :language: julia
 
 .. literalinclude:: ../../bench/diffeq_models.jl
-   :encoding: latin-1
    :language: julia
 
 Differences between implementations
