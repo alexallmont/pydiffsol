@@ -1,6 +1,7 @@
 // Delegate solver types selected at runtime in Python to concrete solver types
 // in Rust.
 
+use diffsl::execution::scalar::Scalar as DiffSlScalar;
 use diffsol::VectorCommon;
 use diffsol::{
     error::DiffsolError, matrix::MatrixRef, DefaultDenseMatrix, DefaultSolver, DiffSl, Matrix,
@@ -10,13 +11,14 @@ use numpy::PyReadonlyArray2;
 use numpy::{ndarray::Array1, PyArray1, PyArray2, PyReadonlyArray1};
 use pyo3::{Bound, Python};
 
+use crate::data_type::DataType;
 use crate::valid_linear_solver::{KluValidator, LuValidator};
 use crate::{
     convert::{MatrixToPy, VectorToPy},
     solver_method::SolverMethod,
 };
 use crate::{
-    error::PyDiffsolError, jit::JitModule, matrix_type::MatrixType, solver_type::SolverType,
+    error::PyDiffsolError, jit::JitModule, matrix_type::MatrixType, matrix_type::MatrixKind, solver_type::SolverType,
     valid_linear_solver::validate_linear_solver,
 };
 
@@ -78,22 +80,34 @@ pub(crate) trait PySolve {
 pub(crate) fn py_solve_factory(
     code: &str,
     matrix_type: MatrixType,
+    data_type: DataType,
 ) -> Result<Box<dyn PySolve>, PyDiffsolError> {
     let py_solve: Box<dyn PySolve> = match matrix_type {
-        MatrixType::NalgebraDenseF64 => {
-            Box::new(GenericPySolve::<diffsol::NalgebraMat<f64>>::new(code)?)
-        }
-        MatrixType::FaerDenseF64 => Box::new(GenericPySolve::<diffsol::FaerMat<f64>>::new(code)?),
-        MatrixType::FaerSparseF64 => {
-            Box::new(GenericPySolve::<diffsol::FaerSparseMat<f64>>::new(code)?)
-        }
+        MatrixType::NalgebraDense => {
+            match data_type {
+                DataType::F32 => Box::new(GenericPySolve::<diffsol::NalgebraMat<f32>>::new(code)?),
+                DataType::F64 => Box::new(GenericPySolve::<diffsol::NalgebraMat<f64>>::new(code)?),
+            }
+        },
+        MatrixType::FaerDense => {
+            match data_type {
+                DataType::F32 => Box::new(GenericPySolve::<diffsol::FaerMat<f32>>::new(code)?),
+                DataType::F64 => Box::new(GenericPySolve::<diffsol::FaerMat<f64>>::new(code)?),
+            }
+        },
+        MatrixType::FaerSparse => {
+            match data_type {
+                DataType::F32 => Box::new(GenericPySolve::<diffsol::FaerSparseMat<f32>>::new(code)?),
+                DataType::F64 => Box::new(GenericPySolve::<diffsol::FaerSparseMat<f64>>::new(code)?)
+            }
+        },
     };
     Ok(py_solve)
 }
 
 pub(crate) struct GenericPySolve<M>
 where
-    M: Matrix<T = f64>,
+    M: Matrix<T: DiffSlScalar>,
     M::V: VectorHost,
 {
     problem: OdeSolverProblem<DiffSl<M, JitModule>>,
@@ -101,7 +115,7 @@ where
 
 impl<M> GenericPySolve<M>
 where
-    M: Matrix<T = f64>,
+    M: Matrix<T: DiffSlScalar>,
     M::V: VectorHost,
 {
     pub fn new(code: &str) -> Result<Self, PyDiffsolError> {
@@ -130,7 +144,7 @@ where
 
 impl<M> PySolve for GenericPySolve<M>
 where
-    M: Matrix<T = f64> + DefaultSolver + LuValidator<M> + KluValidator<M>,
+    M: Matrix<T: DiffSlScalar> + DefaultSolver + LuValidator<M> + KluValidator<M> + MatrixKind,
     for<'b> <<M::V as DefaultDenseMatrix>::M as MatrixCommon>::Inner: MatrixToPy<'b>,
     for<'b> <M::V as VectorCommon>::Inner: VectorToPy<'b>,
     M::V: VectorHost + DefaultDenseMatrix,

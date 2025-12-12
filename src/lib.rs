@@ -1,6 +1,7 @@
 use pyo3::prelude::*;
 
 mod convert;
+mod data_type;
 mod error;
 mod jit;
 mod matrix_type;

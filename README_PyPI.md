@@ -18,10 +18,10 @@ ode = ds.Ode(
     u { 0.1 }
     F { r * u * (1.0 - u / k) }
     """,
-    ds.nalgebra_dense_f64
+    ds.nalgebra_dense
 )
 
-# Solve with default solver for nalgebra_dense_f64 (bdf)
+# Solve with default solver for nalgebra_dense (bdf)
 p = np.array([])
 print(ode.solve(p, 0.4))
 
