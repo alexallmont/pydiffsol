@@ -11,7 +11,8 @@ def plot():
     df = pd.read_csv(csv_filename)
     df_jl = pd.read_csv(csv_filename_jl)
     df = pd.merge(df, df_jl, on=["problem", "ngroups", "tol"], how="outer")
-    computer_name = "Dell PowerEdge R7525 2U rack server"
+    # fill in the name of the local machine here
+    # computer_name = "Dell PowerEdge R7525 2U rack server"
     computer_name = "Macbook Pro M2"
     
     df_robertson = df[df["problem"] == "robertson_ode"]
