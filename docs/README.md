@@ -9,3 +9,6 @@ pip install -r docs/requirements.txt
 cd docs
 sphinx-build -b html . _build/html
 ```
+
+Docs build from the latest published pydiffsol by default. If you have code changes you want to see in docs locally,
+re-run `maturin develop`. This will re-install your local pydiffsol in your venv, then rebuild the docs.
