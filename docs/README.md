@@ -5,7 +5,6 @@ These docs use the Sphinx Napoleon extension to build Python API readthedocs dir
 To test locally, build from the docs folder:
 
 ```shell
-pip install sphinx
 pip install -r docs/requirements.txt
 cd docs
 sphinx-build -b html . _build/html
