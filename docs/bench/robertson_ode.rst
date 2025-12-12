@@ -43,7 +43,7 @@ The following solvers are similar so should be compared against each other:
 - Diffsol's ESDIRK34, DifferentialEquations.jl KenCarp3 and Diffrax's Tsit5 methods are different methods, but are all SDIRK implicit Runge-Kutta methods of similar order.
 
 Benchmark Setup
------------------
+---------------
 
 For each solver, we perform as much initial setup as possible outside of the timing loop to ensure a fair comparison, using a function called `setup`.
 The actual benchmark is performed in a function called `bench`.
@@ -72,7 +72,7 @@ The code for the CasADi solver is shown below:
 
 The code for the Diffrax solver is shown below:
 
-.. literalinclude:: ../../bench/diffrax_robertson_ode.py
+.. literalinclude:: ../../bench/diffrax_robertson.py
    :encoding: latin-1
    :language: python
 
@@ -91,7 +91,7 @@ The code for the DifferentialEquations.jl solvers is shown below:
    :language: julia
 
 Differences between implementations
---------------------------------
+-----------------------------------
 
 There are a few key differences between the Diffrax, Casadi, Diffsol and DifferentialEquations.jl implementations that may affect the performance of the solvers. The main differences are:
 
