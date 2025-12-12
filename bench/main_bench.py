@@ -211,5 +211,4 @@ if __name__ == "__main__":
             for tol in [1e-8]
         ]
     )
-    #bench(ngroups=[32, 64, 128, 256, 512, 1024, 2048], tols=[1e-8])
     #bench(ngroups=[1, 2], tols=[1e-8])
