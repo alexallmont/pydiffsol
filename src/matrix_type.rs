@@ -1,26 +1,9 @@
 // Matrix type Python enum
 
-use diffsol::Matrix;
+use diffsol::{Matrix, Scalar};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyList, PyType};
-
-pub(crate) trait MatrixKind {
-    const MATRIX_TYPE: MatrixType;
-}
-
-impl<T: diffsol::Scalar> MatrixKind for diffsol::NalgebraMat<T> {
-    const MATRIX_TYPE: MatrixType = MatrixType::NalgebraDense;
-}
-
-impl<T: diffsol::Scalar> MatrixKind for diffsol::FaerMat<T> {
-    const MATRIX_TYPE: MatrixType = MatrixType::FaerDense;
-}
-
-impl<T: diffsol::Scalar> MatrixKind for diffsol::FaerSparseMat<T> {
-    const MATRIX_TYPE: MatrixType = MatrixType::FaerSparse;
-}
-
 
 /// Enumerates the possible matrix types for diffsol
 ///
@@ -40,6 +23,23 @@ pub enum MatrixType {
     FaerSparse,
 }
 
+// Internal trait to determine runtime MatrixType from a compile-time diffsol matrix type
+pub(crate) trait MatrixKind {
+    const MATRIX_TYPE: MatrixType;
+}
+
+impl<T: Scalar> MatrixKind for diffsol::NalgebraMat<T> {
+    const MATRIX_TYPE: MatrixType = MatrixType::NalgebraDense;
+}
+
+impl<T: Scalar> MatrixKind for diffsol::FaerMat<T> {
+    const MATRIX_TYPE: MatrixType = MatrixType::FaerDense;
+}
+
+impl<T: Scalar> MatrixKind for diffsol::FaerSparseMat<T> {
+    const MATRIX_TYPE: MatrixType = MatrixType::FaerSparse;
+}
+
 impl MatrixType {
     pub(crate) fn all_enums() -> Vec<MatrixType> {
         vec![
@@ -57,9 +57,9 @@ impl MatrixType {
         }
     }
 
-    pub(crate) fn from_diffsol<M: Matrix + MatrixKind>() -> Option<Self> {
-        // FIXME remove Some, make pub(crate)
-        Some(M::MATRIX_TYPE)
+    // Determine runtime matrix type compiled diffsol matrix type
+    pub(crate) fn from_diffsol<M: Matrix + MatrixKind>() -> Self {
+        M::MATRIX_TYPE
     }
 }
 

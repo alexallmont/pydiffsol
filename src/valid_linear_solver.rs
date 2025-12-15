@@ -15,7 +15,7 @@ pub(crate) fn validate_linear_solver<M: diffsol::Matrix + LuValidator<M> + KluVa
             if !<M as LuValidator<M>>::valid() {
                 return Err(DiffsolError::Other(format!(
                     "Lu solver not supported for {}",
-                    MatrixType::from_diffsol::<M>().unwrap().get_name()
+                    MatrixType::from_diffsol::<M>().get_name()
                 ))
                 .into());
             }
@@ -25,7 +25,7 @@ pub(crate) fn validate_linear_solver<M: diffsol::Matrix + LuValidator<M> + KluVa
             if !<M as KluValidator<M>>::valid() {
                 return Err(DiffsolError::Other(format!(
                     "Klu solver not supported for {}",
-                    MatrixType::from_diffsol::<M>().unwrap().get_name()
+                    MatrixType::from_diffsol::<M>().get_name()
                 ))
                 .into());
             }

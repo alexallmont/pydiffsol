@@ -152,7 +152,7 @@ where
     for<'b> &'b M: MatrixRef<M>,
 {
     fn matrix_type(&self) -> MatrixType {
-        MatrixType::from_diffsol::<M>().expect("Unknown matrix type")
+        MatrixType::from_diffsol::<M>()
     }
 
     fn check(&self, linear_solver: SolverType) -> Result<(), PyDiffsolError> {
