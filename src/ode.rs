@@ -18,7 +18,7 @@ struct Ode {
     code: String,
     linear_solver: SolverType,
     method: SolverMethod,
-    py_solve: Box<dyn PySolve>,
+    py_solve: Box<dyn PySolve>, // FIXME dynamic dispatch, either 32/64, typed Ode, or PyAny.
 }
 unsafe impl Send for Ode {}
 unsafe impl Sync for Ode {}
