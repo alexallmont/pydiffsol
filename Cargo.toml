@@ -25,6 +25,7 @@ diffsol = { version = "0.8.4" }
 faer = "0.23.2"
 nalgebra = "0.34.1"
 numpy = "0.27.1"
+num-traits = "0.2.17"
 
 [dev-dependencies]
 pyo3 = { version = "*", features = ["auto-initialize"] }

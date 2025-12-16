@@ -4,7 +4,7 @@
 use diffsol::error::DiffsolError;
 use diffsol::{
     matrix::MatrixRef, DefaultDenseMatrix, DiffSl, LinearSolver, Matrix, OdeSolverMethod,
-    OdeSolverProblem, Vector, VectorHost, VectorRef,
+    OdeSolverProblem, Vector, VectorHost, VectorRef, DiffSlScalar
 };
 use diffsol::{
     AdjointOdeSolverMethod, Checkpointing, DefaultSolver, DenseMatrix, MatrixCommon,
@@ -15,6 +15,7 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyList, PyType};
 
+use crate::convert::RealF32OrF64;
 use crate::is_sens_available;
 use crate::jit::JitModule;
 use crate::solver_type::SolverType;
@@ -64,10 +65,10 @@ impl SolverMethod {
     pub(crate) fn solve<M, LS>(
         &self,
         problem: &mut OdeSolverProblem<DiffSl<M, JitModule>>,
-        final_time: f64,
-    ) -> Result<(<M::V as DefaultDenseMatrix>::M, Vec<f64>), DiffsolError>
+        final_time: M::T,
+    ) -> Result<(<M::V as DefaultDenseMatrix>::M, Vec<M::T>), DiffsolError>
     where
-        M: Matrix<T = f64>,
+        M: Matrix<T: DiffSlScalar>,
         M::V: VectorHost + DefaultDenseMatrix,
         LS: LinearSolver<M>,
         for<'b> &'b M::V: VectorRef<M::V>,
@@ -84,10 +85,10 @@ impl SolverMethod {
     pub(crate) fn solve_dense<M, LS>(
         &self,
         problem: &mut OdeSolverProblem<DiffSl<M, JitModule>>,
-        t_eval: &[f64],
+        t_eval: &[M::T],
     ) -> Result<<M::V as DefaultDenseMatrix>::M, DiffsolError>
     where
-        M: Matrix<T = f64>,
+        M: Matrix<T: DiffSlScalar>,
         M::V: VectorHost + DefaultDenseMatrix,
         LS: LinearSolver<M>,
         for<'b> &'b M::V: VectorRef<M::V>,
@@ -100,7 +101,7 @@ impl SolverMethod {
             SolverMethod::Tsit45 => problem.tsit45()?.solve_dense(t_eval),
         }
     }
-    
+
     fn check_sens_available() -> Result<(), DiffsolError> {
         if !is_sens_available() {
             return Err(DiffsolError::Other(
@@ -114,7 +115,7 @@ impl SolverMethod {
     pub(crate) fn solve_fwd_sens<M, LS>(
         &self,
         problem: &mut OdeSolverProblem<DiffSl<M, JitModule>>,
-        t_eval: &[f64],
+        t_eval: &[M::T],
     ) -> Result<
         (
             <M::V as DefaultDenseMatrix>::M,
@@ -123,7 +124,7 @@ impl SolverMethod {
         DiffsolError,
     >
     where
-        M: Matrix<T = f64> + DefaultSolver,
+        M: Matrix<T: DiffSlScalar> + DefaultSolver,
         M::V: VectorHost + DefaultDenseMatrix,
         LS: LinearSolver<M>,
         for<'b> &'b M::V: VectorRef<M::V>,
@@ -142,16 +143,18 @@ impl SolverMethod {
         }
     }
 
-    pub(crate) fn solve_sum_squares_adj<'a, M, LS>(
+    pub(crate) fn solve_sum_squares_adj<'a, T, M, LS>(
         &self,
         problem: &mut OdeSolverProblem<DiffSl<M, JitModule>>,
-        data: ArrayView2<'a, f64>,
-        t_eval: &[f64],
+        data: ArrayView2<'a, M::T>,
+        t_eval: &[M::T],
         backwards_method: SolverMethod,
         backwards_linear_solver: SolverType,
     ) -> Result<(M::T, M::V), DiffsolError>
     where
-        M: Matrix<T = f64> + DefaultSolver + LuValidator<M> + KluValidator<M>,
+        T: RealF32OrF64,
+        <T as RealF32OrF64>::MatrixType: RealF32OrF64,
+        M: Matrix<T = T> + DefaultSolver + LuValidator<M> + KluValidator<M>,
         M::V: VectorHost + DefaultDenseMatrix,
         LS: LinearSolver<M>,
         for<'b> &'b M::V: VectorRef<M::V>,
@@ -159,7 +162,7 @@ impl SolverMethod {
     {
         Self::check_sens_available()?;
         match self {
-            SolverMethod::Bdf => self._solve_sum_squares_adj(
+            SolverMethod::Bdf => self._solve_sum_squares_adj::<M::T, _, _>(
                 problem.bdf::<LS>()?,
                 data,
                 t_eval,
@@ -190,16 +193,18 @@ impl SolverMethod {
         }
     }
 
-    pub(crate) fn _solve_sum_squares_adj<'data, 'solver, M, S>(
+    pub(crate) fn _solve_sum_squares_adj<'data, 'solver, T, M, S>(
         &self,
         mut solver: S,
-        data: ArrayView2<'data, f64>,
-        t_eval: &[f64],
+        data: ArrayView2<'data, M::T>,
+        t_eval: &[M::T],
         backwards_method: SolverMethod,
         backwards_linear_solver: SolverType,
     ) -> Result<(M::T, M::V), DiffsolError>
     where
-        M: Matrix<T = f64> + DefaultSolver + LuValidator<M> + KluValidator<M>,
+        T: RealF32OrF64,
+        <T as RealF32OrF64>::MatrixType: RealF32OrF64,
+        M: Matrix<T = T> + DefaultSolver + LuValidator<M> + KluValidator<M>,
         M::V: VectorHost + DefaultDenseMatrix,
         S: OdeSolverMethod<'solver, DiffSl<M, JitModule>>,
         for<'b> &'b M::V: VectorRef<M::V>,
@@ -209,17 +214,17 @@ impl SolverMethod {
         let eqn = solver.problem().eqn();
         let ctx = eqn.context();
         let mut g_m = <M::V as DefaultDenseMatrix>::M::zeros(eqn.nout(), t_eval.len(), ctx.clone());
-        let mut y = 0.0;
+        let mut y = T::zero();
         for j in 0..g_m.ncols() {
             let ys_col = ys.column(j);
             // TODO: can we avoid this allocation? (I can't see how right now)
             let mut tmp = M::V::from_slice(data.column(j).as_slice().unwrap(), ctx.clone());
             // tmp = 2 * ys_col - 2 * tmp
-            tmp.axpy_v(2.0, &ys_col, -2.0);
+            tmp.axpy_v(T::from_f64(2.0).unwrap(), &ys_col, T::from_f64(-2.0).unwrap());
             g_m.column_mut(j).copy_from(&tmp);
 
             // y = (1/4) * dot(tmp, tmp) + y
-            y += (1.0 / 4.0) * tmp.norm(2).powi(2);
+            y += T::from_f64(1.0 / 4.0).unwrap() * tmp.norm(2).powi(2);
         }
         let mut y_sens = match backwards_linear_solver {
             SolverType::Default => backwards_method
@@ -255,11 +260,11 @@ impl SolverMethod {
         problem: &'solver OdeSolverProblem<DiffSl<M, JitModule>>,
         checkpointing: Checkpointing<'solver, DiffSl<M, JitModule>, S>,
         g_m: &<M::V as DefaultDenseMatrix>::M,
-        t_eval: &[f64],
+        t_eval: &[M::T],
         nout_override: Option<usize>,
     ) -> Result<Vec<M::V>, DiffsolError>
     where
-        M: Matrix<T = f64> + DefaultSolver,
+        M: Matrix<T: DiffSlScalar> + DefaultSolver,
         M::V: VectorHost + DefaultDenseMatrix,
         S: OdeSolverMethod<'solver, DiffSl<M, JitModule>>,
         LS: LinearSolver<M>,
