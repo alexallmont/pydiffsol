@@ -1,9 +1,11 @@
 // Matrix type Python enum
 
 use diffsol::{Matrix, Scalar};
-use pyo3::exceptions::PyValueError;
-use pyo3::prelude::*;
-use pyo3::types::{PyList, PyType};
+use pyo3::{
+    exceptions::PyValueError,
+    prelude::*,
+    types::{PyList, PyType},
+};
 
 /// Enumerates the possible matrix types for diffsol
 ///

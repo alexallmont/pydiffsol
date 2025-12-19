@@ -1,13 +1,19 @@
 // Conversion methods from diffsol matrix to Python 2D array
 
-use diffsol::Scalar;
-use numpy::ndarray::{ArrayView1, ArrayView2, ShapeBuilder};
-use numpy::{PyArray1, PyArray2, ToPyArray};
+use numpy::{
+    dtype,
+    ndarray::{ArrayView1, ArrayView2, ShapeBuilder},
+    Element,
+    PyArray1, PyArray2, PyUntypedArray,
+    PyArrayDescrMethods, PyArrayMethods, PyUntypedArrayMethods,
+    ToPyArray
+};
 use pyo3::prelude::*;
 
-// Trait for valid matrix and python scalar types (f32 and f64 currently used)
-trait PyCompatibleScalar: Scalar + numpy::Element {}
-impl<T> PyCompatibleScalar for T where T: Scalar + numpy::Element {}
+use crate::{
+    error::PyDiffsolError,
+    py_types::PyCompatibleScalar
+};
 
 // 2D matrix to python array conversion
 pub trait MatrixToPy<'py, T> {
@@ -49,4 +55,35 @@ impl<'py, T: PyCompatibleScalar> VectorToPy<'py, T> for faer::Col<T> {
         let view = unsafe { ArrayView1::from_shape_ptr(self.nrows(), self.as_ptr()) };
         view.to_pyarray(py)
     }
+}
+
+pub(crate) fn to_arrayview2<'py, T>(
+    arr: &'py Bound<'py, PyUntypedArray>,
+) -> Result<ArrayView2<'py, T>, PyDiffsolError>
+where
+    T: Element,
+{
+    if arr.ndim() != 2 {
+        return Err(PyDiffsolError::Conversion(format!(
+            "Expecting 2D array but got {}D array",
+            arr.ndim()
+        )));
+    }
+
+    let expected = dtype::<T>(arr.py());
+    let actual = arr.dtype();
+    if !actual.is_equiv_to(&expected) {
+        return Err(PyDiffsolError::Conversion(format!(
+            "Expected array type of {} but got {}",
+            std::any::type_name::<T>(),
+            actual
+        )));
+    }
+
+    let typed: &Bound<'py, PyArray2<T>> = arr
+        .cast::<PyArray2<T>>()
+        .map_err(|_| PyDiffsolError::Conversion("FIXME".to_string()))?;
+
+    // SAFETY: From above checks at this point we know dtype, shape and lifetimes are correct
+    Ok(unsafe { typed.as_array() })
 }

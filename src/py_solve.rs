@@ -5,37 +5,23 @@ use diffsol::{
     error::DiffsolError, matrix::MatrixRef,
     DefaultDenseMatrix, DefaultSolver, DiffSl, DiffSlScalar,
     Matrix, MatrixCommon, OdeBuilder, OdeEquations, OdeSolverProblem, Op,
-    Scalar, Vector, VectorCommon, VectorHost, VectorRef
+    Vector, VectorCommon, VectorHost, VectorRef
 };
 use num_traits::{FromPrimitive, ToPrimitive}; // for from_f64 and to_f64
-use numpy::{ndarray::Array1, PyArray1, PyArray2, PyUntypedArray};
-use pyo3::{Bound, Python, PyAny};
+use numpy::{ndarray::Array1, Element, PyArray1};
+use pyo3::{Bound, Python};
 
-use crate::data_type::{self, DataType};
-use crate::valid_linear_solver::{KluValidator, LuValidator};
 use crate::{
-    convert::{MatrixToPy, VectorToPy},
+    data_type::DataType,
+    error::PyDiffsolError,
+    jit::JitModule,
+    matrix_type::{MatrixKind, MatrixType},
+    py_convert::{MatrixToPy, VectorToPy, to_arrayview2},
+    py_types::{PyReadonlyUntypedArray2, PyUntypedArray1, PyUntypedArray2},
     solver_method::SolverMethod,
+    solver_type::SolverType,
+    valid_linear_solver::{KluValidator, LuValidator, validate_linear_solver},
 };
-use crate::{
-    error::PyDiffsolError, jit::JitModule, matrix_type::MatrixType, matrix_type::MatrixKind, solver_type::SolverType,
-    valid_linear_solver::validate_linear_solver,
-};
-
-// Solve methods would ideally use something like a dimensioned PyUntypedArray in their return
-// types, but this has two problems: 1) it cannot be dimensioned, 2) it cannot be returned (it
-// does not have a .into method). So instead this code falls back to PyAny using these aliases
-// to communicate what a paricular return type _should_ be. Summary of solve returns:
-//  - solve result: (2D solution array, 1D timepoints) tuple
-//  - solve_dense result: 2D solution array
-//  - solve_fwd_send result: (2D solution array, 2D sensitivity array) tuple
-//  - solve_sum_squares_adj: (sum of squares, 1D timepoints) tuple
-pub(crate) type PyUntypedArray1 = PyAny;
-pub(crate) type PyUntypedArray2 = PyAny;
-
-// Similarly, there are no dimensioned read only untyped arrays, so aliases are used as above.
-pub(crate) type PyReadonlyUntypedArray1 = PyUntypedArray;
-pub(crate) type PyReadonlyUntypedArray2 = PyUntypedArray;
 
 pub(crate) trait PySolve {
     fn matrix_type(&self) -> MatrixType;
@@ -46,6 +32,7 @@ pub(crate) trait PySolve {
     fn set_atol(&mut self, atol: f64);
     fn atol(&self) -> f64;
 
+    // Result: (2D solution array, 1D timepoints) tuple
     #[allow(clippy::type_complexity)]
     fn solve<'py>(
         &mut self,
@@ -56,6 +43,7 @@ pub(crate) trait PySolve {
         final_time: f64,
     ) -> Result<(Bound<'py, PyUntypedArray2>, Bound<'py, PyUntypedArray1>), PyDiffsolError>;
 
+    // Result: 2D solution array
     fn solve_dense<'py>(
         &mut self,
         py: Python<'py>,
@@ -65,6 +53,7 @@ pub(crate) trait PySolve {
         t_eval: &[f64],
     ) -> Result<Bound<'py, PyUntypedArray2>, PyDiffsolError>;
 
+    // Result: (2D solution array, Vec of 2D sensitivity array per param) tuple
     #[allow(clippy::type_complexity)]
     fn solve_fwd_sens<'py>(
         &mut self,
@@ -75,7 +64,7 @@ pub(crate) trait PySolve {
         t_eval: &[f64],
     ) -> Result<(Bound<'py, PyUntypedArray2>, Vec<Bound<'py, PyUntypedArray2>>), PyDiffsolError>;
 
-/*
+    // Result: (sum of squares, 1D timepoints) tuple
     #[allow(clippy::type_complexity)]
     #[allow(clippy::too_many_arguments)]
     fn solve_sum_squares_adj<'py>(
@@ -86,10 +75,9 @@ pub(crate) trait PySolve {
         backwards_method: SolverMethod,
         backwards_linear_solver: SolverType,
         params: &[f64],
-        data: &[f64], // FIXME data is 2D, need to pass down a different way untyped
+        data: Bound<'py, PyReadonlyUntypedArray2>,
         t_eval: &[f64],
     ) -> Result<(f64, Bound<'py, PyUntypedArray1>), PyDiffsolError>;
-*/
 }
 
 // Public factory method for generating an instance based on matrix type
@@ -131,7 +119,7 @@ where
 
 impl<M> GenericPySolve<M>
 where
-    M: Matrix<T: DiffSlScalar + numpy::Element>,
+    M: Matrix<T: DiffSlScalar + Element>,
     M::V: VectorHost,
 {
     pub fn new(code: &str) -> Result<Self, PyDiffsolError> {
@@ -268,7 +256,6 @@ where
         ))
     }
 
-/*
     fn solve_sum_squares_adj<'py>(
         &mut self,
         py: Python<'py>,
@@ -277,37 +264,39 @@ where
         backwards_method: SolverMethod,
         backwards_linear_solver: SolverType,
         params: &[f64],
-        data: PyReadonlyUntypedArray1<'py>,
-        t_eval: PyReadonlyArray1<'py, M::T>,
+        data: Bound<'py, PyReadonlyUntypedArray2>,
+        t_eval: &[f64],
     ) -> Result<(f64, Bound<'py, PyUntypedArray1>), PyDiffsolError> {
         self.check(linear_solver)?;
         self.setup_problem(params)?;
 
+        let data = to_arrayview2::<M::T>(&data)?;
+        let t_eval: Vec<M::T> = t_eval.iter().map(|&x| M::T::from_f64(x).unwrap()).collect();
+
         let (y, y_sens) = match linear_solver {
-            SolverType::Default => method.solve_sum_squares_adj::<M::T, M, <M as DefaultSolver>::LS>(
+            SolverType::Default => method.solve_sum_squares_adj::<M, <M as DefaultSolver>::LS>(
                 &mut self.problem,
-                data.as_array(),
-                t_eval.as_slice().unwrap(),
+                data,
+                &t_eval,
                 backwards_method,
                 backwards_linear_solver,
             ),
-            SolverType::Lu => method.solve_sum_squares_adj::<M::T, M, <M as LuValidator<M>>::LS>(
+            SolverType::Lu => method.solve_sum_squares_adj::<M, <M as LuValidator<M>>::LS>(
                 &mut self.problem,
-                data.as_array(),
-                t_eval.as_slice().unwrap(),
+                data,
+                &t_eval,
                 backwards_method,
                 backwards_linear_solver,
             ),
-            SolverType::Klu => method.solve_sum_squares_adj::<M::T, M, <M as KluValidator<M>>::LS>(
+            SolverType::Klu => method.solve_sum_squares_adj::<M, <M as KluValidator<M>>::LS>(
                 &mut self.problem,
-                data.as_array(),
-                t_eval.as_slice().unwrap(),
+                data,
+                &t_eval,
                 backwards_method,
                 backwards_linear_solver,
             ),
         }?;
 
-        Ok((y, y_sens.inner().to_pyarray1(py)))
+        Ok((y.to_f64().unwrap(), y_sens.inner().to_pyarray1(py).into_any()))
     }
-*/
 }

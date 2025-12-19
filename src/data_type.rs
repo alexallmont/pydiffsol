@@ -1,8 +1,10 @@
 // Data type Python enum
 
-use pyo3::exceptions::PyValueError;
-use pyo3::prelude::*;
-use pyo3::types::{PyList, PyType};
+use pyo3::{
+    exceptions::PyValueError,
+    prelude::*,
+    types::{PyList, PyType},
+};
 
 // FIXME rename this to ScalarType and scalar_type in Python to reflect diffsol API.
 

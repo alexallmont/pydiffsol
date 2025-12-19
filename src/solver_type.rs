@@ -2,9 +2,11 @@
 // LU or KLU in diffsol, with default selecting whichever is most appropriate
 // given the matrix type.
 
-use pyo3::exceptions::PyValueError;
-use pyo3::prelude::*;
-use pyo3::types::{PyList, PyType};
+use pyo3::{
+    exceptions::PyValueError,
+    prelude::*,
+    types::{PyList, PyType},
+};
 
 /// Enumerates the possible linear solver types for diffsol
 ///

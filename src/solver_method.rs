@@ -7,19 +7,24 @@ use diffsol::{
     OdeSolverProblem, Vector, VectorHost, VectorRef,
 };
 use diffsol::{
-    AdjointOdeSolverMethod, Checkpointing, DefaultSolver, DenseMatrix, DiffSlScalar, MatrixCommon, OdeSolverState, Op, SensitivitiesOdeSolverMethod, VectorViewMut
+    AdjointOdeSolverMethod, Checkpointing, DefaultSolver, DenseMatrix, DiffSlScalar,
+    MatrixCommon, OdeSolverState, Op, SensitivitiesOdeSolverMethod, VectorViewMut
 };
 use nalgebra::ComplexField; // for powi
 use num_traits::{FromPrimitive, Zero}; // for generic nums in _solve_sum_squares_adj
 use numpy::ndarray::ArrayView2;
-use pyo3::exceptions::PyValueError;
-use pyo3::prelude::*;
-use pyo3::types::{PyList, PyType};
+use pyo3::{
+    exceptions::PyValueError,
+    prelude::*,
+    types::{PyList, PyType},
+};
 
-use crate::is_sens_available;
-use crate::jit::JitModule;
-use crate::solver_type::SolverType;
-use crate::valid_linear_solver::{KluValidator, LuValidator};
+use crate::{
+    is_sens_available,
+    jit::JitModule,
+    solver_type::SolverType,
+    valid_linear_solver::{KluValidator, LuValidator},
+};
 
 /// Enumerates the possible ODE solver methods for diffsol. See the solver descriptions in the diffsol documentation (https://github.com/martinjrobins/diffsol) for more details.
 ///
