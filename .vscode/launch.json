@@ -5,21 +5,21 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "debugpy: test_basic_api.py",
+            "name": "debugpy: test_solve.py",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/test/test_basic_api.py",
+            "program": "${workspaceFolder}/test/test_solve.py",
             "python": ".venv/bin/python",
             "console": "integratedTerminal",
             "preLaunchTask": "maturin develop",
         },
         {
-            "name": "lldb: test_basic_api.py",
+            "name": "lldb: test_solve.py",
             "type": "lldb",
             "request": "launch",
             "program": ".venv/bin/python",
             "args": [
-                "test/test_basic_api.py"
+                "test/test_solve.py"
             ],
             "cwd": "${workspaceFolder}",
             "preLaunchTask": "maturin develop",
