@@ -9,11 +9,11 @@ use pyo3::{
 };
 
 use crate::{
-    data_type::DataType,
     error::PyDiffsolError,
     matrix_type::MatrixType,
     py_solve::{py_solve_factory, PySolve},
     py_types::{PyReadonlyUntypedArray2, PyUntypedArray1, PyUntypedArray2},
+    scalar_type::ScalarType,
     solver_method::SolverMethod,
     solver_type::SolverType,
 };
@@ -49,15 +49,15 @@ impl OdeWrapper {
     /// All other fields are editable, for example setting the solver type or
     /// method, or changing solver tolerances.
     #[new]
-    #[pyo3(signature=(code, matrix_type=MatrixType::NalgebraDense, data_type=DataType::F64, method=SolverMethod::Bdf, linear_solver=SolverType::Default))]
+    #[pyo3(signature=(code, matrix_type=MatrixType::NalgebraDense, scalar_type=ScalarType::F64, method=SolverMethod::Bdf, linear_solver=SolverType::Default))]
     fn new(
         code: &str,
         matrix_type: MatrixType,
-        data_type: DataType,
+        scalar_type: ScalarType,
         method: SolverMethod,
         linear_solver: SolverType,
     ) -> Result<Self, PyDiffsolError> {
-        let py_solve = py_solve_factory(code, matrix_type, data_type)?;
+        let py_solve = py_solve_factory(code, matrix_type, scalar_type)?;
         py_solve.check(linear_solver)?;
         Ok(OdeWrapper(Arc::new(Mutex::new(Ode {
             code: code.to_string(),

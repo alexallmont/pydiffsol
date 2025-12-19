@@ -1,6 +1,5 @@
 use pyo3::prelude::*;
 
-mod data_type;
 mod error;
 mod jit;
 mod matrix_type;
@@ -8,6 +7,7 @@ mod ode;
 mod py_convert;
 mod py_types;
 mod py_solve;
+mod scalar_type;
 mod solver_method;
 mod solver_type;
 mod valid_linear_solver;
@@ -36,6 +36,7 @@ fn is_sens_available() -> bool {
 fn pydiffsol(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Register all Python API classes
     m.add_class::<matrix_type::MatrixType>()?;
+    m.add_class::<scalar_type::ScalarType>()?;
     m.add_class::<solver_type::SolverType>()?;
     m.add_class::<solver_method::SolverMethod>()?;
     m.add_class::<ode::OdeWrapper>()?;
@@ -43,6 +44,9 @@ fn pydiffsol(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Shorthand aliases, e.g. `ds.bdf` rather than `ds.SolverMethod.bdf`
     for mt in matrix_type::MatrixType::all_enums() {
         m.add(mt.get_name(), mt)?;
+    }
+    for st in scalar_type::ScalarType::all_enums() {
+        m.add(st.get_name(), st)?;
     }
     for st in solver_type::SolverType::all_enums() {
         m.add(st.get_name(), st)?;

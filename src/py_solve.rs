@@ -12,12 +12,12 @@ use numpy::{ndarray::Array1, Element, PyArray1};
 use pyo3::{Bound, Python};
 
 use crate::{
-    data_type::DataType,
     error::PyDiffsolError,
     jit::JitModule,
     matrix_type::{MatrixKind, MatrixType},
     py_convert::{MatrixToPy, VectorToPy, to_arrayview2},
     py_types::{PyReadonlyUntypedArray2, PyUntypedArray1, PyUntypedArray2},
+    scalar_type::ScalarType,
     solver_method::SolverMethod,
     solver_type::SolverType,
     valid_linear_solver::{KluValidator, LuValidator, validate_linear_solver},
@@ -84,25 +84,25 @@ pub(crate) trait PySolve {
 pub(crate) fn py_solve_factory(
     code: &str,
     matrix_type: MatrixType,
-    data_type: DataType,
+    scalar_type: ScalarType,
 ) -> Result<Box<dyn PySolve>, PyDiffsolError> {
     let py_solve: Box<dyn PySolve> = match matrix_type {
         MatrixType::NalgebraDense => {
-            match data_type {
-                DataType::F32 => Box::new(GenericPySolve::<diffsol::NalgebraMat<f32>>::new(code)?),
-                DataType::F64 => Box::new(GenericPySolve::<diffsol::NalgebraMat<f64>>::new(code)?),
+            match scalar_type {
+                ScalarType::F32 => Box::new(GenericPySolve::<diffsol::NalgebraMat<f32>>::new(code)?),
+                ScalarType::F64 => Box::new(GenericPySolve::<diffsol::NalgebraMat<f64>>::new(code)?),
             }
         },
         MatrixType::FaerDense => {
-            match data_type {
-                DataType::F32 => Box::new(GenericPySolve::<diffsol::FaerMat<f32>>::new(code)?),
-                DataType::F64 => Box::new(GenericPySolve::<diffsol::FaerMat<f64>>::new(code)?),
+            match scalar_type {
+                ScalarType::F32 => Box::new(GenericPySolve::<diffsol::FaerMat<f32>>::new(code)?),
+                ScalarType::F64 => Box::new(GenericPySolve::<diffsol::FaerMat<f64>>::new(code)?),
             }
         },
         MatrixType::FaerSparse => {
-            match data_type {
-                DataType::F32 => Box::new(GenericPySolve::<diffsol::FaerSparseMat<f32>>::new(code)?),
-                DataType::F64 => Box::new(GenericPySolve::<diffsol::FaerSparseMat<f64>>::new(code)?)
+            match scalar_type {
+                ScalarType::F32 => Box::new(GenericPySolve::<diffsol::FaerSparseMat<f32>>::new(code)?),
+                ScalarType::F64 => Box::new(GenericPySolve::<diffsol::FaerSparseMat<f64>>::new(code)?)
             }
         },
     };
