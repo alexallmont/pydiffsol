@@ -13,8 +13,15 @@ u { y0 }
 F { r * u * (1.0 - u / k) }
 """
 
+
 def test_solve():
-    ode = ds.Ode(LOGISTIC_CODE, matrix_type=ds.nalgebra_dense_f64, method=ds.bdf, linear_solver=ds.lu)
+    ode = ds.Ode(
+        LOGISTIC_CODE,
+        matrix_type=ds.nalgebra_dense,
+        scalar_type=ds.f64,
+        method=ds.bdf,
+        linear_solver=ds.lu
+    )
 
     r = 1.0
     k = 1.0
@@ -56,6 +63,29 @@ def test_solve():
     # Check that code read back matches original
     assert ode.code == LOGISTIC_CODE
 
+
+@pytest.mark.parametrize("final_time", [0.4, 1.0, 2.0])
+@pytest.mark.parametrize("params", [[1.0, 1.0, 0.1], [2.0, 0.5, 0.2]])
+def test_solve_f32_near_f64(final_time, params):
+    last_y = []
+    last_t = []
+
+    for scalar_type in [ds.f64, ds.f32]:
+        ode = ds.Ode(
+            LOGISTIC_CODE,
+            matrix_type=ds.nalgebra_dense,
+            scalar_type=scalar_type,
+            method=ds.bdf,
+            linear_solver=ds.lu
+        )
+        ys, ts = ode.solve(np.array(params), final_time)
+        last_y.append(ys[0][-1])
+        last_t.append(ts[-1])
+
+    assert last_y[0] == pytest.approx(last_y[1], abs=1e-4)
+    assert last_t[0] == pytest.approx(last_t[1], abs=1e-4)
+
+
 def test_solve_fwd_sens():
     ode = ds.Ode(LOGISTIC_CODE, matrix_type=ds.nalgebra_dense_f64, method=ds.bdf, linear_solver=ds.lu)
 
@@ -86,7 +116,7 @@ def test_solve_fwd_sens():
     for sens_i, expect_i, param_name in zip(sens, expect_sens, ['r', 'k', 'y0']):
         np.testing.assert_allclose(sens_i[0], expect_i, rtol=1e-4, err_msg=f"Sensitivity mismatch for param {param_name}")
 
-        
+
 def test_solve_sum_squares_adjoint():
     ode = ds.Ode(LOGISTIC_CODE, matrix_type=ds.nalgebra_dense_f64, method=ds.bdf, linear_solver=ds.lu)
 
@@ -102,7 +132,7 @@ def test_solve_sum_squares_adjoint():
             ys, sens = ode.solve_sum_squares_adj(params, data, t_eval)
         return
     ys, sens = ode.solve_sum_squares_adj(params, data, t_eval)
-    
+
     assert isinstance(ys, float)
     assert sens.shape == (3,)
 
@@ -117,7 +147,7 @@ def test_solve_sum_squares_adjoint():
         (v * y0 - u * np.exp(-r * t_eval)) / v**2,
         (v * k - u * (1.0 - np.exp(-r * t_eval))) / v**2
     ])
-    
+
     # l = sum((y - data)^2)
     # dl/dp = sum(2 * (y - data) * dy/dp)
     expect_dsum_squares_dp = np.array([
@@ -129,4 +159,4 @@ def test_solve_sum_squares_adjoint():
 
 
 if __name__ == "__main__":
-    test_basic_api()
+    test_solve()
