@@ -4,18 +4,18 @@
 use diffsol::error::DiffsolError;
 use diffsol::{
     matrix::MatrixRef, DefaultDenseMatrix, DiffSl, LinearSolver, Matrix, OdeSolverMethod,
-    OdeSolverProblem, Vector, VectorHost, VectorRef, DiffSlScalar
+    OdeSolverProblem, Vector, VectorHost, VectorRef,
 };
 use diffsol::{
-    AdjointOdeSolverMethod, Checkpointing, DefaultSolver, DenseMatrix, MatrixCommon,
-    OdeSolverState, Op, SensitivitiesOdeSolverMethod, VectorViewMut,
+    AdjointOdeSolverMethod, Checkpointing, DefaultSolver, DenseMatrix, DiffSlScalar, MatrixCommon, OdeSolverState, Op, SensitivitiesOdeSolverMethod, VectorViewMut
 };
+use nalgebra::ComplexField; // for powi
+use num_traits::{FromPrimitive, Zero}; // for generic nums in _solve_sum_squares_adj
 use numpy::ndarray::ArrayView2;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyList, PyType};
 
-use crate::convert::RealF32OrF64;
 use crate::is_sens_available;
 use crate::jit::JitModule;
 use crate::solver_type::SolverType;
@@ -143,7 +143,7 @@ impl SolverMethod {
         }
     }
 
-    pub(crate) fn solve_sum_squares_adj<'a, T, M, LS>(
+    pub(crate) fn solve_sum_squares_adj<'a, M, LS>(
         &self,
         problem: &mut OdeSolverProblem<DiffSl<M, JitModule>>,
         data: ArrayView2<'a, M::T>,
@@ -152,9 +152,7 @@ impl SolverMethod {
         backwards_linear_solver: SolverType,
     ) -> Result<(M::T, M::V), DiffsolError>
     where
-        T: RealF32OrF64,
-        <T as RealF32OrF64>::MatrixType: RealF32OrF64,
-        M: Matrix<T = T> + DefaultSolver + LuValidator<M> + KluValidator<M>,
+        M: Matrix<T: DiffSlScalar> + DefaultSolver + LuValidator<M> + KluValidator<M>,
         M::V: VectorHost + DefaultDenseMatrix,
         LS: LinearSolver<M>,
         for<'b> &'b M::V: VectorRef<M::V>,
@@ -162,7 +160,7 @@ impl SolverMethod {
     {
         Self::check_sens_available()?;
         match self {
-            SolverMethod::Bdf => self._solve_sum_squares_adj::<M::T, _, _>(
+            SolverMethod::Bdf => self._solve_sum_squares_adj(
                 problem.bdf::<LS>()?,
                 data,
                 t_eval,
@@ -193,7 +191,7 @@ impl SolverMethod {
         }
     }
 
-    pub(crate) fn _solve_sum_squares_adj<'data, 'solver, T, M, S>(
+    pub(crate) fn _solve_sum_squares_adj<'data, 'solver, M, S>(
         &self,
         mut solver: S,
         data: ArrayView2<'data, M::T>,
@@ -202,9 +200,7 @@ impl SolverMethod {
         backwards_linear_solver: SolverType,
     ) -> Result<(M::T, M::V), DiffsolError>
     where
-        T: RealF32OrF64,
-        <T as RealF32OrF64>::MatrixType: RealF32OrF64,
-        M: Matrix<T = T> + DefaultSolver + LuValidator<M> + KluValidator<M>,
+        M: Matrix<T: DiffSlScalar> + DefaultSolver + LuValidator<M> + KluValidator<M>,
         M::V: VectorHost + DefaultDenseMatrix,
         S: OdeSolverMethod<'solver, DiffSl<M, JitModule>>,
         for<'b> &'b M::V: VectorRef<M::V>,
@@ -214,17 +210,17 @@ impl SolverMethod {
         let eqn = solver.problem().eqn();
         let ctx = eqn.context();
         let mut g_m = <M::V as DefaultDenseMatrix>::M::zeros(eqn.nout(), t_eval.len(), ctx.clone());
-        let mut y = T::zero();
+        let mut y = M::T::zero();
         for j in 0..g_m.ncols() {
             let ys_col = ys.column(j);
             // TODO: can we avoid this allocation? (I can't see how right now)
             let mut tmp = M::V::from_slice(data.column(j).as_slice().unwrap(), ctx.clone());
             // tmp = 2 * ys_col - 2 * tmp
-            tmp.axpy_v(T::from_f64(2.0).unwrap(), &ys_col, T::from_f64(-2.0).unwrap());
+            tmp.axpy_v(M::T::from_f64(2.0).unwrap(), &ys_col, M::T::from_f64(-2.0).unwrap());
             g_m.column_mut(j).copy_from(&tmp);
 
             // y = (1/4) * dot(tmp, tmp) + y
-            y += T::from_f64(1.0 / 4.0).unwrap() * tmp.norm(2).powi(2);
+            y += M::T::from_f64(1.0 / 4.0).unwrap() * tmp.norm(2).powi(2);
         }
         let mut y_sens = match backwards_linear_solver {
             SolverType::Default => backwards_method
