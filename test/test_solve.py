@@ -83,7 +83,12 @@ def test_solve_f32_near_f64(final_time, params):
         last_t.append(ts[-1])
 
     assert last_y[0] == pytest.approx(last_y[1], abs=1e-4)
+    assert last_y[0].dtype == np.float64
+    assert last_y[1].dtype == np.float32
+
     assert last_t[0] == pytest.approx(last_t[1], abs=1e-4)
+    assert last_t[0].dtype == np.float64
+    assert last_t[1].dtype == np.float32
 
 
 def test_solve_fwd_sens():
