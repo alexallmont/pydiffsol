@@ -212,6 +212,15 @@ impl OdeWrapper {
         Ok(self.guard()?.code.clone())
     }
 
+    fn rhs<'py>(
+        slf: PyRefMut<'py, Self>,
+        t: f64,
+        y: PyReadonlyArray1<'py, f64>,
+    ) -> Result<Bound<'py, PyArray1<f64>>, PyDiffsolError> {
+        let mut self_guard = slf.0.lock().unwrap();
+        self_guard.py_solve.rhs(slf.py(), t, y)
+    }
+
     /// Using the provided state, solve the problem up to time `final_time`.
     ///
     /// The number of params must match the expected params in the diffsl code.

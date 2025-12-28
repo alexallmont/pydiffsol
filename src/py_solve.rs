@@ -4,9 +4,11 @@
 use diffsol::VectorCommon;
 use diffsol::{
     error::DiffsolError, matrix::MatrixRef, DefaultDenseMatrix, DefaultSolver, DiffSl, Matrix,
-    MatrixCommon, OdeBuilder, OdeEquations, OdeSolverProblem, Op, Vector, VectorHost, VectorRef,
+    MatrixCommon, NonLinearOp, OdeBuilder, OdeEquations, OdeSolverProblem, Op, Vector, VectorHost,
+    VectorRef,
 };
 use numpy::PyReadonlyArray2;
+use numpy::PyUntypedArrayMethods;
 use numpy::{ndarray::Array1, PyArray1, PyArray2, PyReadonlyArray1};
 use paste::paste;
 use pyo3::{Bound, Python};
@@ -81,6 +83,13 @@ macro_rules! generate_ode_option_accessors {
 // Each matrix type implements PySolve as bridge between diffsol and Python
 pub(crate) trait PySolve {
     fn matrix_type(&self) -> MatrixType;
+
+    fn rhs<'py>(
+        &mut self,
+        py: Python<'py>,
+        t: f64,
+        y: PyReadonlyArray1<'py, f64>,
+    ) -> Result<Bound<'py, PyArray1<f64>>, PyDiffsolError>;
 
     #[allow(clippy::type_complexity)]
     fn solve<'py>(
@@ -245,6 +254,27 @@ where
         max_nonlinear_solver_iterations: usize,
         max_error_test_failures: usize,
         min_timestep: f64
+    }
+
+    fn rhs<'py>(
+        &mut self,
+        py: Python<'py>,
+        t: f64,
+        y: PyReadonlyArray1<'py, f64>,
+    ) -> Result<Bound<'py, PyArray1<f64>>, PyDiffsolError> {
+        let n = self.problem.eqn.nstates();
+        if y.len() != n {
+            return Err(DiffsolError::Other(format!(
+                "Expecting state vector of length {} but got {}",
+                n,
+                y.len()
+            ))
+            .into());
+        }
+        let y_vec = M::V::from_slice(y.as_slice().unwrap(), M::C::default());
+        let mut dydt = M::V::zeros(n, M::C::default());
+        self.problem.eqn.rhs().call_inplace(&y_vec, t, &mut dydt);
+        Ok(dydt.inner().to_pyarray1(py))
     }
 
     fn solve<'py>(
