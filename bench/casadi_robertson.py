@@ -2,7 +2,7 @@ import casadi
 import numpy as np
 
 
-def setup(ngroups: int, tol: float, t_final: float) -> dict:
+def setup_robertson_ode(ngroups: int):
     x = casadi.MX.sym("x", ngroups)
     y = casadi.MX.sym("y", ngroups)
     z = casadi.MX.sym("z", ngroups)
@@ -18,15 +18,6 @@ def setup(ngroups: int, tol: float, t_final: float) -> dict:
     ode = {}  # ODE declaration
     ode["x"] = casadi.vertcat(x, y, z)  # states
     ode["ode"] = casadi.vertcat(f0, f1, f2)  # right-hand side
-
-    F = casadi.integrator(
-        "F", "cvodes", ode, 0.0, t_final, {"abstol": tol, "reltol": tol}
-    )
-
-    return F
-
-
-def bench(model, numgroups: int) -> np.ndarray:
-    x0 = np.zeros(3 * numgroups)
-    x0[:numgroups] = 1.0
-    return model(x0=x0)["xf"][:, -1]
+    x0 = np.zeros(3 * ngroups)
+    x0[:ngroups] = 1.0
+    return (ode, 1e10, x0)
