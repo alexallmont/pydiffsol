@@ -4,7 +4,7 @@ import pytest
 
 LOGISTIC_CODE = \
 """
-in { r = 1, k = 1, y0 = 0.1 }
+in_i { r = 1, k = 1, y0 = 0.1 }
 u { y0 }
 F { r * u * (1.0 - u / k) }
 """
