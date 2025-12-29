@@ -4,10 +4,13 @@
 use diffsol::VectorCommon;
 use diffsol::{
     error::DiffsolError, matrix::MatrixRef, DefaultDenseMatrix, DefaultSolver, DiffSl, Matrix,
-    MatrixCommon, OdeBuilder, OdeEquations, OdeSolverProblem, Op, Vector, VectorHost, VectorRef,
+    MatrixCommon, NonLinearOp, OdeBuilder, OdeEquations, OdeSolverProblem, Op, Vector, VectorHost,
+    VectorRef,
 };
 use numpy::PyReadonlyArray2;
+use numpy::PyUntypedArrayMethods;
 use numpy::{ndarray::Array1, PyArray1, PyArray2, PyReadonlyArray1};
+use paste::paste;
 use pyo3::{Bound, Python};
 
 use crate::valid_linear_solver::{KluValidator, LuValidator};
@@ -20,9 +23,73 @@ use crate::{
     valid_linear_solver::validate_linear_solver,
 };
 
+// macro to generate all the trait methods for accessing ic_options
+macro_rules! generate_trait_ic_option_accessors {
+    ($($field:ident : $type:ty),*) => {
+        $(
+            paste! {
+                fn [<set_ic_ $field>](&mut self, value: $type);
+                fn [<ic_ $field>](&self) -> $type;
+            }
+        )*
+    };
+}
+
+// macro to generate all the trait methods for accessing ode_options
+macro_rules! generate_trait_ode_option_accessors {
+    ($($field:ident : $type:ty),*) => {
+        $(
+            paste! {
+                fn [<set_ode_ $field>](&mut self, value: $type);
+                fn [<ode_ $field>](&self) -> $type;
+            }
+        )*
+    };
+}
+
+// macro to generate all the setters and getters for ic_options
+macro_rules! generate_ic_option_accessors {
+    ($($field:ident : $type:ty),*) => {
+        $(
+            paste! {
+                fn [<set_ic_ $field>](&mut self, value: $type) {
+                    self.problem.ic_options.$field = value;
+                }
+
+                fn [<ic_ $field>](&self) -> $type {
+                    self.problem.ic_options.$field
+                }
+            }
+        )*
+    };
+}
+
+// macro to generate all the setters and getters for ode_options
+macro_rules! generate_ode_option_accessors {
+    ($($field:ident : $type:ty),*) => {
+        $(
+            paste! {
+                fn [<set_ode_ $field>](&mut self, value: $type) {
+                    self.problem.ode_options.$field = value;
+                }
+                fn [<ode_ $field>](&self) -> $type {
+                    self.problem.ode_options.$field
+                }
+            }
+        )*
+    };
+}
+
 // Each matrix type implements PySolve as bridge between diffsol and Python
 pub(crate) trait PySolve {
     fn matrix_type(&self) -> MatrixType;
+
+    fn rhs<'py>(
+        &mut self,
+        py: Python<'py>,
+        t: f64,
+        y: PyReadonlyArray1<'py, f64>,
+    ) -> Result<Bound<'py, PyArray1<f64>>, PyDiffsolError>;
 
     #[allow(clippy::type_complexity)]
     fn solve<'py>(
@@ -72,6 +139,19 @@ pub(crate) trait PySolve {
     fn rtol(&self) -> f64;
     fn set_atol(&mut self, atol: f64);
     fn atol(&self) -> f64;
+    generate_trait_ic_option_accessors! {
+        use_linesearch: bool,
+        max_linesearch_iterations: usize,
+        max_newton_iterations: usize,
+        max_linear_solver_setups: usize,
+        step_reduction_factor: f64,
+        armijo_constant: f64
+    }
+    generate_trait_ode_option_accessors! {
+        max_nonlinear_solver_iterations: usize,
+        max_error_test_failures: usize,
+        min_timestep: f64
+    }
 }
 
 // Public factory method for generating an instance based on matrix type
@@ -159,6 +239,42 @@ where
 
     fn rtol(&self) -> f64 {
         self.problem.rtol
+    }
+
+    generate_ic_option_accessors! {
+        use_linesearch: bool,
+        max_linesearch_iterations: usize,
+        max_newton_iterations: usize,
+        max_linear_solver_setups: usize,
+        step_reduction_factor: f64,
+        armijo_constant: f64
+    }
+
+    generate_ode_option_accessors! {
+        max_nonlinear_solver_iterations: usize,
+        max_error_test_failures: usize,
+        min_timestep: f64
+    }
+
+    fn rhs<'py>(
+        &mut self,
+        py: Python<'py>,
+        t: f64,
+        y: PyReadonlyArray1<'py, f64>,
+    ) -> Result<Bound<'py, PyArray1<f64>>, PyDiffsolError> {
+        let n = self.problem.eqn.nstates();
+        if y.len() != n {
+            return Err(DiffsolError::Other(format!(
+                "Expecting state vector of length {} but got {}",
+                n,
+                y.len()
+            ))
+            .into());
+        }
+        let y_vec = M::V::from_slice(y.as_slice().unwrap(), M::C::default());
+        let mut dydt = M::V::zeros(n, M::C::default());
+        self.problem.eqn.rhs().call_inplace(&y_vec, t, &mut dydt);
+        Ok(dydt.inner().to_pyarray1(py))
     }
 
     fn solve<'py>(

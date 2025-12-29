@@ -23,8 +23,8 @@ fn is_klu_available() -> bool {
     cfg!(feature = "suitesparse")
 }
 
-#[pyfunction]  
-fn is_sens_available() -> bool {  
+#[pyfunction]
+fn is_sens_available() -> bool {
     cfg!(not(target_os = "windows"))
 }
 

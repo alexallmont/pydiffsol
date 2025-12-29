@@ -29,6 +29,7 @@ bench = [
     "numpy",
     "pandas",
     "matplotlib",
+    "jax<0.7.0",
 ]
 
 [tool.maturin]
