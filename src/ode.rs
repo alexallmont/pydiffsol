@@ -212,6 +212,7 @@ impl OdeWrapper {
         Ok(self.guard()?.code.clone())
     }
 
+    /// evaluate the right-hand side function at time `t` and state `y`.
     fn rhs<'py>(
         slf: PyRefMut<'py, Self>,
         t: f64,

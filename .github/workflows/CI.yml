@@ -60,7 +60,7 @@ jobs:
         shell: bash
         env:
           ACTIVATE: ${{ runner.os == 'Windows' && '.venv/Scripts/activate' || '.venv/bin/activate' }}
-          PYTEST_DIRS: ${{ runner.os == 'macOS' && 'test' || 'test examples/* bench/main_bench.py' }} # MacOS runner fails with LLVM and matplotlib
+          PYTEST_DIRS: ${{ runner.os == 'macOS' && 'test' || runner.os == 'Windows' && 'test examples/*' || 'test examples/* bench/main_bench.py' }} # MacOS runner fails with LLVM and matplotlib, Windows runner fails with diffrax
         run: |
           set -e
           python3 -m venv .venv
