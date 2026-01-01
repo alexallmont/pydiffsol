@@ -516,9 +516,9 @@ checksum = "930c7171c8df9fb1782bdf9b918ed9ed2d33d1d22300abb754f9085bc48bf8e8"
 
 [[package]]
 name = "diffsl"
-version = "0.6.5"
+version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dce4f2434aff0866b8eb2f48fb3201f49c10aa58e7e9da2e93c2aac7b8e46bfd"
+checksum = "e0c9b760ba0b024fd2f08b2fb26f0eab92d1030723a0c3618c72ee413e4878e9"
 dependencies = [
  "aliasable",
  "anyhow",
@@ -541,6 +541,7 @@ dependencies = [
  "llvm-sys 191.1.0",
  "llvm-sys 201.0.1",
  "llvm-sys 211.0.0",
+ "log",
  "mmap-rs",
  "ndarray",
  "num-traits",
@@ -556,9 +557,9 @@ dependencies = [
 
 [[package]]
 name = "diffsol"
-version = "0.8.4"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5d5f2aba9724cf28260444fc296a19873e632e799306f0c9bfdd59737576a8f2"
+checksum = "abe38e23f09deae47813dbe069ce8827ad631b7645e7d219cc959dd037d0bbb4"
 dependencies = [
  "diffsl",
  "faer",
@@ -1287,9 +1288,9 @@ dependencies = [
 
 [[package]]
 name = "log"
-version = "0.4.27"
+version = "0.4.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "13dc2df351e3202783a1fe0d44375f7295ffb4049267b0f3018346dc122a1d94"
+checksum = "5e5032e24019045c762d3c0f28f5b6b8bbf38563a65908389bf7978758920897"
 
 [[package]]
 name = "loom"
