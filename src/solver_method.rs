@@ -100,7 +100,7 @@ impl SolverMethod {
             SolverMethod::Tsit45 => problem.tsit45()?.solve_dense(t_eval),
         }
     }
-    
+
     fn check_sens_available() -> Result<(), DiffsolError> {
         if !is_sens_available() {
             return Err(DiffsolError::Other(
