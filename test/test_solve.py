@@ -5,10 +5,7 @@ import os
 
 LOGISTIC_CODE = \
 """
-in = [r, k, y0]
-r { 1.0 }
-k { 1.0 }
-y0 { 0.1 }
+in_i { r = 1, k = 1, y0 = 0.1 }
 u { y0 }
 F { r * u * (1.0 - u / k) }
 """
@@ -92,7 +89,13 @@ def test_solve_f32_near_f64(final_time, params):
 
 
 def test_solve_fwd_sens():
-    ode = ds.Ode(LOGISTIC_CODE, matrix_type=ds.nalgebra_dense_f64, method=ds.bdf, linear_solver=ds.lu)
+    ode = ds.Ode(
+        LOGISTIC_CODE,
+        matrix_type=ds.nalgebra_dense,
+        scalar_type=ds.f64,
+        method=ds.bdf,
+        linear_solver=ds.lu
+    )
 
     r = 1.0
     k = 1.0
@@ -123,7 +126,13 @@ def test_solve_fwd_sens():
 
 
 def test_solve_sum_squares_adjoint():
-    ode = ds.Ode(LOGISTIC_CODE, matrix_type=ds.nalgebra_dense_f64, method=ds.bdf, linear_solver=ds.lu)
+    ode = ds.Ode(
+        LOGISTIC_CODE,
+        matrix_type=ds.nalgebra_dense,
+        scalar_type=ds.f64,
+        method=ds.bdf,
+        linear_solver=ds.lu
+    )
 
     r = 1.0
     k = 1.0
