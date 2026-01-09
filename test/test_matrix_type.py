@@ -67,14 +67,12 @@ def _invalid_config_triplets():
 @pytest.mark.parametrize("matrix_type,method,linear_solver", _valid_config_triplets())
 def test_valid_config_solve(matrix_type, linear_solver, method):
     # TODO faer_sparse klu bdf skipped until underlying diffsol bug resolved
-    if matrix_type == ds.faer_sparse and method == ds.bdf:
-        import sys
-        if sys.platform == "darwin":
-            print(
-                "Skipping test_valid_config_solve on macos for",
-                matrix_type, linear_solver, method
-            )
-            return
+    if matrix_type == ds.faer_sparse and linear_solver == ds.klu and method == ds.bdf:
+        print(
+            "Skipping test_valid_config_solve for",
+            matrix_type, linear_solver, method
+        )
+        return
 
     ode = ds.Ode(DIFFSL_LOGISTIC, matrix_type=matrix_type, method=method, linear_solver=linear_solver)
 

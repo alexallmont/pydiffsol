@@ -34,9 +34,8 @@ print(ode.solve(params, 0.4))
 
 ## Known issues
 
-- BDF with FaerSparseF64 KLU is not stable on macos; we have found a segfault in
-underlying diffsol. Unit tests are disabled for this combination.
-- f32 is not yet supported for faer_sparse, pending KLU diffsol support.
+- Instability for BDF with FaerSparse KLU. We are investigating a segfault in
+underlying diffsol. In the meantime, unit tests are disabled for this combination.
 
 ## Local development
 

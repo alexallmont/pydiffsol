@@ -101,10 +101,8 @@ pub(crate) fn py_solve_factory(
         },
         MatrixType::FaerSparse => {
             match scalar_type {
-                ScalarType::F32 => {
-                    return Err(DiffsolError::Other(format!("f32 not supported for faer_sparse")).into())
-                },
-                ScalarType::F64 => Box::new(GenericPySolve::<diffsol::FaerSparseMat<f64>>::new(code)?)
+                ScalarType::F32 => Box::new(GenericPySolve::<diffsol::FaerSparseMat<f32>>::new(code)?),
+                ScalarType::F64 => Box::new(GenericPySolve::<diffsol::FaerSparseMat<f64>>::new(code)?),
             }
         },
     };

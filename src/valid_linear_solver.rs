@@ -41,12 +41,20 @@ pub(crate) trait KluValidator<M: diffsol::Matrix> {
     }
 }
 
-// Known issue: FaerSparseMat does not yet support f32 for KLU
+// Known issue: FaerSparseMat currently only supports KLU for f64
 #[cfg(feature = "suitesparse")]
 impl KluValidator<diffsol::FaerSparseMat<f64>> for diffsol::FaerSparseMat<f64> {
     type LS = diffsol::KLU<diffsol::FaerSparseMat<f64>>;
     fn valid() -> bool {
         true
+    }
+}
+
+#[cfg(feature = "suitesparse")]
+impl KluValidator<diffsol::FaerSparseMat<f32>> for diffsol::FaerSparseMat<f32> {
+    type LS = diffsol::FaerSparseLU<f32>;
+    fn valid() -> bool {
+        false
     }
 }
 
