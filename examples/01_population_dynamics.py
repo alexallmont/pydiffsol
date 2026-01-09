@@ -42,8 +42,7 @@ def solve():
 def phase_plane():
     ode = ds.Ode(
         """
-        in = [ y0 ]
-        y0 { 1.0 }
+        in { y0 = 1 }
         a { 2.0/3.0 } b { 4.0/3.0 } c { 1.0 } d { 1.0 }
         u_i {
             y1 = y0,
