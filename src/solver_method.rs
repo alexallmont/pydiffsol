@@ -4,6 +4,7 @@
 use diffsol::error::DiffsolError;
 use diffsol::{
     matrix::MatrixRef, DefaultDenseMatrix, DiffSl, LinearSolver, Matrix, OdeSolverMethod,
+    OdeEquations,
     OdeSolverProblem, Vector, VectorHost, VectorRef,
 };
 use diffsol::{

@@ -197,6 +197,50 @@ impl OdeWrapper {
         Ok(())
     }
     #[getter]
+    fn get_update_jacobian_after_steps(&self) -> PyResult<usize> {
+        Ok(self.guard()?.py_solve.ode_update_jacobian_after_steps())
+    }
+    #[setter]
+    fn set_update_jacobian_after_steps(&self, value: usize) -> PyResult<()> {
+        self.guard()?
+            .py_solve
+            .set_ode_update_jacobian_after_steps(value);
+        Ok(())
+    }
+    #[getter]
+    fn get_update_rhs_jacobian_after_steps(&self) -> PyResult<usize> {
+        Ok(self.guard()?.py_solve.ode_update_rhs_jacobian_after_steps())
+    }
+    #[setter]
+    fn set_update_rhs_jacobian_after_steps(&self, value: usize) -> PyResult<()> {
+        self.guard()?
+            .py_solve
+            .set_ode_update_rhs_jacobian_after_steps(value);
+        Ok(())
+    }
+    #[getter]
+    fn get_threshold_to_update_jacobian(&self) -> PyResult<f64> {
+        Ok(self.guard()?.py_solve.ode_threshold_to_update_jacobian())
+    }
+    #[setter]
+    fn set_threshold_to_update_jacobian(&self, value: f64) -> PyResult<()> {
+        self.guard()?
+            .py_solve
+            .set_ode_threshold_to_update_jacobian(value);
+        Ok(())
+    }
+    #[getter]
+    fn get_threshold_to_update_rhs_jacobian(&self) -> PyResult<f64> {
+        Ok(self.guard()?.py_solve.ode_threshold_to_update_rhs_jacobian())
+    }
+    #[setter]
+    fn set_threshold_to_update_rhs_jacobian(&self, value: f64) -> PyResult<()> {
+        self.guard()?
+            .py_solve
+            .set_ode_threshold_to_update_rhs_jacobian(value);
+        Ok(())
+    }
+    #[getter]
     fn get_min_timestep(&self) -> PyResult<f64> {
         Ok(self.guard()?.py_solve.ode_min_timestep())
     }
@@ -211,6 +255,14 @@ impl OdeWrapper {
     fn get_code(&self) -> PyResult<String> {
         Ok(self.guard()?.code.clone())
     }
+    
+    /// Get the initial condition vector y0 as a 1D numpy array.
+    fn y0<'py>(
+        slf: PyRefMut<'py, Self>,
+    ) -> Result<Bound<'py, PyArray1<f64>>, PyDiffsolError> {
+        let mut self_guard = slf.0.lock().unwrap();
+        self_guard.py_solve.y0(slf.py())
+    }
 
     /// evaluate the right-hand side function at time `t` and state `y`.
     fn rhs<'py>(
@@ -220,6 +272,17 @@ impl OdeWrapper {
     ) -> Result<Bound<'py, PyArray1<f64>>, PyDiffsolError> {
         let mut self_guard = slf.0.lock().unwrap();
         self_guard.py_solve.rhs(slf.py(), t, y)
+    }
+    
+    /// evaluate the right-hand side Jacobian-vector product `Jv`` at time `t` and state `y`.
+    fn rhs_jac_mul<'py>(
+        slf: PyRefMut<'py, Self>,
+        t: f64,
+        y: PyReadonlyArray1<'py, f64>,
+        v: PyReadonlyArray1<'py, f64>,
+    ) -> Result<Bound<'py, PyArray1<f64>>, PyDiffsolError> {
+        let mut self_guard = slf.0.lock().unwrap();
+        self_guard.py_solve.rhs_jac_mul(slf.py(), t, y, v)
     }
 
     /// Using the provided state, solve the problem up to time `final_time`.

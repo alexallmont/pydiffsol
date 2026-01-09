@@ -50,6 +50,8 @@ fn pydiffsol(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // General utility methods
     m.add_function(wrap_pyfunction!(version, m)?)?;
     m.add_function(wrap_pyfunction!(is_klu_available, m)?)?;
+    
+    pyo3_log::init();
 
     Ok(())
 }

@@ -1,11 +1,11 @@
 // Delegate solver types selected at runtime in Python to concrete solver types
 // in Rust.
 
-use diffsol::VectorCommon;
+use diffsol::{ConstantOp, VectorCommon};
 use diffsol::{
     error::DiffsolError, matrix::MatrixRef, DefaultDenseMatrix, DefaultSolver, DiffSl, Matrix,
     MatrixCommon, NonLinearOp, OdeBuilder, OdeEquations, OdeSolverProblem, Op, Vector, VectorHost,
-    VectorRef,
+    VectorRef, NonLinearOpJacobian
 };
 use numpy::PyReadonlyArray2;
 use numpy::PyUntypedArrayMethods;
@@ -90,6 +90,19 @@ pub(crate) trait PySolve {
         t: f64,
         y: PyReadonlyArray1<'py, f64>,
     ) -> Result<Bound<'py, PyArray1<f64>>, PyDiffsolError>;
+    
+    fn rhs_jac_mul<'py>(
+        &mut self,
+        py: Python<'py>,
+        t: f64,
+        y: PyReadonlyArray1<'py, f64>,
+        v: PyReadonlyArray1<'py, f64>,
+    ) -> Result<Bound<'py, PyArray1<f64>>, PyDiffsolError>;
+    
+    fn y0<'py>(
+        &mut self,
+        py: Python<'py>,
+    ) -> Result<Bound<'py, PyArray1<f64>>, PyDiffsolError>;
 
     #[allow(clippy::type_complexity)]
     fn solve<'py>(
@@ -150,7 +163,11 @@ pub(crate) trait PySolve {
     generate_trait_ode_option_accessors! {
         max_nonlinear_solver_iterations: usize,
         max_error_test_failures: usize,
-        min_timestep: f64
+        min_timestep: f64,
+        update_jacobian_after_steps: usize,
+        update_rhs_jacobian_after_steps: usize,
+        threshold_to_update_jacobian: f64,
+        threshold_to_update_rhs_jacobian: f64
     }
 }
 
@@ -253,7 +270,22 @@ where
     generate_ode_option_accessors! {
         max_nonlinear_solver_iterations: usize,
         max_error_test_failures: usize,
-        min_timestep: f64
+        min_timestep: f64,
+        update_jacobian_after_steps: usize,
+        update_rhs_jacobian_after_steps: usize,
+        threshold_to_update_jacobian: f64,
+        threshold_to_update_rhs_jacobian: f64
+    }
+    
+    fn y0<'py>(
+        &mut self,
+        py: Python<'py>,
+    ) -> Result<Bound<'py, PyArray1<f64>>, PyDiffsolError> {
+        let n = self.problem.eqn.nstates();
+        let mut y0= M::V::zeros(n, M::C::default());
+        let t0 = self.problem.t0;
+        self.problem.eqn.init().call_inplace(t0, &mut y0);
+        Ok(y0.inner().to_pyarray1(py))
     }
 
     fn rhs<'py>(
@@ -263,20 +295,28 @@ where
         y: PyReadonlyArray1<'py, f64>,
     ) -> Result<Bound<'py, PyArray1<f64>>, PyDiffsolError> {
         let n = self.problem.eqn.nstates();
-        if y.len() != n {
-            return Err(DiffsolError::Other(format!(
-                "Expecting state vector of length {} but got {}",
-                n,
-                y.len()
-            ))
-            .into());
-        }
+        
         let y_vec = M::V::from_slice(y.as_slice().unwrap(), M::C::default());
         let mut dydt = M::V::zeros(n, M::C::default());
         self.problem.eqn.rhs().call_inplace(&y_vec, t, &mut dydt);
         Ok(dydt.inner().to_pyarray1(py))
     }
-
+    
+    fn rhs_jac_mul<'py>(
+            &mut self,
+            py: Python<'py>,
+            t: f64,
+            y: PyReadonlyArray1<'py, f64>,
+            v: PyReadonlyArray1<'py, f64>,
+        ) -> Result<Bound<'py, PyArray1<f64>>, PyDiffsolError> {
+        let n = self.problem.eqn.nstates();
+        let y_vec = M::V::from_slice(y.as_slice().unwrap(), M::C::default());
+        let v_vec = M::V::from_slice(v.as_slice().unwrap(), M::C::default());
+        let mut dydt = M::V::zeros(n, M::C::default());
+        self.problem.eqn.rhs().jac_mul_inplace(&y_vec, t, &v_vec, &mut dydt);
+        Ok(dydt.inner().to_pyarray1(py))
+    }
+    
     fn solve<'py>(
         &mut self,
         py: Python<'py>,
