@@ -21,10 +21,11 @@ suitesparse = ["diffsol/suitesparse"]
 
 [dependencies]
 pyo3 = { version = "0.27.2", default-features = false, features = ["abi3-py39", "extension-module"] }
-diffsol = { version = "0.8.4" }
+diffsol = { version = "0.9.1" }
 faer = "0.23.2"
 nalgebra = "0.34.1"
 numpy = "0.27.1"
+num-traits = "0.2.17"
 
 [dev-dependencies]
 pyo3 = { version = "*", features = ["auto-initialize"] }

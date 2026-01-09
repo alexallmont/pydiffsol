@@ -6,9 +6,9 @@ from diffsol_robertson import robertson_ode_str
 
 def setup(ngroups: int, tol: float, method: str, problem: str):
     if ngroups < 20:
-        matrix_type = ds.nalgebra_dense_f64
+        matrix_type = ds.nalgebra_dense
     else:
-        matrix_type = ds.faer_sparse_f64
+        matrix_type = ds.faer_sparse
     if method == "bdf":
         method = ds.bdf
     elif method == "esdirk34":
@@ -30,6 +30,7 @@ def setup(ngroups: int, tol: float, method: str, problem: str):
     ode = ds.Ode(
         code,
         matrix_type=matrix_type,
+        scalar_type=ds.f64,
         method=method,
     )
     ode.rtol = tol
