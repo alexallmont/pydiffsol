@@ -10,8 +10,8 @@ from diffsol_models import setup as diffsol_setup, bench as diffsol_bench
 def bench(torun):
     results = []
     for run in torun:
-        (ng, tol, problem) = run    
-        
+        (ng, tol, problem) = run
+
         is_stiff = problem == "robertson_ode"
 
         t0 = time.perf_counter()
@@ -21,15 +21,15 @@ def bench(torun):
 
         def diffrax_kvaerno5():
             return diffrax_bench(diffrax_kvaerno5_model)
-        
+
         t0 = time.perf_counter()
         diffrax_tsit5_model = diffrax_setup(ngroups=ng, tol=tol, method='tsit5', problem=problem)
         t1 = time.perf_counter()
         diffrax_tsit5_setup_time = t1 - t0
-        
+
         def diffrax_tsit5():
             return diffrax_bench(diffrax_tsit5_model)
-        
+
         t0 = time.perf_counter()
         casadi_model = casadi_setup(ngroups=ng, tol=tol, problem=problem)
         t1 = time.perf_counter()
@@ -59,7 +59,7 @@ def bench(torun):
 
         def diffsol_tr_bdf2():
             return diffsol_bench(diffsol_tr_bdf2_model)
-    
+
         diffsol_tsit5_model = diffsol_setup(
             ngroups=ng, tol=tol, method="tsit5", problem=problem
         )
@@ -83,7 +83,7 @@ def bench(torun):
         y_diffsol_tr_bdf2 = diffsol_tr_bdf2()
 
         check_tol = 1e3 * tol
-        
+
         np.testing.assert_allclose(
             y_casadi, y_diffsol_bdf, rtol=check_tol, atol=check_tol
         )
@@ -153,7 +153,7 @@ def bench(torun):
             "diffrax_tsit5_time": None,
             "speedup_diffrax_vs_bdf": None,
         }
-        
+
         if not is_stiff:
             diffsol_tsit5_time = timeit.timeit(diffsol_tsit5, number=n) / n
             print("Diffsol tsit5 time: ", diffsol_tsit5_time)
@@ -171,7 +171,7 @@ def bench(torun):
             print("Speedup over diffrax: ", diffrax_kvaerno5_time / diffsol_bdf_time)
             result_row["diffrax_kvaerno5_setup_time"] = diffrax_kvaerno5_setup_time
             result_row["diffrax_kvaerno5_time"] = diffrax_kvaerno5_time
-        
+
 
         # Add result to list
         results.append(result_row)
