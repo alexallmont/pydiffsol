@@ -5,11 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.3.0]
 
 ### Added
 
 - 32-bit float support (#27)
+- Robertson_ode benchmark (#16)
+- Forward sensitivity and adjoint sum of squares solves (#21)
+- Generalise benchmarks for different models and add lotka-volterra benchmark (#19)
 
 ## [0.2.0]
 
