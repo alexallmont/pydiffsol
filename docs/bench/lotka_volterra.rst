@@ -12,12 +12,14 @@ We benchmark ODE solvers on the Lotka-Volterra predator-prey model. This is a no
 where :math:`x` is the number of prey, :math:`y` is the number of predators, and :math:`a`, :math:`b`, :math:`c`, and :math:`d` are positive real parameters that describe the interaction between the two species.
 
 We will benchmark the following solvers against different tolerances:
+
 - Diffsol's BDF & TSIT45 methods
 - CasADi's CVODE solver
 - Diffrax's Tsit5 solvers
 - Julia's DifferentialEquations.jl FBDF & Tsit5 methods
 
 The following solvers are similar so should be compared against each other:
+
 - Diffsol BDF, CasADi CVODE & DifferentialEquations.jl FBDF methods.
 - Diffsol's TSIT45, DifferentialEquations.jl Tsit5 and Diffrax's Tsit5 methods are all explicit Runge-Kutta methods with identical tableaus.
 
