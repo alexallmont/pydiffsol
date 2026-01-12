@@ -4,9 +4,12 @@ mod error;
 mod jit;
 mod matrix_type;
 mod ode;
+mod options_ic;
+mod options_ode;
 mod py_convert;
-mod py_types;
 mod py_solve;
+mod py_solve_macros;
+mod py_types;
 mod scalar_type;
 mod solver_method;
 mod solver_type;
@@ -40,6 +43,8 @@ fn pydiffsol(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<solver_type::SolverType>()?;
     m.add_class::<solver_method::SolverMethod>()?;
     m.add_class::<ode::OdeWrapper>()?;
+    m.add_class::<options_ic::InitialConditionSolverOptions>()?;
+    m.add_class::<options_ode::OdeSolverOptions>()?;
 
     // Shorthand aliases, e.g. `ds.bdf` rather than `ds.SolverMethod.bdf`
     for mt in matrix_type::MatrixType::all_enums() {
@@ -58,7 +63,7 @@ fn pydiffsol(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // General utility methods
     m.add_function(wrap_pyfunction!(version, m)?)?;
     m.add_function(wrap_pyfunction!(is_klu_available, m)?)?;
-    
+
     pyo3_log::init();
 
     Ok(())
