@@ -567,18 +567,20 @@ dependencies = [
 
 [[package]]
 name = "diffsol"
-version = "0.9.1"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "253d759063b94a84a459b4ce9afd1db4cbe1df6e9b28c5a0ca8a765889d33d0f"
+checksum = "57a816213978be4de87422dc66ea7814244419b1e90ac70c9e919e25ee2a1571"
 dependencies = [
  "diffsl",
  "faer",
  "faer-traits",
+ "log",
  "nalgebra",
  "nalgebra-sparse",
  "num-traits",
  "petgraph",
  "serde",
+ "serde_json",
  "suitesparse_sys",
  "thiserror 2.0.17",
 ]
@@ -1182,6 +1184,12 @@ checksum = "2b192c782037fadd9cfa75548310488aabdbf3d2da73885b31bd0abd03351285"
 dependencies = [
  "either",
 ]
+
+[[package]]
+name = "itoa"
+version = "1.0.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "92ecc6618181def0457392ccd0ee51198e065e016d1d527a7ac1b6dc7c1f09d2"
 
 [[package]]
 name = "lazy_static"
@@ -1854,7 +1862,7 @@ dependencies = [
 
 [[package]]
 name = "pydiffsol"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "diffsol",
  "faer",
@@ -2225,6 +2233,19 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.111",
+]
+
+[[package]]
+name = "serde_json"
+version = "1.0.149"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "83fc039473c5595ace860d8c4fafa220ff474b3fc6bfdb4293327f1a37e94d86"
+dependencies = [
+ "itoa",
+ "memchr",
+ "serde",
+ "serde_core",
+ "zmij",
 ]
 
 [[package]]
@@ -3003,3 +3024,9 @@ dependencies = [
  "quote",
  "syn 2.0.111",
 ]
+
+[[package]]
+name = "zmij"
+version = "1.0.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ac93432f5b761b22864c774aac244fa5c0fd877678a4c37ebf6cf42208f9c9ec"
