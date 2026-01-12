@@ -2,15 +2,21 @@
 
 use std::sync::{Arc, Mutex};
 
-use crate::error::PyDiffsolError;
-use crate::matrix_type::MatrixType;
-use crate::py_solve::{py_solve_factory, PySolve};
-use crate::solver_method::SolverMethod;
-use crate::solver_type::SolverType;
+use numpy::{PyReadonlyArray1};
+use pyo3::{
+    exceptions::PyRuntimeError,
+    prelude::*,
+};
 
-use numpy::{PyArray1, PyArray2, PyReadonlyArray1, PyReadonlyArray2};
-use pyo3::exceptions::PyRuntimeError;
-use pyo3::prelude::*;
+use crate::{
+    error::PyDiffsolError,
+    matrix_type::MatrixType,
+    py_solve::{py_solve_factory, PySolve},
+    py_types::{PyReadonlyUntypedArray2, PyUntypedArray1, PyUntypedArray2},
+    scalar_type::ScalarType,
+    solver_method::SolverMethod,
+    solver_type::SolverType,
+};
 
 #[pyclass]
 struct Ode {
@@ -43,14 +49,15 @@ impl OdeWrapper {
     /// All other fields are editable, for example setting the solver type or
     /// method, or changing solver tolerances.
     #[new]
-    #[pyo3(signature=(code, matrix_type=MatrixType::NalgebraDenseF64, method=SolverMethod::Bdf, linear_solver=SolverType::Default))]
+    #[pyo3(signature=(code, matrix_type=MatrixType::NalgebraDense, scalar_type=ScalarType::F64, method=SolverMethod::Bdf, linear_solver=SolverType::Default))]
     fn new(
         code: &str,
         matrix_type: MatrixType,
+        scalar_type: ScalarType,
         method: SolverMethod,
         linear_solver: SolverType,
     ) -> Result<Self, PyDiffsolError> {
-        let py_solve = py_solve_factory(code, matrix_type)?;
+        let py_solve = py_solve_factory(code, matrix_type, scalar_type)?;
         py_solve.check(linear_solver)?;
         Ok(OdeWrapper(Arc::new(Mutex::new(Ode {
             code: code.to_string(),
@@ -308,7 +315,7 @@ impl OdeWrapper {
         slf: PyRefMut<'py, Self>,
         params: PyReadonlyArray1<'py, f64>,
         final_time: f64,
-    ) -> Result<(Bound<'py, PyArray2<f64>>, Bound<'py, PyArray1<f64>>), PyDiffsolError> {
+    ) -> Result<(Bound<'py, PyUntypedArray2>, Bound<'py, PyUntypedArray1>), PyDiffsolError> {
         let mut self_guard = slf.0.lock().unwrap();
         let params = params.as_array();
 
@@ -341,9 +348,10 @@ impl OdeWrapper {
         slf: PyRefMut<'py, Self>,
         params: PyReadonlyArray1<'py, f64>,
         t_eval: PyReadonlyArray1<'py, f64>,
-    ) -> Result<Bound<'py, PyArray2<f64>>, PyDiffsolError> {
+    ) -> Result<Bound<'py, PyUntypedArray2>, PyDiffsolError> {
         let mut self_guard = slf.0.lock().unwrap();
         let params = params.as_array();
+        let t_eval = t_eval.as_array();
 
         let linear_solver = self_guard.linear_solver;
         let method = self_guard.method;
@@ -353,7 +361,7 @@ impl OdeWrapper {
             method,
             linear_solver,
             params.as_slice().unwrap(),
-            t_eval,
+            t_eval.as_slice().unwrap(),
         )
     }
 
@@ -375,17 +383,20 @@ impl OdeWrapper {
         slf: PyRefMut<'py, Self>,
         params: PyReadonlyArray1<'py, f64>,
         t_eval: PyReadonlyArray1<'py, f64>,
-    ) -> Result<(Bound<'py, PyArray2<f64>>, Vec<Bound<'py, PyArray2<f64>>>), PyDiffsolError> {
+    ) -> Result<(Bound<'py, PyUntypedArray2>, Vec<Bound<'py, PyUntypedArray2>>), PyDiffsolError> {
         let mut self_guard = slf.0.lock().unwrap();
         let params = params.as_array();
+        let t_eval = t_eval.as_array();
+
         let linear_solver = self_guard.linear_solver;
         let method = self_guard.method;
+
         self_guard.py_solve.solve_fwd_sens(
             slf.py(),
             method,
             linear_solver,
             params.as_slice().unwrap(),
-            t_eval,
+            t_eval.as_slice().unwrap(),
         )
     }
 
@@ -398,13 +409,16 @@ impl OdeWrapper {
     fn solve_sum_squares_adj<'py>(
         slf: PyRefMut<'py, Self>,
         params: PyReadonlyArray1<'py, f64>,
-        data: PyReadonlyArray2<'py, f64>,
+        data: Bound<'py, PyReadonlyUntypedArray2>,
         t_eval: PyReadonlyArray1<'py, f64>,
-    ) -> Result<(f64, Bound<'py, PyArray1<f64>>), PyDiffsolError> {
+    ) -> Result<(f64, Bound<'py, PyUntypedArray1>), PyDiffsolError> {
         let mut self_guard = slf.0.lock().unwrap();
         let params = params.as_array();
+        let t_eval = t_eval.as_array();
+
         let linear_solver = self_guard.linear_solver;
         let method = self_guard.method;
+
         self_guard.py_solve.solve_sum_squares_adj(
             slf.py(),
             method,
@@ -413,7 +427,7 @@ impl OdeWrapper {
             linear_solver,
             params.as_slice().unwrap(),
             data,
-            t_eval,
+            t_eval.as_slice().unwrap(),
         )
     }
 }
