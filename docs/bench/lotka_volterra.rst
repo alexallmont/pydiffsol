@@ -97,9 +97,8 @@ The results are shown below:
   :height: 600
   :alt: benchmark_lotka_volterra_ode_macbook.svg
 
-The Diffsol implementation of the TSIT45 method perform the best across all tolerances (particularly at lower tolerances) and both hardware setups,
-with the DifferentialEquations.jl Tsit5 implementation being consistently the second fastest. Diffrax's Tsit5 implementation is slowest, perhaps due to the use of double precision,
-which is not a common use case for ML libraries.
+The Diffsol and DifferentialEquations.jl implementations of the TSIT45 method perform the best across all tolerances and hardware setups, with Diffsol being slightly faster at larger tolerances and DifferentialEquations.jl being slightly faster at smaller tolerances.
+Diffrax's Tsit5 implementation is slowest, perhaps due to the use of double precision, which is not a common use case for ML libraries.
 
 For the BDF/FBDF methods, the Diffsol implementation outperforms both the Casadi and DifferentialEquations.jl implementations across all tolerances and hardware setups.
 The Casadi implementation is the slowest of the three, likely due to the overhead of evaluating the function using the computational graph.
