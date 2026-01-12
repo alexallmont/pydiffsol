@@ -65,3 +65,8 @@ def test_config_ode():
     assert ode.options.threshold_to_update_jacobian == 1e-3
     ode_opts.threshold_to_update_rhs_jacobian = 1e-4
     assert ode.options.threshold_to_update_rhs_jacobian == 1e-4
+    
+    # delete ode and make sure options persist
+    del ode
+    ode_opts.threshold_to_update_rhs_jacobian = 1e-4
+    assert ode_opts.threshold_to_update_rhs_jacobian == 1e-4
