@@ -27,7 +27,7 @@ Basic Usage
       u { 0.1 }
       F { r * u * (1.0 - u / k) }
       """,
-      ds.nalgebra_dense_f64
+      ds.nalgebra_dense
    )
    p = np.array([])
    print(ode.solve(p, 0.4))

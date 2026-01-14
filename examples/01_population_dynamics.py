@@ -21,7 +21,7 @@ def solve():
             c * y1 * y2 - d * y2,
         }
         """,
-        matrix_type=ds.nalgebra_dense_f64,
+        matrix_type=ds.nalgebra_dense,
         linear_solver=ds.lu,
         method=ds.bdf,
     )
@@ -42,8 +42,7 @@ def solve():
 def phase_plane():
     ode = ds.Ode(
         """
-        in = [ y0 ]
-        y0 { 1.0 }
+        in { y0 = 1 }
         a { 2.0/3.0 } b { 4.0/3.0 } c { 1.0 } d { 1.0 }
         u_i {
             y1 = y0,
@@ -54,7 +53,7 @@ def phase_plane():
             c * y1 * y2 - d * y2,
         }
         """,
-        matrix_type=ds.nalgebra_dense_f64,
+        matrix_type=ds.nalgebra_dense,
         linear_solver=ds.lu,
         method=ds.bdf,
     )

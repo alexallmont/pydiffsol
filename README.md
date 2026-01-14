@@ -20,7 +20,7 @@ ode = ds.Ode(
     u { 0.1 }
     F { r * u * (1.0 - u / k) }
     """,
-    ds.nalgebra_dense_f64
+    ds.nalgebra_dense
 )
 
 # Example overriding r input param with 2.0
@@ -34,8 +34,8 @@ print(ode.solve(params, 0.4))
 
 ## Known issues
 
-- BDF with FaerSparseF64 KLU is not stable on macos; we have found a segfault in
-underlying diffsol. Unit tests are disabled for this combination.
+- Instability for BDF with FaerSparse KLU. We are investigating a segfault in
+underlying diffsol. In the meantime, unit tests are disabled for this combination.
 
 ## Local development
 

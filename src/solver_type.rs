@@ -2,12 +2,14 @@
 // LU or KLU in diffsol, with default selecting whichever is most appropriate
 // given the matrix type.
 
-use pyo3::exceptions::PyValueError;
-use pyo3::prelude::*;
-use pyo3::types::{PyList, PyType};
+use pyo3::{
+    exceptions::PyValueError,
+    prelude::*,
+    types::{PyList, PyType},
+};
 
 /// Enumerates the possible linear solver types for diffsol
-/// 
+///
 /// :attr default: use the solver's default linear solver choice, typically LU
 /// :attr lu: use LU decomposition linear solver (dense or sparse as appropriate)
 /// :attr klu: use KLU sparse linear solver

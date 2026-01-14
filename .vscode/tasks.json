@@ -7,14 +7,20 @@
             "label": "maturin develop",
             "type": "shell",
             "linux": {
-                "command": "maturin develop --extras dev --features diffsol-llvm17 --features suitesparse",
+                "command": "maturin develop --extras dev --features diffsol-llvm17 --features suitesparse"
             },
             "osx": {
-                "command": "maturin develop --extras dev --features diffsol-llvm17",
+                "command": "maturin develop --extras dev --features diffsol-llvm17"
             },
             "windows": {
-                "command": "maturin develop --extras dev --features diffsol-cranelift",
+                "command": "maturin develop --extras dev --features diffsol-cranelift"
+            },
+            "problemMatcher": [
+                "$rustc"
+            ],
+            "presentation": {
+                "clear": true
             }
-        },
+        }
     ]
 }

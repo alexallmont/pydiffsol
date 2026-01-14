@@ -21,7 +21,7 @@ def solve():
             -k/m * x - c/m * v,
         }
         """,
-        ds.nalgebra_dense_f64,
+        ds.nalgebra_dense,
     )
 
     params = np.array([])

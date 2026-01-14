@@ -11,7 +11,7 @@ __pycache__/
 # Distribution / packaging
 .Python
 .venv/
-env/
+env*/
 bin/
 build/
 develop-eggs/
@@ -55,3 +55,6 @@ docs/_build/
 
 # benchmark files
 **/benchmark*.csv
+
+# julia Manifest
+Manifest.toml
