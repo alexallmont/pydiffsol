@@ -1,7 +1,7 @@
 Example: Heat Equation
 ======================
 
-We will now consider the heat equation as an example for a simple PDE. The heat equation is a PDE that describes how the temperature of a material changes over time. In one dimension, the heat equation is
+We will now consider the heat equation as an example for a simple PDE. The heat equation is a PDE that describes how the temperature of a material changes over time. In one dimension, the heat equation is:
 
 .. math:: \frac{\partial u}{\partial t} = D \frac{\partial^2 u}{\partial x^2}
 
