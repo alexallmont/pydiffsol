@@ -18,10 +18,7 @@ pub enum ScalarType {
 
 impl ScalarType {
     pub(crate) fn all_enums() -> Vec<ScalarType> {
-        vec![
-            ScalarType::F32,
-            ScalarType::F64,
-        ]
+        vec![ScalarType::F32, ScalarType::F64]
     }
 
     pub(crate) fn get_name(&self) -> &str {

@@ -3,17 +3,12 @@
 use numpy::{
     dtype,
     ndarray::{ArrayView1, ArrayView2, ShapeBuilder},
-    Element,
-    PyArray1, PyArray2, PyUntypedArray,
-    PyArrayDescrMethods, PyArrayMethods, PyUntypedArrayMethods,
-    ToPyArray
+    Element, PyArray1, PyArray2, PyArrayDescrMethods, PyArrayMethods, PyUntypedArray,
+    PyUntypedArrayMethods, ToPyArray,
 };
 use pyo3::prelude::*;
 
-use crate::{
-    error::PyDiffsolError,
-    py_types::PyCompatibleScalar
-};
+use crate::{error::PyDiffsolError, py_types::PyCompatibleScalar};
 
 // 2D matrix to python array conversion
 pub trait MatrixToPy<'py, T> {

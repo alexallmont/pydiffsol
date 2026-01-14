@@ -12,7 +12,7 @@ pub enum PyDiffsolError {
 }
 
 impl From<PyDiffsolError> for PyErr {
-   fn from(err: PyDiffsolError) -> Self {
+    fn from(err: PyDiffsolError) -> Self {
         match err {
             PyDiffsolError::Diffsol(e) => PyRuntimeError::new_err(e.to_string()),
             PyDiffsolError::Conversion(msg) => PyValueError::new_err(msg),

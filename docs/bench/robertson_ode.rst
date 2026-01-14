@@ -15,6 +15,8 @@ This test case can be written as an ODE given by the following set of equations:
 
 with initial conditions:
 
+.. math::
+
    \begin{align}
    x(0) &= 1 \\
    y(0) &= 0 \\
@@ -31,12 +33,14 @@ Solvers
 -------
 
 We benchmark the following solvers:
+
 - Diffsol's BDF, ESDIRK34 & TR-BDF2 methods
 - CasADi's CVODE solver
 - Diffrax's Kvaerno5 & Tsit5 solvers
 - Julia's DifferentialEquations.jl FBDF, KenCarp3, & TRBDF2 methods
 
 The following solvers are similar so should be compared against each other:
+
 - Diffsol BDF, CasADi CVODE & DifferentialEquations.jl FBDF methods.
 - Diffsol's TR-BDF2 and DifferentialEquations.jl TRBDF2.
 - Diffsol's ESDIRK34, DifferentialEquations.jl KenCarp3 and Diffrax's Tsit5 methods are different methods, but are all SDIRK implicit Runge-Kutta methods of similar order.
