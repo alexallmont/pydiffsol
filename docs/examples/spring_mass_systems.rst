@@ -17,19 +17,19 @@ where \\(x\\) is the position of the mass, \\(t\\) is time, and the negative sig
 We can convert this to a system of two first order ODEs by introducing a new variable for the velocity of the mass:
 
 .. math::
-    \begin{align*}
-    \frac{dx}{dt} &= v \\\\
-    \frac{dv}{dt} &= -\frac{k}{m} x - \frac{c}{m} v
-    \end{align*}
+  \begin{align*}
+  \frac{dx}{dt} &= v \\\\
+  \frac{dv}{dt} &= -\frac{k}{m} x - \frac{c}{m} v
+  \end{align*}
 
 where \\(v = \frac{dx}{dt}\\) is the velocity of the mass.
 
 We can solve this system of ODEs using Diffsol with the following code:
 
 .. literalinclude:: ../../examples/02_spring_mass_system.py
-   :encoding: latin-1
-   :lines: 4,6-9,11-33
-   :language: python
+  :encoding: latin-1
+  :lines: 4,6-9,11-33
+  :language: python
 
 .. image:: ../images/spring_mass_system.svg
   :width: 640
