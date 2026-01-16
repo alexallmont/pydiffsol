@@ -55,6 +55,7 @@
             "options": [
                 "examples/1_1_population_dynamics.py",
                 "examples/2_1_spring_mass_system.py",
+                "examples/4_1_electrical_circuits.py"
                 "examples/5_1_heat_equation.py",
             ]
         }
