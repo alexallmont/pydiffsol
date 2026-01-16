@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import cm
 import pydiffsol as ds
 
 
@@ -33,15 +34,26 @@ def solve():
             u_i
         }
         """,
+        # Note that faer_sparse may be a better choice than nalgebra_dense for
+        # larger systems because the RHS Jacobian will mostly be zeroes.
         ds.nalgebra_dense,
     )
     params = np.array([])
     ys, ts = ode.solve(params, 0.1)
 
-    fig, ax = plt.subplots()
-    ax.plot(ys[:,-1], label="x")
-    ax.set_xlabel("x")
-    ax.set_ylabel("T")
+    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+    ax.plot_surface(
+        *np.meshgrid(ts, np.arange(ys.shape[0])), ys, # X, Y, Z
+        cmap=cm.coolwarm,
+    )
+    ax.grid(False)
+    ax.view_init(15, -30, 0)
+    ax.set_box_aspect(None, zoom=1.2)
+    ax.set_xlabel("t")
+    ax.set_ylabel("h")
+    ax.set_zlabel("T")
     fig.savefig("docs/images/heat_equation.svg")
 
-solve()
+
+if __name__ == "__main__":
+    solve()
