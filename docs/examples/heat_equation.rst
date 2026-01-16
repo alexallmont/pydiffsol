@@ -10,8 +10,9 @@ the `Diffsol heat equation example <https://martinjrobins.github.io/diffsol/prim
 
 We can solve the one-dimensional heat equation using Diffsol with the following code:
 
-.. literalinclude:: ../../examples/03_heat_equation.py
+.. literalinclude:: ../../examples/5_1_heat_equation.py
   :encoding: latin-1
+  :lines: 1-45
   :language: python
 
 The plot of the solution is shown below:

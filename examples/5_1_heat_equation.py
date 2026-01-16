@@ -44,4 +44,6 @@ def solve():
     ax.set_ylabel("T")
     fig.savefig("docs/images/heat_equation.svg")
 
-solve()
+
+if __name__ == "__main__":
+    solve()
