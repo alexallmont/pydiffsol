@@ -4,8 +4,8 @@ Example: Spring-mass systems
 We will model a `damped spring-mass system <https://en.wikipedia.org/wiki/Mass-spring-damper_model>`_ using a second order ODE. The system consists of a mass \\(m\\) attached to a spring with spring constant \\(k\\), and a damping force proportional to the velocity of the mass with damping coefficient \\(c\\).
 
 .. image:: ../images/mass_spring_damper.png
-  :width: 640
-  :height: 480
+  :width: 320
+  :height: 240
   :alt: mass_spring_damper.png
 
 The equation of motion for the mass can be written as:
@@ -26,7 +26,7 @@ where \\(v = \frac{dx}{dt}\\) is the velocity of the mass.
 
 We can solve this system of ODEs using Diffsol with the following code:
 
-.. literalinclude:: ../../examples/02_spring_mass_system.py
+.. literalinclude:: ../../examples/2_1_spring_mass_system.py
   :encoding: latin-1
   :lines: 4,6-9,11-33
   :language: python
