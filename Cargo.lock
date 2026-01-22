@@ -517,9 +517,9 @@ checksum = "930c7171c8df9fb1782bdf9b918ed9ed2d33d1d22300abb754f9085bc48bf8e8"
 
 [[package]]
 name = "diffsl"
-version = "0.8.2"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e0c9b760ba0b024fd2f08b2fb26f0eab92d1030723a0c3618c72ee413e4878e9"
+checksum = "81461a974580434b91c779b6b8db87e31b642e33cb3bc2fc4aee9766dc9b3bb1"
 dependencies = [
  "aliasable",
  "anyhow",
@@ -558,18 +558,20 @@ dependencies = [
 
 [[package]]
 name = "diffsol"
-version = "0.9.1"
+version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "253d759063b94a84a459b4ce9afd1db4cbe1df6e9b28c5a0ca8a765889d33d0f"
+checksum = "ab33cab70faf981d2baf4b4e6332c072599717d8177789a47385de5c0a95cb8d"
 dependencies = [
  "diffsl",
  "faer",
  "faer-traits",
+ "log",
  "nalgebra",
  "nalgebra-sparse",
  "num-traits",
  "petgraph",
  "serde",
+ "serde_json",
  "suitesparse_sys",
  "thiserror 2.0.17",
 ]
@@ -1173,6 +1175,12 @@ checksum = "2b192c782037fadd9cfa75548310488aabdbf3d2da73885b31bd0abd03351285"
 dependencies = [
  "either",
 ]
+
+[[package]]
+name = "itoa"
+version = "1.0.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "92ecc6618181def0457392ccd0ee51198e065e016d1d527a7ac1b6dc7c1f09d2"
 
 [[package]]
 name = "lazy_static"
@@ -2206,6 +2214,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_json"
+version = "1.0.149"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "83fc039473c5595ace860d8c4fafa220ff474b3fc6bfdb4293327f1a37e94d86"
+dependencies = [
+ "itoa",
+ "memchr",
+ "serde",
+ "serde_core",
+ "zmij",
+]
+
+[[package]]
 name = "sha2"
 version = "0.10.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2981,3 +3002,9 @@ dependencies = [
  "quote",
  "syn 2.0.111",
 ]
+
+[[package]]
+name = "zmij"
+version = "1.0.16"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dfcd145825aace48cff44a8844de64bf75feec3080e0aa5cdbde72961ae51a65"
