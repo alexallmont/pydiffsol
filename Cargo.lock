@@ -1853,7 +1853,7 @@ dependencies = [
 
 [[package]]
 name = "pydiffsol"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "diffsol",
  "faer",
