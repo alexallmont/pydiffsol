@@ -36,6 +36,7 @@ pub(crate) trait PySolve {
     fn rhs<'py>(
         &mut self,
         py: Python<'py>,
+        params: &[f64],
         t: f64,
         y: &[f64],
     ) -> Result<Bound<'py, PyUntypedArray1>, PyDiffsolError>;
@@ -43,12 +44,13 @@ pub(crate) trait PySolve {
     fn rhs_jac_mul<'py>(
         &mut self,
         py: Python<'py>,
+        params: &[f64],
         t: f64,
         y: &[f64],
         v: &[f64],
     ) -> Result<Bound<'py, PyUntypedArray1>, PyDiffsolError>;
 
-    fn y0<'py>(&mut self, py: Python<'py>) -> Result<Bound<'py, PyUntypedArray1>, PyDiffsolError>;
+    fn y0<'py>(&mut self, py: Python<'py>, params: &[f64]) -> Result<Bound<'py, PyUntypedArray1>, PyDiffsolError>;
 
     fn check(&self, linear_solver: SolverType) -> Result<(), PyDiffsolError>;
     fn set_rtol(&mut self, rtol: f64);
@@ -245,7 +247,8 @@ where
         threshold_to_update_rhs_jacobian: f64
     }
 
-    fn y0<'py>(&mut self, py: Python<'py>) -> Result<Bound<'py, PyUntypedArray1>, PyDiffsolError> {
+    fn y0<'py>(&mut self, py: Python<'py>, params: &[f64]) -> Result<Bound<'py, PyUntypedArray1>, PyDiffsolError> {
+        self.setup_problem(params)?;
         let n = self.problem.eqn.nstates();
         let mut y0 = M::V::zeros(n, M::C::default());
         let t0 = self.problem.t0;
@@ -256,9 +259,11 @@ where
     fn rhs<'py>(
         &mut self,
         py: Python<'py>,
+        params: &[f64],
         t: f64,
         y: &[f64],
     ) -> Result<Bound<'py, PyUntypedArray1>, PyDiffsolError> {
+        self.setup_problem(params)?;
         let n = self.problem.eqn.nstates();
         let y = y
             .iter()
@@ -276,10 +281,12 @@ where
     fn rhs_jac_mul<'py>(
         &mut self,
         py: Python<'py>,
+        params: &[f64],
         t: f64,
         y: &[f64],
         v: &[f64],
     ) -> Result<Bound<'py, PyUntypedArray1>, PyDiffsolError> {
+        self.setup_problem(params)?;
         let n = self.problem.eqn.nstates();
         let y = y
             .iter()

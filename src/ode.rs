@@ -139,24 +139,26 @@ impl OdeWrapper {
     }
 
     /// Get the initial condition vector y0 as a 1D numpy array.
-    fn y0<'py>(slf: PyRefMut<'py, Self>) -> Result<Bound<'py, PyUntypedArray1>, PyDiffsolError> {
+    fn y0<'py>(slf: PyRefMut<'py, Self>, params: PyReadonlyArray1<'py, f64>) -> Result<Bound<'py, PyUntypedArray1>, PyDiffsolError> {
         let mut self_guard = slf.0.lock().unwrap();
-        self_guard.py_solve.y0(slf.py())
+        self_guard.py_solve.y0(slf.py(), params.as_slice().unwrap())
     }
 
     /// evaluate the right-hand side function at time `t` and state `y`.
     fn rhs<'py>(
         slf: PyRefMut<'py, Self>,
+        params: PyReadonlyArray1<'py, f64>,
         t: f64,
         y: PyReadonlyArray1<'py, f64>,
     ) -> Result<Bound<'py, PyUntypedArray1>, PyDiffsolError> {
         let mut self_guard = slf.0.lock().unwrap();
-        self_guard.py_solve.rhs(slf.py(), t, y.as_slice().unwrap())
+        self_guard.py_solve.rhs(slf.py(), params.as_slice().unwrap(), t, y.as_slice().unwrap())
     }
 
     /// evaluate the right-hand side Jacobian-vector product `Jv`` at time `t` and state `y`.
     fn rhs_jac_mul<'py>(
         slf: PyRefMut<'py, Self>,
+        params: PyReadonlyArray1<'py, f64>,
         t: f64,
         y: PyReadonlyArray1<'py, f64>,
         v: PyReadonlyArray1<'py, f64>,
@@ -164,7 +166,7 @@ impl OdeWrapper {
         let mut self_guard = slf.0.lock().unwrap();
         self_guard
             .py_solve
-            .rhs_jac_mul(slf.py(), t, y.as_slice().unwrap(), v.as_slice().unwrap())
+            .rhs_jac_mul(slf.py(), params.as_slice().unwrap(), t, y.as_slice().unwrap(), v.as_slice().unwrap())
     }
 
     /// Using the provided state, solve the problem up to time `final_time`.
