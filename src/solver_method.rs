@@ -7,8 +7,8 @@ use diffsol::{
     OdeSolverProblem, Vector, VectorHost, VectorRef,
 };
 use diffsol::{
-    AdjointOdeSolverMethod, Checkpointing, DefaultSolver, DenseMatrix, DiffSlScalar,
-    MatrixCommon, OdeSolverState, Op, SensitivitiesOdeSolverMethod, VectorViewMut
+    AdjointOdeSolverMethod, Checkpointing, DefaultSolver, DenseMatrix, DiffSlScalar, MatrixCommon,
+    OdeSolverState, Op, SensitivitiesOdeSolverMethod, VectorViewMut,
 };
 use nalgebra::ComplexField; // for powi
 use num_traits::{FromPrimitive, Zero}; // for generic nums in _solve_sum_squares_adj
@@ -221,7 +221,11 @@ impl SolverMethod {
             // TODO: can we avoid this allocation? (I can't see how right now)
             let mut tmp = M::V::from_slice(data.column(j).as_slice().unwrap(), ctx.clone());
             // tmp = 2 * ys_col - 2 * tmp
-            tmp.axpy_v(M::T::from_f64(2.0).unwrap(), &ys_col, M::T::from_f64(-2.0).unwrap());
+            tmp.axpy_v(
+                M::T::from_f64(2.0).unwrap(),
+                &ys_col,
+                M::T::from_f64(-2.0).unwrap(),
+            );
             g_m.column_mut(j).copy_from(&tmp);
 
             // y = (1/4) * dot(tmp, tmp) + y

@@ -2,15 +2,14 @@
 
 use std::sync::{Arc, Mutex};
 
-use numpy::{PyReadonlyArray1};
-use pyo3::{
-    exceptions::PyRuntimeError,
-    prelude::*,
-};
+use numpy::PyReadonlyArray1;
+use pyo3::{exceptions::PyRuntimeError, prelude::*};
 
 use crate::{
     error::PyDiffsolError,
     matrix_type::MatrixType,
+    options_ic::InitialConditionSolverOptions,
+    options_ode::OdeSolverOptions,
     py_solve::{py_solve_factory, PySolve},
     py_types::{PyReadonlyUntypedArray2, PyUntypedArray1, PyUntypedArray2},
     scalar_type::ScalarType,
@@ -19,11 +18,11 @@ use crate::{
 };
 
 #[pyclass]
-struct Ode {
+pub(crate) struct Ode {
     code: String,
     linear_solver: SolverType,
     method: SolverMethod,
-    py_solve: Box<dyn PySolve>,
+    pub(crate) py_solve: Box<dyn PySolve>,
 }
 unsafe impl Send for Ode {}
 unsafe impl Sync for Ode {}
@@ -129,6 +128,47 @@ impl OdeWrapper {
         Ok(self.guard()?.code.clone())
     }
 
+    #[getter]
+    fn get_ic_options(&self) -> InitialConditionSolverOptions {
+        InitialConditionSolverOptions::new(self.0.clone())
+    }
+
+    #[getter]
+    fn get_options(&self) -> OdeSolverOptions {
+        OdeSolverOptions::new(self.0.clone())
+    }
+
+    /// Get the initial condition vector y0 as a 1D numpy array.
+    fn y0<'py>(slf: PyRefMut<'py, Self>, params: PyReadonlyArray1<'py, f64>) -> Result<Bound<'py, PyUntypedArray1>, PyDiffsolError> {
+        let mut self_guard = slf.0.lock().unwrap();
+        self_guard.py_solve.y0(slf.py(), params.as_slice().unwrap())
+    }
+
+    /// evaluate the right-hand side function at time `t` and state `y`.
+    fn rhs<'py>(
+        slf: PyRefMut<'py, Self>,
+        params: PyReadonlyArray1<'py, f64>,
+        t: f64,
+        y: PyReadonlyArray1<'py, f64>,
+    ) -> Result<Bound<'py, PyUntypedArray1>, PyDiffsolError> {
+        let mut self_guard = slf.0.lock().unwrap();
+        self_guard.py_solve.rhs(slf.py(), params.as_slice().unwrap(), t, y.as_slice().unwrap())
+    }
+
+    /// evaluate the right-hand side Jacobian-vector product `Jv`` at time `t` and state `y`.
+    fn rhs_jac_mul<'py>(
+        slf: PyRefMut<'py, Self>,
+        params: PyReadonlyArray1<'py, f64>,
+        t: f64,
+        y: PyReadonlyArray1<'py, f64>,
+        v: PyReadonlyArray1<'py, f64>,
+    ) -> Result<Bound<'py, PyUntypedArray1>, PyDiffsolError> {
+        let mut self_guard = slf.0.lock().unwrap();
+        self_guard
+            .py_solve
+            .rhs_jac_mul(slf.py(), params.as_slice().unwrap(), t, y.as_slice().unwrap(), v.as_slice().unwrap())
+    }
+
     /// Using the provided state, solve the problem up to time `final_time`.
     ///
     /// The number of params must match the expected params in the diffsl code.
@@ -220,7 +260,13 @@ impl OdeWrapper {
         slf: PyRefMut<'py, Self>,
         params: PyReadonlyArray1<'py, f64>,
         t_eval: PyReadonlyArray1<'py, f64>,
-    ) -> Result<(Bound<'py, PyUntypedArray2>, Vec<Bound<'py, PyUntypedArray2>>), PyDiffsolError> {
+    ) -> Result<
+        (
+            Bound<'py, PyUntypedArray2>,
+            Vec<Bound<'py, PyUntypedArray2>>,
+        ),
+        PyDiffsolError,
+    > {
         let mut self_guard = slf.0.lock().unwrap();
         let params = params.as_array();
         let t_eval = t_eval.as_array();

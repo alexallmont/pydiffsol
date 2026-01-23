@@ -4,9 +4,14 @@
 use diffsol::error::DiffsolError;
 use diffsol::Scalar;
 
-use crate::{error::PyDiffsolError, matrix_type::MatrixType, matrix_type::MatrixKind, solver_type::SolverType};
+use crate::{
+    error::PyDiffsolError, matrix_type::MatrixKind, matrix_type::MatrixType,
+    solver_type::SolverType,
+};
 
-pub(crate) fn validate_linear_solver<M: diffsol::Matrix + LuValidator<M> + KluValidator<M> + MatrixKind>(
+pub(crate) fn validate_linear_solver<
+    M: diffsol::Matrix + LuValidator<M> + KluValidator<M> + MatrixKind,
+>(
     linear_solver: SolverType,
 ) -> Result<(), PyDiffsolError> {
     match linear_solver {
