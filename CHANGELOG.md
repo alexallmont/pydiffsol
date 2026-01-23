@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Get/set initial conditions, solver options, rhs and y0 (#30)
+- Electrical circuits example (#39)
 - Heat equation example (#36)
 - Update to diffsol 0.10.2 (#41)
 
