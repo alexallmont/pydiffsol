@@ -9,3 +9,5 @@ for broader context and overview of ODEs and applications.
 
    examples/population_dynamics
    examples/spring_mass_systems
+   examples/electrical_circuits
+   examples/heat_equation

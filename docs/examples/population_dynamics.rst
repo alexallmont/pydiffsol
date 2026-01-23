@@ -21,20 +21,20 @@ Putting the two equations together, we have a system of two first order ODEs:
 
 .. math::
 
-    \frac{dx}{dt} = a x - b x y \\
-    \frac{dy}{dt} = c x y - d y
+  \frac{dx}{dt} = a x - b x y \\
+  \frac{dy}{dt} = c x y - d y
 
 which can be written in vector form as:
 
 .. math::
 
-    \begin{bmatrix}
-    \frac{dx}{dt} \\\\
-    \frac{dy}{dt}
-    \end{bmatrix} = \begin{bmatrix}
-    a x - b x y \\\\
-    c x y - d y
-    \end{bmatrix}
+  \begin{bmatrix}
+  \frac{dx}{dt} \\\\
+  \frac{dy}{dt}
+  \end{bmatrix} = \begin{bmatrix}
+  a x - b x y \\\\
+  c x y - d y
+  \end{bmatrix}
 
 or in the general form of a first order ODE system:
 
@@ -54,10 +54,10 @@ We also have initial conditions for the populations at time \\(t = 0\\). We can 
 
 Let's solve this system of ODEs using pydiffsol.
 
-.. literalinclude:: ../../examples/01_population_dynamics.py
-   :encoding: latin-1
-   :lines: 4,6-9,11-39
-   :language: python
+.. literalinclude:: ../../examples/1_1_population_dynamics.py
+  :encoding: latin-1
+  :lines: 4,6-9,11-39
+  :language: python
 
 .. image:: ../images/prey_predator.svg
   :width: 640
@@ -72,10 +72,10 @@ Our initial conditions are now:
 
 so we can solve this system for different values of \\(y_0\\) and plot the phase plane for each case. We will use similar code as above, but we will introduce our new parameter and loop over different values of \\(y_0\\)
 
-.. literalinclude:: ../../examples/01_population_dynamics.py
-   :encoding: latin-1
-   :lines: 41-72
-   :language: python
+.. literalinclude:: ../../examples/1_1_population_dynamics.py
+  :encoding: latin-1
+  :lines: 41-72
+  :language: python
 
 .. image:: ../images/prey_predator2.svg
   :width: 640

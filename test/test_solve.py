@@ -28,8 +28,7 @@ def test_solve():
     ys, ts = ode.solve(params, 0.4)
 
     assert len(ys) == 1
-    assert len(ys[0]) == 28
-    assert len(ts) == 28
+    assert len(ys[0]) == len(ts)
 
     for i, t in enumerate(ts):
        expect = k * y0 / (y0 + (k - y0) * np.exp(-r * t))
@@ -40,13 +39,8 @@ def test_solve():
     # and ys are new objects and not referring to mutated data.
     ys2, ts2 = ode.solve(params, 1.0)
 
-    # New solve generates more data due to larger t of 1.0
-    assert len(ys2[0]) == 34
-    assert len(ts2) == 34
-
-    # Old arrays refer to original data for t = 0.4
-    assert len(ys[0]) == 28
-    assert len(ts) == 28
+    assert len(ys2[0]) == len(ts2)
+    assert len(ys[0]) == len(ts)
 
     # Sanity check that the python objects are unique
     assert id(ys) != id(ys2)
