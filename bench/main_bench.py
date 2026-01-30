@@ -41,34 +41,45 @@ def bench(torun):
         t0 = time.perf_counter()
         diffsol_bdf_model = diffsol_setup(ngroups=ng, tol=tol, method="bdf", problem=problem)
         t1 = time.perf_counter()
-        diffsol_setup_time = t1 - t0
+        diffsol_bdf_setup_time = t1 - t0
+    
 
         def diffsol_bdf():
             return diffsol_bench(diffsol_bdf_model)
 
+        t0 = time.perf_counter()
         diffsol_esdirk34_model = diffsol_setup(
             ngroups=ng, tol=tol, method="esdirk34", problem=problem
         )
+        t1 = time.perf_counter()
+        diffsol_esdirk34_setup_time = t1 - t0
 
         def diffsol_esdirk34():
             return diffsol_bench(diffsol_esdirk34_model)
 
+        t0 = time.perf_counter()
         diffsol_tr_bdf2_model = diffsol_setup(
             ngroups=ng, tol=tol, method="tr_bdf2", problem=problem
         )
+        t1 = time.perf_counter()
+        diffsol_tr_bdf2_setup_time = t1 - t0
 
         def diffsol_tr_bdf2():
             return diffsol_bench(diffsol_tr_bdf2_model)
 
+        t0 = time.perf_counter()
         diffsol_tsit5_model = diffsol_setup(
             ngroups=ng, tol=tol, method="tsit5", problem=problem
         )
+        t1 = time.perf_counter()
+        diffsol_tsit5_setup_time = t1 - t0
 
         def diffsol_tsit5():
             return diffsol_bench(diffsol_tsit5_model)
 
         run_diffrax = ng <= 100
 
+        # run one solve and add to the setup time, this is to account for JIT compilation time in diffrax and diffeq
         # check that output is same
         t0 = time.perf_counter()
         y_casadi = casadi()
@@ -78,9 +89,15 @@ def bench(torun):
         t0 = time.perf_counter()
         y_diffsol_bdf = diffsol_bdf()
         t1 = time.perf_counter()
-        diffsol_setup_time += t1 - t0
+        diffsol_bdf_setup_time += t1 - t0
+        t0 = time.perf_counter()
         y_diffsol_esdirk34 = diffsol_esdirk34()
+        t1 = time.perf_counter()
+        diffsol_esdirk34_setup_time += t1 - t0
+        t0 = time.perf_counter()
         y_diffsol_tr_bdf2 = diffsol_tr_bdf2()
+        t1 = time.perf_counter()
+        diffsol_tr_bdf2_setup_time += t1 - t0
 
         check_tol = 1e3 * tol
 
@@ -93,6 +110,7 @@ def bench(torun):
         np.testing.assert_allclose(
             y_casadi, y_diffsol_tr_bdf2, rtol=check_tol, atol=check_tol
         )
+        
         if run_diffrax:
             t0 = time.perf_counter()
             y_diffrax = diffrax_kvaerno5()
@@ -125,7 +143,7 @@ def bench(torun):
         print("Casadi setup time: ", casadi_setup_time)
         print("Casadi time: ", casadi_time)
         diffsol_bdf_time = timeit.timeit(diffsol_bdf, number=n) / n
-        print("Diffsol BDF setup time: ", diffsol_setup_time)
+        print("Diffsol BDF setup time: ", diffsol_bdf_setup_time)
         print("Diffsol BDF time: ", diffsol_bdf_time)
         diffsol_esdirk34_time = timeit.timeit(diffsol_esdirk34, number=n) / n
         print("Diffsol ESDIRK34 time: ", diffsol_esdirk34_time)
@@ -141,9 +159,11 @@ def bench(torun):
             "n_runs": n,
             "casadi_setup_time": casadi_setup_time,
             "casadi_time": casadi_time,
-            "diffsol_setup_time": diffsol_setup_time,
+            "diffsol_bdf_setup_time": diffsol_bdf_setup_time,
             "diffsol_bdf_time": diffsol_bdf_time,
+            "diffsol_esdirk34_setup_time": diffsol_esdirk34_setup_time,
             "diffsol_esdirk34_time": diffsol_esdirk34_time,
+            "diffsol_tr_bdf2_setup_time": diffsol_tr_bdf2_setup_time,
             "diffsol_tr_bdf2_time": diffsol_tr_bdf2_time,
             "diffsol_tsit5_time": None,
             "speedup_casadi_vs_bdf": casadi_time / diffsol_bdf_time,
@@ -158,6 +178,7 @@ def bench(torun):
             diffsol_tsit5_time = timeit.timeit(diffsol_tsit5, number=n) / n
             print("Diffsol tsit5 time: ", diffsol_tsit5_time)
             result_row["diffsol_tsit5_time"] = diffsol_tsit5_time
+            result_row["diffsol_tsit5_setup_time"] = diffsol_tsit5_setup_time
             if run_diffrax:
                 diffrax_tsit5_time = timeit.timeit(diffrax_tsit5, number=n) / n
                 print("Diffrax tsit5 setup time: ", diffrax_tsit5_setup_time)

@@ -4,7 +4,7 @@ include("diffeq_robertson.jl")
 include("diffeq_lokta_volterra.jl")
 
 
-function setup(ngroups, tol, method, problem)
+function setup(ngroups, tol, method, problem, specialisation)
     if problem == "robertson_ode"
         prob, tspan = setup_robertson_ode(ngroups)
     elseif problem == "lotka_volterra_ode"
@@ -13,7 +13,9 @@ function setup(ngroups, tol, method, problem)
         error("Unknown problem: $problem")
     end
     @MTK.mtkcompile sys = MTK.modelingtoolkitize(prob)
-    prob = DE.ODEProblem(sys, [], tspan, jac=true, sparse=ngroups >= 20)
+    base_prob = MTK.ODEProblem(sys, [], tspan, jac=true, sparse=ngroups >= 20)
+    prob = DE.ODEProblem{true, specialisation}(base_prob.f, base_prob.u0, base_prob.tspan, base_prob.p)
+    
     if method == "bdf"
         alg = DE.FBDF()
     elseif method == "kencarp3"

@@ -45,6 +45,32 @@ def plot():
     plt.grid(True, which="both", ls="--", linewidth=0.5)
     plt.tight_layout()
     plt.savefig("benchmark_robertson_ode.svg")
+    
+    fig, ax = plt.subplots(figsize=(10, 6))
+    for method in [
+        "casadi_setup_time",
+        "diffsol_setup_time",
+        "diffrax_kvaerno5_setup_time",
+        "diffeq_bdf_setup_time",
+        "diffeq_kencarp3_setup_time",
+        "diffeq_tr_bdf2_setup_time",
+    ]:
+        if method in df.columns:
+            ax.plot(
+                df_robertson["ngroups"] * 3,
+                df_robertson[method],
+                marker="o",
+                label=method.replace("_setup_time", "").replace("_", " ").title(),
+            )
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlabel("Number of states (log scale)")
+    ax.set_ylabel("Setup Time (seconds, log scale)")
+    ax.set_title(f"Setup Time for stiff Robertson ODE on {computer_name}")
+    ax.legend()
+    plt.grid(True, which="both", ls="--", linewidth=0.5)
+    plt.tight_layout()
+    plt.savefig("benchmark_robertson_ode_setup.svg")
 
     fig, ax = plt.subplots(figsize=(10, 6))
     for method in [
