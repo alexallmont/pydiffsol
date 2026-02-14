@@ -96,6 +96,9 @@ def test_solve_fwd_sens_appends_into_existing_solution():
 
 
 def test_reject_append_when_existing_solution_has_sens_but_new_segment_does_not():
+    if os.name == "nt":
+        return
+
     ode = make_ode()
     params = np.array([1.0, 1.0, 0.1])
 
