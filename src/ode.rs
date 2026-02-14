@@ -10,6 +10,7 @@ use crate::{
     matrix_type::MatrixType,
     options_ic::InitialConditionSolverOptions,
     options_ode::OdeSolverOptions,
+    py_solution::PySolution,
     py_solve::{py_solve_factory, PySolve},
     py_types::{PyReadonlyUntypedArray2, PyUntypedArray1},
     scalar_type::ScalarType,
@@ -33,11 +34,41 @@ unsafe impl Sync for Ode {}
 #[derive(Clone)]
 pub struct OdeWrapper(Arc<Mutex<Ode>>);
 
+type SolveCallResult = Result<Box<dyn PySolution>, (PyDiffsolError, Option<Box<dyn PySolution>>)>;
+
 impl OdeWrapper {
     fn guard(&self) -> PyResult<std::sync::MutexGuard<'_, Ode>> {
         self.0
             .lock()
             .map_err(|_| PyRuntimeError::new_err("Ode mutex poisoned"))
+    }
+
+    fn run_solve_call<F>(
+        py_solve: &mut dyn PySolve,
+        solution: Option<SolutionWrapper>,
+        solve_call: F,
+    ) -> Result<SolutionWrapper, PyDiffsolError>
+    where
+        F: FnOnce(&mut dyn PySolve, Option<Box<dyn PySolution>>) -> SolveCallResult,
+    {
+        if let Some(solution) = solution {
+            let old_solution = solution.take_py_solution()?;
+            match solve_call(py_solve, Some(old_solution)) {
+                Ok(py_solution) => {
+                    solution.replace_py_solution(py_solution)?;
+                    Ok(solution)
+                }
+                Err((err, maybe_old_solution)) => {
+                    if let Some(old_solution) = maybe_old_solution {
+                        solution.replace_py_solution(old_solution)?;
+                    }
+                    Err(err)
+                }
+            }
+        } else {
+            let py_solution = solve_call(py_solve, None).map_err(|(err, _)| err)?;
+            Ok(SolutionWrapper::new(py_solution))
+        }
     }
 }
 
@@ -209,31 +240,14 @@ impl OdeWrapper {
         solution: Option<SolutionWrapper>,
     ) -> Result<SolutionWrapper, PyDiffsolError> {
         let mut self_guard = slf.0.lock().unwrap();
-        let params = params.as_array();
+        let params_array = params.as_array();
+        let params = params_array.as_slice().unwrap();
 
         let linear_solver = self_guard.linear_solver;
         let method = self_guard.method;
-        if let Some(solution) = solution {
-            let py_solution = solution.take_py_solution()?;
-            let py_solution = self_guard.py_solve.solve(
-                method,
-                linear_solver,
-                params.as_slice().unwrap(),
-                final_time,
-                Some(py_solution),
-            )?;
-            solution.replace_py_solution(py_solution)?;
-            Ok(solution)
-        } else {
-            let py_solution = self_guard.py_solve.solve(
-                method,
-                linear_solver,
-                params.as_slice().unwrap(),
-                final_time,
-                None,
-            )?;
-            Ok(SolutionWrapper::new(py_solution))
-        }
+        Self::run_solve_call(&mut *self_guard.py_solve, solution, |py_solve, py_solution| {
+            py_solve.solve(method, linear_solver, params, final_time, py_solution)
+        })
     }
 
     /// Using the provided state, solve the problem up to time
@@ -259,33 +273,16 @@ impl OdeWrapper {
         solution: Option<SolutionWrapper>,
     ) -> Result<SolutionWrapper, PyDiffsolError> {
         let mut self_guard = slf.0.lock().unwrap();
-        let params = params.as_array();
-        let t_eval = t_eval.as_array();
+        let params_array = params.as_array();
+        let params = params_array.as_slice().unwrap();
+        let t_eval_array = t_eval.as_array();
+        let t_eval = t_eval_array.as_slice().unwrap();
 
         let linear_solver = self_guard.linear_solver;
         let method = self_guard.method;
-
-        if let Some(solution) = solution {
-            let py_solution = solution.take_py_solution()?;
-            let py_solution = self_guard.py_solve.solve_dense(
-                method,
-                linear_solver,
-                params.as_slice().unwrap(),
-                t_eval.as_slice().unwrap(),
-                Some(py_solution),
-            )?;
-            solution.replace_py_solution(py_solution)?;
-            Ok(solution)
-        } else {
-            let py_solution = self_guard.py_solve.solve_dense(
-                method,
-                linear_solver,
-                params.as_slice().unwrap(),
-                t_eval.as_slice().unwrap(),
-                None,
-            )?;
-            Ok(SolutionWrapper::new(py_solution))
-        }
+        Self::run_solve_call(&mut *self_guard.py_solve, solution, |py_solve, py_solution| {
+            py_solve.solve_dense(method, linear_solver, params, t_eval, py_solution)
+        })
     }
 
     /// Using the provided state, solve the problem up to time `t_eval[t_eval.len()-1]`.
@@ -310,33 +307,16 @@ impl OdeWrapper {
         solution: Option<SolutionWrapper>,
     ) -> Result<SolutionWrapper, PyDiffsolError> {
         let mut self_guard = slf.0.lock().unwrap();
-        let params = params.as_array();
-        let t_eval = t_eval.as_array();
+        let params_array = params.as_array();
+        let params = params_array.as_slice().unwrap();
+        let t_eval_array = t_eval.as_array();
+        let t_eval = t_eval_array.as_slice().unwrap();
 
         let linear_solver = self_guard.linear_solver;
         let method = self_guard.method;
-
-        if let Some(solution) = solution {
-            let py_solution = solution.take_py_solution()?;
-            let py_solution = self_guard.py_solve.solve_fwd_sens(
-                method,
-                linear_solver,
-                params.as_slice().unwrap(),
-                t_eval.as_slice().unwrap(),
-                Some(py_solution),
-            )?;
-            solution.replace_py_solution(py_solution)?;
-            Ok(solution)
-        } else {
-            let py_solution = self_guard.py_solve.solve_fwd_sens(
-                method,
-                linear_solver,
-                params.as_slice().unwrap(),
-                t_eval.as_slice().unwrap(),
-                None,
-            )?;
-            Ok(SolutionWrapper::new(py_solution))
-        }
+        Self::run_solve_call(&mut *self_guard.py_solve, solution, |py_solve, py_solution| {
+            py_solve.solve_fwd_sens(method, linear_solver, params, t_eval, py_solution)
+        })
     }
 
     /// Using the provided state, solve the adjoint problem for the sum of squares
@@ -352,8 +332,10 @@ impl OdeWrapper {
         t_eval: PyReadonlyArray1<'py, f64>,
     ) -> Result<(f64, Bound<'py, PyUntypedArray1>), PyDiffsolError> {
         let mut self_guard = slf.0.lock().unwrap();
-        let params = params.as_array();
-        let t_eval = t_eval.as_array();
+        let params_array = params.as_array();
+        let params = params_array.as_slice().unwrap();
+        let t_eval_array = t_eval.as_array();
+        let t_eval = t_eval_array.as_slice().unwrap();
 
         let linear_solver = self_guard.linear_solver;
         let method = self_guard.method;
@@ -364,9 +346,9 @@ impl OdeWrapper {
             linear_solver,
             method,
             linear_solver,
-            params.as_slice().unwrap(),
+            params,
             data,
-            t_eval.as_slice().unwrap(),
+            t_eval,
         )
     }
 }

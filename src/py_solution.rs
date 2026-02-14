@@ -19,6 +19,19 @@ pub(crate) trait PySolution: Any {
 }
 
 impl dyn PySolution + '_ {
+    pub(crate) fn downcast_typed_solution<V>(&self) -> Result<&GenericPySolution<V>, PyDiffsolError>
+    where
+        V: Vector + DefaultDenseMatrix + 'static,
+    {
+        (self as &dyn Any)
+            .downcast_ref::<GenericPySolution<V>>()
+            .ok_or_else(|| {
+                PyDiffsolError::Conversion(
+                    "Provided Solution type is incompatible with this Ode instance".to_string(),
+                )
+            })
+    }
+
     pub(crate) fn downcast_typed_solution_mut<V>(
         &mut self,
     ) -> Result<&mut GenericPySolution<V>, PyDiffsolError>
@@ -75,9 +88,10 @@ impl<V: Vector + DefaultDenseMatrix> GenericPySolution<V> {
             .expect("solution current state missing unexpectedly")
     }
 
-    pub(crate) fn take_state(&mut self) -> Result<GenericPyState<V>, PyDiffsolError> {
+    pub(crate) fn state_clone(&self) -> Result<GenericPyState<V>, PyDiffsolError> {
         self.state
-            .take()
+            .as_ref()
+            .cloned()
             .ok_or_else(|| PyDiffsolError::Conversion("Solution current state missing".to_string()))
     }
 
@@ -88,8 +102,6 @@ impl<V: Vector + DefaultDenseMatrix> GenericPySolution<V> {
         ts: Vec<V::T>,
         sens: Vec<<V as DefaultDenseMatrix>::M>,
     ) -> Result<(), String> {
-        self.state = Some(state);
-
         if self.ys.nrows() != ys.nrows() {
             return Err(format!(
                 "Cannot append ys with mismatched rows ({} vs {})",
@@ -97,10 +109,10 @@ impl<V: Vector + DefaultDenseMatrix> GenericPySolution<V> {
                 ys.nrows()
             ));
         }
-        append_matrix_columns(&mut self.ys, &ys);
 
+        // Validate sensitivity dimensions before mutating any buffers.
         if self.sens.is_empty() {
-            self.sens = sens;
+            // no-op validation
         } else if !sens.is_empty() {
             if self.sens.len() != sens.len() {
                 return Err(format!(
@@ -117,11 +129,19 @@ impl<V: Vector + DefaultDenseMatrix> GenericPySolution<V> {
                         src.nrows()
                     ));
                 }
-                append_matrix_columns(dst, src);
             }
         }
 
+        append_matrix_columns(&mut self.ys, &ys);
+        if self.sens.is_empty() {
+            self.sens = sens;
+        } else if !sens.is_empty() {
+            for (dst, src) in self.sens.iter_mut().zip(sens.iter()) {
+                append_matrix_columns(dst, src);
+            }
+        }
         self.ts.extend(ts);
+        self.state = Some(state);
         Ok(())
     }
 }
