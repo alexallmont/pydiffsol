@@ -110,10 +110,17 @@ impl<V: Vector + DefaultDenseMatrix> GenericPySolution<V> {
             ));
         }
 
+        let self_has_sens = !self.sens.is_empty();
+        let new_has_sens = !sens.is_empty();
+        if self_has_sens != new_has_sens {
+            return Err(format!(
+                "Cannot append solution with sensitivities={} to solution with sensitivities={}",
+                new_has_sens, self_has_sens
+            ));
+        }
+
         // Validate sensitivity dimensions before mutating any buffers.
-        if self.sens.is_empty() {
-            // no-op validation
-        } else if !sens.is_empty() {
+        if self_has_sens {
             if self.sens.len() != sens.len() {
                 return Err(format!(
                     "Cannot append sens with mismatched length ({} vs {})",
@@ -121,7 +128,7 @@ impl<V: Vector + DefaultDenseMatrix> GenericPySolution<V> {
                     sens.len()
                 ));
             }
-            for (dst, src) in self.sens.iter_mut().zip(sens.iter()) {
+            for (dst, src) in self.sens.iter().zip(sens.iter()) {
                 if dst.nrows() != src.nrows() {
                     return Err(format!(
                         "Cannot append sens with mismatched rows ({} vs {})",
@@ -133,9 +140,7 @@ impl<V: Vector + DefaultDenseMatrix> GenericPySolution<V> {
         }
 
         append_matrix_columns(&mut self.ys, &ys);
-        if self.sens.is_empty() {
-            self.sens = sens;
-        } else if !sens.is_empty() {
+        if self_has_sens {
             for (dst, src) in self.sens.iter_mut().zip(sens.iter()) {
                 append_matrix_columns(dst, src);
             }

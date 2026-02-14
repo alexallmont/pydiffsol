@@ -95,6 +95,27 @@ def test_solve_fwd_sens_appends_into_existing_solution():
         assert sens_i.shape == (1, len(t_eval1) + len(t_eval2))
 
 
+def test_reject_append_when_existing_solution_has_sens_but_new_segment_does_not():
+    ode = make_ode()
+    params = np.array([1.0, 1.0, 0.1])
+
+    t_eval1 = np.array([0.0, 0.1, 0.2])
+    t_eval2 = np.array([0.3, 0.4])
+
+    solution = ode.solve_fwd_sens(params, t_eval1)
+    ys_before = solution.ys.copy()
+    ts_before = solution.ts.copy()
+    sens_before = [s.copy() for s in solution.sens]
+
+    with pytest.raises(Exception, match="Cannot append solution with sensitivities"):
+        ode.solve_dense(params, t_eval2, solution)
+
+    np.testing.assert_allclose(solution.ys, ys_before)
+    np.testing.assert_allclose(solution.ts, ts_before)
+    for s_before, s_after in zip(sens_before, solution.sens):
+        np.testing.assert_allclose(s_after, s_before)
+
+
 @pytest.mark.parametrize("scalar_type", [ds.f64, ds.f32])
 @pytest.mark.parametrize("method", [ds.bdf, ds.esdirk34, ds.tr_bdf2, ds.tsit45])
 def test_solution_current_state_round_trip(scalar_type, method):
