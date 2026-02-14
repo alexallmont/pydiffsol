@@ -72,6 +72,7 @@ impl SolverMethod {
         &self,
         problem: &mut OdeSolverProblem<DiffSl<M, JitModule>>,
         final_time: M::T,
+        initial_state: Option<GenericPyState<M::V>>,
     ) -> Result<
         (
             <M::V as DefaultDenseMatrix>::M,
@@ -89,22 +90,54 @@ impl SolverMethod {
     {
         match self {
             SolverMethod::Bdf => {
-                let mut solver = problem.bdf::<LS>()?;
+                let mut solver = match initial_state {
+                    Some(GenericPyState::Bdf(state)) => problem.bdf_solver::<LS>(state)?,
+                    Some(GenericPyState::Rk(_)) => {
+                        return Err(DiffsolError::Other(
+                            "Expected a BDF state for bdf method".to_string(),
+                        ));
+                    }
+                    None => problem.bdf::<LS>()?,
+                };
                 let (ys, ts) = solver.solve(final_time)?;
                 Ok((ys, ts, GenericPyState::Bdf(solver.into_state())))
             }
             SolverMethod::Esdirk34 => {
-                let mut solver = problem.esdirk34::<LS>()?;
+                let mut solver = match initial_state {
+                    Some(GenericPyState::Rk(state)) => problem.esdirk34_solver::<LS>(state)?,
+                    Some(GenericPyState::Bdf(_)) => {
+                        return Err(DiffsolError::Other(
+                            "Expected an RK state for esdirk34 method".to_string(),
+                        ));
+                    }
+                    None => problem.esdirk34::<LS>()?,
+                };
                 let (ys, ts) = solver.solve(final_time)?;
                 Ok((ys, ts, GenericPyState::Rk(solver.into_state())))
             }
             SolverMethod::TrBdf2 => {
-                let mut solver = problem.tr_bdf2::<LS>()?;
+                let mut solver = match initial_state {
+                    Some(GenericPyState::Rk(state)) => problem.tr_bdf2_solver::<LS>(state)?,
+                    Some(GenericPyState::Bdf(_)) => {
+                        return Err(DiffsolError::Other(
+                            "Expected an RK state for tr_bdf2 method".to_string(),
+                        ));
+                    }
+                    None => problem.tr_bdf2::<LS>()?,
+                };
                 let (ys, ts) = solver.solve(final_time)?;
                 Ok((ys, ts, GenericPyState::Rk(solver.into_state())))
             }
             SolverMethod::Tsit45 => {
-                let mut solver = problem.tsit45()?;
+                let mut solver = match initial_state {
+                    Some(GenericPyState::Rk(state)) => problem.tsit45_solver(state)?,
+                    Some(GenericPyState::Bdf(_)) => {
+                        return Err(DiffsolError::Other(
+                            "Expected an RK state for tsit45 method".to_string(),
+                        ));
+                    }
+                    None => problem.tsit45()?,
+                };
                 let (ys, ts) = solver.solve(final_time)?;
                 Ok((ys, ts, GenericPyState::Rk(solver.into_state())))
             }
@@ -115,6 +148,7 @@ impl SolverMethod {
         &self,
         problem: &mut OdeSolverProblem<DiffSl<M, JitModule>>,
         t_eval: &[M::T],
+        initial_state: Option<GenericPyState<M::V>>,
     ) -> Result<(<M::V as DefaultDenseMatrix>::M, GenericPyState<M::V>), DiffsolError>
     where
         M: Matrix<T: DiffSlScalar>,
@@ -125,22 +159,54 @@ impl SolverMethod {
     {
         match self {
             SolverMethod::Bdf => {
-                let mut solver = problem.bdf::<LS>()?;
+                let mut solver = match initial_state {
+                    Some(GenericPyState::Bdf(state)) => problem.bdf_solver::<LS>(state)?,
+                    Some(GenericPyState::Rk(_)) => {
+                        return Err(DiffsolError::Other(
+                            "Expected a BDF state for bdf method".to_string(),
+                        ));
+                    }
+                    None => problem.bdf::<LS>()?,
+                };
                 let ys = solver.solve_dense(t_eval)?;
                 Ok((ys, GenericPyState::Bdf(solver.into_state())))
             }
             SolverMethod::Esdirk34 => {
-                let mut solver = problem.esdirk34::<LS>()?;
+                let mut solver = match initial_state {
+                    Some(GenericPyState::Rk(state)) => problem.esdirk34_solver::<LS>(state)?,
+                    Some(GenericPyState::Bdf(_)) => {
+                        return Err(DiffsolError::Other(
+                            "Expected an RK state for esdirk34 method".to_string(),
+                        ));
+                    }
+                    None => problem.esdirk34::<LS>()?,
+                };
                 let ys = solver.solve_dense(t_eval)?;
                 Ok((ys, GenericPyState::Rk(solver.into_state())))
             }
             SolverMethod::TrBdf2 => {
-                let mut solver = problem.tr_bdf2::<LS>()?;
+                let mut solver = match initial_state {
+                    Some(GenericPyState::Rk(state)) => problem.tr_bdf2_solver::<LS>(state)?,
+                    Some(GenericPyState::Bdf(_)) => {
+                        return Err(DiffsolError::Other(
+                            "Expected an RK state for tr_bdf2 method".to_string(),
+                        ));
+                    }
+                    None => problem.tr_bdf2::<LS>()?,
+                };
                 let ys = solver.solve_dense(t_eval)?;
                 Ok((ys, GenericPyState::Rk(solver.into_state())))
             }
             SolverMethod::Tsit45 => {
-                let mut solver = problem.tsit45()?;
+                let mut solver = match initial_state {
+                    Some(GenericPyState::Rk(state)) => problem.tsit45_solver(state)?,
+                    Some(GenericPyState::Bdf(_)) => {
+                        return Err(DiffsolError::Other(
+                            "Expected an RK state for tsit45 method".to_string(),
+                        ));
+                    }
+                    None => problem.tsit45()?,
+                };
                 let ys = solver.solve_dense(t_eval)?;
                 Ok((ys, GenericPyState::Rk(solver.into_state())))
             }
@@ -161,6 +227,7 @@ impl SolverMethod {
         &self,
         problem: &mut OdeSolverProblem<DiffSl<M, JitModule>>,
         t_eval: &[M::T],
+        initial_state: Option<GenericPyState<M::V>>,
     ) -> Result<
         (
             <M::V as DefaultDenseMatrix>::M,
@@ -179,22 +246,54 @@ impl SolverMethod {
         Self::check_sens_available()?;
         match self {
             SolverMethod::Bdf => {
-                let mut solver = problem.bdf_sens::<LS>()?;
+                let mut solver = match initial_state {
+                    Some(GenericPyState::Bdf(state)) => problem.bdf_solver_sens::<LS>(state)?,
+                    Some(GenericPyState::Rk(_)) => {
+                        return Err(DiffsolError::Other(
+                            "Expected a BDF state for bdf method".to_string(),
+                        ));
+                    }
+                    None => problem.bdf_sens::<LS>()?,
+                };
                 let (ys, sens) = solver.solve_dense_sensitivities(t_eval)?;
                 Ok((ys, sens, GenericPyState::Bdf(solver.into_state())))
             }
             SolverMethod::Esdirk34 => {
-                let mut solver = problem.esdirk34_sens::<LS>()?;
+                let mut solver = match initial_state {
+                    Some(GenericPyState::Rk(state)) => problem.esdirk34_solver_sens::<LS>(state)?,
+                    Some(GenericPyState::Bdf(_)) => {
+                        return Err(DiffsolError::Other(
+                            "Expected an RK state for esdirk34 method".to_string(),
+                        ));
+                    }
+                    None => problem.esdirk34_sens::<LS>()?,
+                };
                 let (ys, sens) = solver.solve_dense_sensitivities(t_eval)?;
                 Ok((ys, sens, GenericPyState::Rk(solver.into_state())))
             }
             SolverMethod::TrBdf2 => {
-                let mut solver = problem.tr_bdf2_sens::<LS>()?;
+                let mut solver = match initial_state {
+                    Some(GenericPyState::Rk(state)) => problem.tr_bdf2_solver_sens::<LS>(state)?,
+                    Some(GenericPyState::Bdf(_)) => {
+                        return Err(DiffsolError::Other(
+                            "Expected an RK state for tr_bdf2 method".to_string(),
+                        ));
+                    }
+                    None => problem.tr_bdf2_sens::<LS>()?,
+                };
                 let (ys, sens) = solver.solve_dense_sensitivities(t_eval)?;
                 Ok((ys, sens, GenericPyState::Rk(solver.into_state())))
             }
             SolverMethod::Tsit45 => {
-                let mut solver = problem.tsit45_sens()?;
+                let mut solver = match initial_state {
+                    Some(GenericPyState::Rk(state)) => problem.tsit45_solver_sens(state)?,
+                    Some(GenericPyState::Bdf(_)) => {
+                        return Err(DiffsolError::Other(
+                            "Expected an RK state for tsit45 method".to_string(),
+                        ));
+                    }
+                    None => problem.tsit45_sens()?,
+                };
                 let (ys, sens) = solver.solve_dense_sensitivities(t_eval)?;
                 Ok((ys, sens, GenericPyState::Rk(solver.into_state())))
             }

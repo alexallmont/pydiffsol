@@ -193,29 +193,47 @@ impl OdeWrapper {
     /// :type params: numpy.ndarray
     /// :param final_time: end time of solver
     /// :type final_time: float
+    /// :param solution: optional existing solution object to continue from; if provided, new values are appended in place
+    /// :type solution: Solution, optional
     /// :return: `Solution` object with fields `ys` and `ts`
     /// :rtype: Solution
     ///
     /// Example:
     ///     >>> print(ode.solve(np.array([]), 0.5))
     #[allow(clippy::type_complexity)]
-    #[pyo3(signature=(params, final_time))]
+    #[pyo3(signature=(params, final_time, solution=None))]
     fn solve<'py>(
         slf: PyRefMut<'py, Self>,
         params: PyReadonlyArray1<'py, f64>,
         final_time: f64,
+        solution: Option<SolutionWrapper>,
     ) -> Result<SolutionWrapper, PyDiffsolError> {
         let mut self_guard = slf.0.lock().unwrap();
         let params = params.as_array();
 
         let linear_solver = self_guard.linear_solver;
         let method = self_guard.method;
-        self_guard.py_solve.solve(
-            method,
-            linear_solver,
-            params.as_slice().unwrap(),
-            final_time,
-        )
+        if let Some(solution) = solution {
+            let py_solution = solution.take_py_solution()?;
+            let py_solution = self_guard.py_solve.solve(
+                method,
+                linear_solver,
+                params.as_slice().unwrap(),
+                final_time,
+                Some(py_solution),
+            )?;
+            solution.replace_py_solution(py_solution)?;
+            Ok(solution)
+        } else {
+            let py_solution = self_guard.py_solve.solve(
+                method,
+                linear_solver,
+                params.as_slice().unwrap(),
+                final_time,
+                None,
+            )?;
+            Ok(SolutionWrapper::new(py_solution))
+        }
     }
 
     /// Using the provided state, solve the problem up to time
@@ -229,13 +247,16 @@ impl OdeWrapper {
     /// :type params: numpy.ndarray
     /// :param t_eval: 1D array of solver times
     /// :type params: numpy.ndarray
+    /// :param solution: optional existing solution object to continue from; if provided, new values are appended in place
+    /// :type solution: Solution, optional
     /// :return: `Solution` object with fields `ys` and `ts`
     /// :rtype: Solution
-    #[pyo3(signature=(params, t_eval))]
+    #[pyo3(signature=(params, t_eval, solution=None))]
     fn solve_dense<'py>(
         slf: PyRefMut<'py, Self>,
         params: PyReadonlyArray1<'py, f64>,
         t_eval: PyReadonlyArray1<'py, f64>,
+        solution: Option<SolutionWrapper>,
     ) -> Result<SolutionWrapper, PyDiffsolError> {
         let mut self_guard = slf.0.lock().unwrap();
         let params = params.as_array();
@@ -244,12 +265,27 @@ impl OdeWrapper {
         let linear_solver = self_guard.linear_solver;
         let method = self_guard.method;
 
-        self_guard.py_solve.solve_dense(
-            method,
-            linear_solver,
-            params.as_slice().unwrap(),
-            t_eval.as_slice().unwrap(),
-        )
+        if let Some(solution) = solution {
+            let py_solution = solution.take_py_solution()?;
+            let py_solution = self_guard.py_solve.solve_dense(
+                method,
+                linear_solver,
+                params.as_slice().unwrap(),
+                t_eval.as_slice().unwrap(),
+                Some(py_solution),
+            )?;
+            solution.replace_py_solution(py_solution)?;
+            Ok(solution)
+        } else {
+            let py_solution = self_guard.py_solve.solve_dense(
+                method,
+                linear_solver,
+                params.as_slice().unwrap(),
+                t_eval.as_slice().unwrap(),
+                None,
+            )?;
+            Ok(SolutionWrapper::new(py_solution))
+        }
     }
 
     /// Using the provided state, solve the problem up to time `t_eval[t_eval.len()-1]`.
@@ -261,14 +297,17 @@ impl OdeWrapper {
     /// :type params: numpy.ndarray
     /// :param t_eval: 1D array of solver times
     /// :type params: numpy.ndarray
+    /// :param solution: optional existing solution object to continue from; if provided, new values are appended in place
+    /// :type solution: Solution, optional
     /// :return: `Solution` object with fields `ys`, `ts`, and `sens`
     /// :rtype: Solution
     #[allow(clippy::type_complexity)]
-    #[pyo3(signature=(params, t_eval))]
+    #[pyo3(signature=(params, t_eval, solution=None))]
     fn solve_fwd_sens<'py>(
         slf: PyRefMut<'py, Self>,
         params: PyReadonlyArray1<'py, f64>,
         t_eval: PyReadonlyArray1<'py, f64>,
+        solution: Option<SolutionWrapper>,
     ) -> Result<SolutionWrapper, PyDiffsolError> {
         let mut self_guard = slf.0.lock().unwrap();
         let params = params.as_array();
@@ -277,12 +316,27 @@ impl OdeWrapper {
         let linear_solver = self_guard.linear_solver;
         let method = self_guard.method;
 
-        self_guard.py_solve.solve_fwd_sens(
-            method,
-            linear_solver,
-            params.as_slice().unwrap(),
-            t_eval.as_slice().unwrap(),
-        )
+        if let Some(solution) = solution {
+            let py_solution = solution.take_py_solution()?;
+            let py_solution = self_guard.py_solve.solve_fwd_sens(
+                method,
+                linear_solver,
+                params.as_slice().unwrap(),
+                t_eval.as_slice().unwrap(),
+                Some(py_solution),
+            )?;
+            solution.replace_py_solution(py_solution)?;
+            Ok(solution)
+        } else {
+            let py_solution = self_guard.py_solve.solve_fwd_sens(
+                method,
+                linear_solver,
+                params.as_slice().unwrap(),
+                t_eval.as_slice().unwrap(),
+                None,
+            )?;
+            Ok(SolutionWrapper::new(py_solution))
+        }
     }
 
     /// Using the provided state, solve the adjoint problem for the sum of squares
