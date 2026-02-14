@@ -143,6 +143,18 @@ def test_solution_current_state_round_trip(scalar_type, method):
     np.testing.assert_allclose(solution.current_state, solution.ys[:, -1], rtol=1e-6, atol=1e-8)
 
 
+def test_solution_current_state_rejects_wrong_length():
+    ode = make_ode()
+    params = np.array([1.0, 1.0, 0.1])
+    solution = ode.solve(params, 0.2)
+    state_before = solution.current_state.copy()
+
+    with pytest.raises(ValueError, match="Expected current_state length 1 but got 2"):
+        solution.current_state = np.array([0.2, 0.3])
+
+    np.testing.assert_allclose(solution.current_state, state_before)
+
+
 def test_solution_rejects_incompatible_ode_instance():
     ode_f64 = make_ode(ds.f64)
     ode_f32 = make_ode(ds.f32)

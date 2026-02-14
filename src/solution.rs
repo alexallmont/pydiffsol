@@ -94,7 +94,7 @@ impl SolutionWrapper {
             .py_solution
             .as_mut()
             .ok_or_else(|| PyRuntimeError::new_err("Solution payload missing"))?;
-        py_solution.set_state_y(&y);
+        py_solution.set_state_y(&y)?;
         Ok(())
     }
 

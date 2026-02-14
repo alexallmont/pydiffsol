@@ -14,7 +14,7 @@ pub(crate) trait PySolution: Any + Send + Sync {
     fn get_ys<'py>(&self, py: Python<'py>) -> Bound<'py, PyUntypedArray2>;
     fn get_ts<'py>(&self, py: Python<'py>) -> Bound<'py, PyUntypedArray1>;
     fn get_sens<'py>(&self, py: Python<'py>) -> Vec<Bound<'py, PyUntypedArray2>>;
-    fn set_state_y(&mut self, y: &[f64]);
+    fn set_state_y(&mut self, y: &[f64]) -> Result<(), PyDiffsolError>;
     fn get_state_y<'py>(&self, py: Python<'py>) -> Bound<'py, PyUntypedArray1>;
 }
 
@@ -160,10 +160,18 @@ fn append_matrix_columns<M: DenseMatrix>(dst: &mut M, src: &M) {
     }
 }
 
-fn copy_slice_to_vec<V: VectorHost>(state: &mut V, y: &[f64]) {
+fn copy_slice_to_vec<V: VectorHost>(state: &mut V, y: &[f64]) -> Result<(), PyDiffsolError> {
+    if state.len() != y.len() {
+        return Err(PyDiffsolError::Conversion(format!(
+            "Expected current_state length {} but got {}",
+            state.len(),
+            y.len()
+        )));
+    }
     for (yi, &y_val) in state.as_mut_slice().iter_mut().zip(y.iter()) {
         *yi = V::T::from_f64(y_val).unwrap();
     }
+    Ok(())
 }
 
 impl<V: VectorHost + DefaultDenseMatrix + Send + Sync + 'static> PySolution
@@ -173,7 +181,7 @@ where
     for<'b> <V as VectorCommon>::Inner: VectorToPy<'b, V::T>,
     for<'b> <<V as DefaultDenseMatrix>::M as MatrixCommon>::Inner: MatrixToPy<'b, V::T>,
 {
-    fn set_state_y(&mut self, y: &[f64]) {
+    fn set_state_y(&mut self, y: &[f64]) -> Result<(), PyDiffsolError> {
         match self.current_state_mut() {
             GenericPyState::Bdf(state) => copy_slice_to_vec(state.as_mut().y, y),
             GenericPyState::Rk(state) => copy_slice_to_vec(state.as_mut().y, y),
