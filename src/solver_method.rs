@@ -22,7 +22,7 @@ use pyo3::{
 use crate::{
     is_sens_available,
     jit::JitModule,
-    py_state::GenericPyState,
+    py_solution::GenericPyState,
     solver_type::SolverType,
     valid_linear_solver::{KluValidator, LuValidator},
 };

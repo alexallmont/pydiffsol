@@ -9,7 +9,7 @@ mod options_ode;
 mod py_convert;
 mod py_solve;
 mod py_solve_macros;
-mod py_state;
+mod py_solution;
 mod py_types;
 mod scalar_type;
 mod solution;

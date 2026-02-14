@@ -22,7 +22,7 @@ use crate::{
     jit::JitModule,
     matrix_type::{MatrixKind, MatrixType},
     py_convert::{to_arrayview2, MatrixToPy, VectorToPy},
-    py_state::{GenericPySolution, GenericPyState, PySolution},
+    py_solution::{GenericPySolution, GenericPyState, PySolution},
     py_types::{PyReadonlyUntypedArray2, PyUntypedArray1},
     scalar_type::ScalarType,
     solver_method::SolverMethod,

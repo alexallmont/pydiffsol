@@ -4,7 +4,7 @@ use pyo3::{exceptions::PyRuntimeError, prelude::*};
 
 use crate::{
     error::PyDiffsolError,
-    py_state::PySolution,
+    py_solution::PySolution,
     py_types::{PyUntypedArray1, PyUntypedArray2},
 };
 
