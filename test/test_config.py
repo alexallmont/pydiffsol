@@ -22,7 +22,9 @@ def test_config_tol(rtol, atol):
     y0 = 0.1
     params = np.array([r, k, y0])
 
-    ys, ts = ode.solve(params, 0.4)
+    solution = ode.solve(params, 0.4)
+    ys = solution.ys
+    ts = solution.ts
 
     expect = k * y0 / (y0 + (k - y0) * np.exp(-r * ts))
     np.testing.assert_allclose(ys[0], expect, rtol=rtol, atol=atol)

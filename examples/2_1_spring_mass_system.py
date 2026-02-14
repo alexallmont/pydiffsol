@@ -25,7 +25,9 @@ def solve():
     )
 
     params = np.array([])
-    ys, ts = ode.solve(params, 40.0)
+    solution = ode.solve(params, 40.0)
+    ys = solution.ys
+    ts = solution.ts
 
     fig, ax = plt.subplots()
     ax.plot(ts, ys[0], label="x")

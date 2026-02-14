@@ -22,6 +22,7 @@ use pyo3::{
 use crate::{
     is_sens_available,
     jit::JitModule,
+    py_state::GenericPyState,
     solver_type::SolverType,
     valid_linear_solver::{KluValidator, LuValidator},
 };
@@ -71,7 +72,14 @@ impl SolverMethod {
         &self,
         problem: &mut OdeSolverProblem<DiffSl<M, JitModule>>,
         final_time: M::T,
-    ) -> Result<(<M::V as DefaultDenseMatrix>::M, Vec<M::T>), DiffsolError>
+    ) -> Result<
+        (
+            <M::V as DefaultDenseMatrix>::M,
+            Vec<M::T>,
+            GenericPyState<M::V>,
+        ),
+        DiffsolError,
+    >
     where
         M: Matrix<T: DiffSlScalar>,
         M::V: VectorHost + DefaultDenseMatrix,
@@ -80,10 +88,26 @@ impl SolverMethod {
         for<'b> &'b M: MatrixRef<M>,
     {
         match self {
-            SolverMethod::Bdf => problem.bdf::<LS>()?.solve(final_time),
-            SolverMethod::Esdirk34 => problem.esdirk34::<LS>()?.solve(final_time),
-            SolverMethod::TrBdf2 => problem.tr_bdf2::<LS>()?.solve(final_time),
-            SolverMethod::Tsit45 => problem.tsit45()?.solve(final_time),
+            SolverMethod::Bdf => {
+                let mut solver = problem.bdf::<LS>()?;
+                let (ys, ts) = solver.solve(final_time)?;
+                Ok((ys, ts, GenericPyState::Bdf(solver.into_state())))
+            }
+            SolverMethod::Esdirk34 => {
+                let mut solver = problem.esdirk34::<LS>()?;
+                let (ys, ts) = solver.solve(final_time)?;
+                Ok((ys, ts, GenericPyState::Rk(solver.into_state())))
+            }
+            SolverMethod::TrBdf2 => {
+                let mut solver = problem.tr_bdf2::<LS>()?;
+                let (ys, ts) = solver.solve(final_time)?;
+                Ok((ys, ts, GenericPyState::Rk(solver.into_state())))
+            }
+            SolverMethod::Tsit45 => {
+                let mut solver = problem.tsit45()?;
+                let (ys, ts) = solver.solve(final_time)?;
+                Ok((ys, ts, GenericPyState::Rk(solver.into_state())))
+            }
         }
     }
 
@@ -91,7 +115,7 @@ impl SolverMethod {
         &self,
         problem: &mut OdeSolverProblem<DiffSl<M, JitModule>>,
         t_eval: &[M::T],
-    ) -> Result<<M::V as DefaultDenseMatrix>::M, DiffsolError>
+    ) -> Result<(<M::V as DefaultDenseMatrix>::M, GenericPyState<M::V>), DiffsolError>
     where
         M: Matrix<T: DiffSlScalar>,
         M::V: VectorHost + DefaultDenseMatrix,
@@ -100,10 +124,26 @@ impl SolverMethod {
         for<'b> &'b M: MatrixRef<M>,
     {
         match self {
-            SolverMethod::Bdf => problem.bdf::<LS>()?.solve_dense(t_eval),
-            SolverMethod::Esdirk34 => problem.esdirk34::<LS>()?.solve_dense(t_eval),
-            SolverMethod::TrBdf2 => problem.tr_bdf2::<LS>()?.solve_dense(t_eval),
-            SolverMethod::Tsit45 => problem.tsit45()?.solve_dense(t_eval),
+            SolverMethod::Bdf => {
+                let mut solver = problem.bdf::<LS>()?;
+                let ys = solver.solve_dense(t_eval)?;
+                Ok((ys, GenericPyState::Bdf(solver.into_state())))
+            }
+            SolverMethod::Esdirk34 => {
+                let mut solver = problem.esdirk34::<LS>()?;
+                let ys = solver.solve_dense(t_eval)?;
+                Ok((ys, GenericPyState::Rk(solver.into_state())))
+            }
+            SolverMethod::TrBdf2 => {
+                let mut solver = problem.tr_bdf2::<LS>()?;
+                let ys = solver.solve_dense(t_eval)?;
+                Ok((ys, GenericPyState::Rk(solver.into_state())))
+            }
+            SolverMethod::Tsit45 => {
+                let mut solver = problem.tsit45()?;
+                let ys = solver.solve_dense(t_eval)?;
+                Ok((ys, GenericPyState::Rk(solver.into_state())))
+            }
         }
     }
 
@@ -125,6 +165,7 @@ impl SolverMethod {
         (
             <M::V as DefaultDenseMatrix>::M,
             Vec<<M::V as DefaultDenseMatrix>::M>,
+            GenericPyState<M::V>,
         ),
         DiffsolError,
     >
@@ -137,14 +178,26 @@ impl SolverMethod {
     {
         Self::check_sens_available()?;
         match self {
-            SolverMethod::Bdf => problem.bdf_sens::<LS>()?.solve_dense_sensitivities(t_eval),
-            SolverMethod::Esdirk34 => problem
-                .esdirk34_sens::<LS>()?
-                .solve_dense_sensitivities(t_eval),
-            SolverMethod::TrBdf2 => problem
-                .tr_bdf2_sens::<LS>()?
-                .solve_dense_sensitivities(t_eval),
-            SolverMethod::Tsit45 => problem.tsit45_sens()?.solve_dense_sensitivities(t_eval),
+            SolverMethod::Bdf => {
+                let mut solver = problem.bdf_sens::<LS>()?;
+                let (ys, sens) = solver.solve_dense_sensitivities(t_eval)?;
+                Ok((ys, sens, GenericPyState::Bdf(solver.into_state())))
+            }
+            SolverMethod::Esdirk34 => {
+                let mut solver = problem.esdirk34_sens::<LS>()?;
+                let (ys, sens) = solver.solve_dense_sensitivities(t_eval)?;
+                Ok((ys, sens, GenericPyState::Rk(solver.into_state())))
+            }
+            SolverMethod::TrBdf2 => {
+                let mut solver = problem.tr_bdf2_sens::<LS>()?;
+                let (ys, sens) = solver.solve_dense_sensitivities(t_eval)?;
+                Ok((ys, sens, GenericPyState::Rk(solver.into_state())))
+            }
+            SolverMethod::Tsit45 => {
+                let mut solver = problem.tsit45_sens()?;
+                let (ys, sens) = solver.solve_dense_sensitivities(t_eval)?;
+                Ok((ys, sens, GenericPyState::Rk(solver.into_state())))
+            }
         }
     }
 

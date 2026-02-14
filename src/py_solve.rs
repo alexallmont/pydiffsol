@@ -4,10 +4,10 @@
 use diffsol::{
     error::DiffsolError, matrix::MatrixRef, ConstantOp, DefaultDenseMatrix, DefaultSolver, DiffSl,
     DiffSlScalar, Matrix, MatrixCommon, NonLinearOp, NonLinearOpJacobian, OdeBuilder, OdeEquations,
-    OdeSolverProblem, Op, Vector, VectorCommon, VectorHost, VectorRef,
+    OdeSolverProblem, OdeSolverState, Op, Vector, VectorCommon, VectorHost, VectorRef,
 };
 use num_traits::{FromPrimitive, ToPrimitive}; // for from_f64 and to_f64
-use numpy::{ndarray::Array1, Element, PyArray1};
+use numpy::Element;
 use paste::paste;
 use pyo3::{Bound, Python};
 
@@ -22,8 +22,10 @@ use crate::{
     jit::JitModule,
     matrix_type::{MatrixKind, MatrixType},
     py_convert::{to_arrayview2, MatrixToPy, VectorToPy},
-    py_types::{PyReadonlyUntypedArray2, PyUntypedArray1, PyUntypedArray2},
+    py_state::{GenericPySolution, GenericPyState},
+    py_types::{PyReadonlyUntypedArray2, PyUntypedArray1},
     scalar_type::ScalarType,
+    solution::SolutionWrapper,
     solver_method::SolverMethod,
     solver_type::SolverType,
     valid_linear_solver::{validate_linear_solver, KluValidator, LuValidator},
@@ -50,7 +52,11 @@ pub(crate) trait PySolve {
         v: &[f64],
     ) -> Result<Bound<'py, PyUntypedArray1>, PyDiffsolError>;
 
-    fn y0<'py>(&mut self, py: Python<'py>, params: &[f64]) -> Result<Bound<'py, PyUntypedArray1>, PyDiffsolError>;
+    fn y0<'py>(
+        &mut self,
+        py: Python<'py>,
+        params: &[f64],
+    ) -> Result<Bound<'py, PyUntypedArray1>, PyDiffsolError>;
 
     fn check(&self, linear_solver: SolverType) -> Result<(), PyDiffsolError>;
     fn set_rtol(&mut self, rtol: f64);
@@ -58,43 +64,32 @@ pub(crate) trait PySolve {
     fn set_atol(&mut self, atol: f64);
     fn atol(&self) -> f64;
 
-    // Result: (2D solution array, 1D timepoints) tuple
-    #[allow(clippy::type_complexity)]
-    fn solve<'py>(
+    // Result: solution wrapper with ys, ts, and current_state
+    fn solve(
         &mut self,
-        py: Python<'py>,
         method: SolverMethod,
         linear_solver: SolverType,
         params: &[f64],
         final_time: f64,
-    ) -> Result<(Bound<'py, PyUntypedArray2>, Bound<'py, PyUntypedArray1>), PyDiffsolError>;
+    ) -> Result<SolutionWrapper, PyDiffsolError>;
 
-    // Result: 2D solution array
-    fn solve_dense<'py>(
+    // Result: solution wrapper with ys, ts, and current_state
+    fn solve_dense(
         &mut self,
-        py: Python<'py>,
         method: SolverMethod,
         linear_solver: SolverType,
         params: &[f64],
         t_eval: &[f64],
-    ) -> Result<Bound<'py, PyUntypedArray2>, PyDiffsolError>;
+    ) -> Result<SolutionWrapper, PyDiffsolError>;
 
-    // Result: (2D solution array, Vec of 2D sensitivity array per param) tuple
-    #[allow(clippy::type_complexity)]
-    fn solve_fwd_sens<'py>(
+    // Result: solution wrapper with ys, ts, sens, and current_state
+    fn solve_fwd_sens(
         &mut self,
-        py: Python<'py>,
         method: SolverMethod,
         linear_solver: SolverType,
         params: &[f64],
         t_eval: &[f64],
-    ) -> Result<
-        (
-            Bound<'py, PyUntypedArray2>,
-            Vec<Bound<'py, PyUntypedArray2>>,
-        ),
-        PyDiffsolError,
-    >;
+    ) -> Result<SolutionWrapper, PyDiffsolError>;
 
     // Result: (sum of squares, 1D timepoints) tuple
     #[allow(clippy::type_complexity)]
@@ -247,7 +242,11 @@ where
         threshold_to_update_rhs_jacobian: f64
     }
 
-    fn y0<'py>(&mut self, py: Python<'py>, params: &[f64]) -> Result<Bound<'py, PyUntypedArray1>, PyDiffsolError> {
+    fn y0<'py>(
+        &mut self,
+        py: Python<'py>,
+        params: &[f64],
+    ) -> Result<Bound<'py, PyUntypedArray1>, PyDiffsolError> {
         self.setup_problem(params)?;
         let n = self.problem.eqn.nstates();
         let mut y0 = M::V::zeros(n, M::C::default());
@@ -308,18 +307,17 @@ where
         Ok(dydt.inner().to_pyarray1(py).into_any())
     }
 
-    fn solve<'py>(
+    fn solve(
         &mut self,
-        py: Python<'py>,
         method: SolverMethod,
         linear_solver: SolverType,
         params: &[f64],
         final_time: f64,
-    ) -> Result<(Bound<'py, PyUntypedArray2>, Bound<'py, PyUntypedArray1>), PyDiffsolError> {
+    ) -> Result<SolutionWrapper, PyDiffsolError> {
         self.check(linear_solver)?;
         self.setup_problem(params)?;
         let final_time = M::T::from_f64(final_time).unwrap();
-        let (ys, ts) = match linear_solver {
+        let (ys, ts, state) = match linear_solver {
             SolverType::Default => {
                 method.solve::<M, <M as DefaultSolver>::LS>(&mut self.problem, final_time)
             }
@@ -331,25 +329,22 @@ where
             }
         }?;
 
-        Ok((
-            ys.inner().to_pyarray2(py).into_any(),
-            PyArray1::from_owned_array(py, Array1::from(ts)).into_any(),
-        ))
+        let py_solution = Box::new(GenericPySolution::<M::V>::new(state, ys, ts, Vec::new()));
+        Ok(SolutionWrapper::new(py_solution))
     }
 
-    fn solve_dense<'py>(
+    fn solve_dense(
         &mut self,
-        py: Python<'py>,
         method: SolverMethod,
         linear_solver: SolverType,
         params: &[f64],
         t_eval: &[f64],
-    ) -> Result<Bound<'py, PyUntypedArray2>, PyDiffsolError> {
+    ) -> Result<SolutionWrapper, PyDiffsolError> {
         self.check(linear_solver)?;
         self.setup_problem(params)?;
 
         let t_eval: Vec<M::T> = t_eval.iter().map(|&x| M::T::from_f64(x).unwrap()).collect();
-        let ys = match linear_solver {
+        let (ys, state) = match linear_solver {
             SolverType::Default => {
                 method.solve_dense::<M, <M as DefaultSolver>::LS>(&mut self.problem, &t_eval)
             }
@@ -361,28 +356,40 @@ where
             }
         }?;
 
-        Ok(ys.inner().to_pyarray2(py).into_any())
+        let ncols = ys.ncols();
+        let ts = if ncols == t_eval.len() {
+            t_eval
+        } else {
+            let mut ts: Vec<M::T> = t_eval
+                .iter()
+                .copied()
+                .take(ncols.saturating_sub(1))
+                .collect();
+            if ncols > 0 {
+                let final_t = match &state {
+                    GenericPyState::Bdf(s) => s.as_ref().t,
+                    GenericPyState::Rk(s) => s.as_ref().t,
+                };
+                ts.push(final_t);
+            }
+            ts
+        };
+        let py_solution = Box::new(GenericPySolution::<M::V>::new(state, ys, ts, Vec::new()));
+        Ok(SolutionWrapper::new(py_solution))
     }
 
-    fn solve_fwd_sens<'py>(
+    fn solve_fwd_sens(
         &mut self,
-        py: Python<'py>,
         method: SolverMethod,
         linear_solver: SolverType,
         params: &[f64],
         t_eval: &[f64],
-    ) -> Result<
-        (
-            Bound<'py, PyUntypedArray2>,
-            Vec<Bound<'py, PyUntypedArray2>>,
-        ),
-        PyDiffsolError,
-    > {
+    ) -> Result<SolutionWrapper, PyDiffsolError> {
         self.check(linear_solver)?;
         self.setup_problem(params)?;
 
         let t_eval: Vec<M::T> = t_eval.iter().map(|&x| M::T::from_f64(x).unwrap()).collect();
-        let (ys, sens) =
+        let (ys, sens, state) =
             match linear_solver {
                 SolverType::Default => {
                     method.solve_fwd_sens::<M, <M as DefaultSolver>::LS>(&mut self.problem, &t_eval)
@@ -393,12 +400,26 @@ where
                     .solve_fwd_sens::<M, <M as KluValidator<M>>::LS>(&mut self.problem, &t_eval),
             }?;
 
-        Ok((
-            ys.inner().to_pyarray2(py).into_any(),
-            sens.into_iter()
-                .map(|s| s.inner().to_pyarray2(py).into_any())
-                .collect(),
-        ))
+        let ncols = ys.ncols();
+        let ts = if ncols == t_eval.len() {
+            t_eval
+        } else {
+            let mut ts: Vec<M::T> = t_eval
+                .iter()
+                .copied()
+                .take(ncols.saturating_sub(1))
+                .collect();
+            if ncols > 0 {
+                let final_t = match &state {
+                    GenericPyState::Bdf(s) => s.as_ref().t,
+                    GenericPyState::Rk(s) => s.as_ref().t,
+                };
+                ts.push(final_t);
+            }
+            ts
+        };
+        let py_solution = Box::new(GenericPySolution::<M::V>::new(state, ys, ts, sens));
+        Ok(SolutionWrapper::new(py_solution))
     }
 
     fn solve_sum_squares_adj<'py>(

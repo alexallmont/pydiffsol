@@ -29,7 +29,9 @@ def solve():
     ode.rtol = 1e-6
 
     params = np.array([])
-    ys, ts = ode.solve(params, 40.0)
+    solution = ode.solve(params, 40.0)
+    ys = solution.ys
+    ts = solution.ts
 
     fig, ax = plt.subplots()
     ax.plot(ts, ys[0], label="prey")
@@ -64,7 +66,8 @@ def phase_plane():
     for i in range(5):
         y0 = float(i + 1)
         params = np.array([y0])
-        [prey, predator], _ = ode.solve(params, 40.0)
+        solution = ode.solve(params, 40.0)
+        prey, predator = solution.ys
         ax.plot(prey, predator, label=f"y0 = {y0}")
     ax.set_xlabel("prey")
     ax.set_ylabel("predator")

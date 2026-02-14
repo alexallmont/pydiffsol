@@ -8,14 +8,14 @@ mod options_ic;
 mod options_ode;
 mod py_convert;
 mod py_solve;
-mod py_state;
 mod py_solve_macros;
+mod py_state;
 mod py_types;
 mod scalar_type;
+mod solution;
 mod solver_method;
 mod solver_type;
 mod valid_linear_solver;
-mod solution;
 
 /// Get version of this pydiffsol module
 #[pyfunction]

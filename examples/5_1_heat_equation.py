@@ -39,7 +39,9 @@ def solve():
         ds.nalgebra_dense,
     )
     params = np.array([])
-    ys, ts = ode.solve(params, 0.1)
+    solution = ode.solve(params, 0.1)
+    ys = solution.ys
+    ts = solution.ts
 
     fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
     ax.plot_surface(

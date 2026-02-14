@@ -30,4 +30,5 @@ Basic Usage
       ds.nalgebra_dense
    )
    p = np.array([])
-   print(ode.solve(p, 0.4))
+   solution = ode.solve(p, 0.4)
+   print(solution.ys, solution.ts)

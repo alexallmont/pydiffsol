@@ -11,8 +11,9 @@ use crate::{
     options_ic::InitialConditionSolverOptions,
     options_ode::OdeSolverOptions,
     py_solve::{py_solve_factory, PySolve},
-    py_types::{PyReadonlyUntypedArray2, PyUntypedArray1, PyUntypedArray2},
+    py_types::{PyReadonlyUntypedArray2, PyUntypedArray1},
     scalar_type::ScalarType,
+    solution::SolutionWrapper,
     solver_method::SolverMethod,
     solver_type::SolverType,
 };
@@ -139,7 +140,10 @@ impl OdeWrapper {
     }
 
     /// Get the initial condition vector y0 as a 1D numpy array.
-    fn y0<'py>(slf: PyRefMut<'py, Self>, params: PyReadonlyArray1<'py, f64>) -> Result<Bound<'py, PyUntypedArray1>, PyDiffsolError> {
+    fn y0<'py>(
+        slf: PyRefMut<'py, Self>,
+        params: PyReadonlyArray1<'py, f64>,
+    ) -> Result<Bound<'py, PyUntypedArray1>, PyDiffsolError> {
         let mut self_guard = slf.0.lock().unwrap();
         self_guard.py_solve.y0(slf.py(), params.as_slice().unwrap())
     }
@@ -152,7 +156,12 @@ impl OdeWrapper {
         y: PyReadonlyArray1<'py, f64>,
     ) -> Result<Bound<'py, PyUntypedArray1>, PyDiffsolError> {
         let mut self_guard = slf.0.lock().unwrap();
-        self_guard.py_solve.rhs(slf.py(), params.as_slice().unwrap(), t, y.as_slice().unwrap())
+        self_guard.py_solve.rhs(
+            slf.py(),
+            params.as_slice().unwrap(),
+            t,
+            y.as_slice().unwrap(),
+        )
     }
 
     /// evaluate the right-hand side Jacobian-vector product `Jv`` at time `t` and state `y`.
@@ -164,9 +173,13 @@ impl OdeWrapper {
         v: PyReadonlyArray1<'py, f64>,
     ) -> Result<Bound<'py, PyUntypedArray1>, PyDiffsolError> {
         let mut self_guard = slf.0.lock().unwrap();
-        self_guard
-            .py_solve
-            .rhs_jac_mul(slf.py(), params.as_slice().unwrap(), t, y.as_slice().unwrap(), v.as_slice().unwrap())
+        self_guard.py_solve.rhs_jac_mul(
+            slf.py(),
+            params.as_slice().unwrap(),
+            t,
+            y.as_slice().unwrap(),
+            v.as_slice().unwrap(),
+        )
     }
 
     /// Using the provided state, solve the problem up to time `final_time`.
@@ -180,9 +193,8 @@ impl OdeWrapper {
     /// :type params: numpy.ndarray
     /// :param final_time: end time of solver
     /// :type final_time: float
-    /// :return: `(ys, ts)` tuple where `ys` is a 2D array of values at times
-    ///     `ts` chosen by the solver
-    /// :rtype: Tuple[numpy.ndarray, numpy.ndarray]
+    /// :return: `Solution` object with fields `ys` and `ts`
+    /// :rtype: Solution
     ///
     /// Example:
     ///     >>> print(ode.solve(np.array([]), 0.5))
@@ -192,14 +204,13 @@ impl OdeWrapper {
         slf: PyRefMut<'py, Self>,
         params: PyReadonlyArray1<'py, f64>,
         final_time: f64,
-    ) -> Result<(Bound<'py, PyUntypedArray2>, Bound<'py, PyUntypedArray1>), PyDiffsolError> {
+    ) -> Result<SolutionWrapper, PyDiffsolError> {
         let mut self_guard = slf.0.lock().unwrap();
         let params = params.as_array();
 
         let linear_solver = self_guard.linear_solver;
         let method = self_guard.method;
         self_guard.py_solve.solve(
-            slf.py(),
             method,
             linear_solver,
             params.as_slice().unwrap(),
@@ -208,7 +219,7 @@ impl OdeWrapper {
     }
 
     /// Using the provided state, solve the problem up to time
-    /// `t_eval[t_eval.len()-1]`. Returns 2D array of solution values at
+    /// `t_eval[t_eval.len()-1]`. Returns a `Solution` object with values at
     /// timepoints given by `t_eval`.
     ///
     /// The number of params must match the expected params in the diffsl code.
@@ -218,14 +229,14 @@ impl OdeWrapper {
     /// :type params: numpy.ndarray
     /// :param t_eval: 1D array of solver times
     /// :type params: numpy.ndarray
-    /// :return: 2D array of values at times `t_eval`
-    /// :rtype: numpy.ndarray
+    /// :return: `Solution` object with fields `ys` and `ts`
+    /// :rtype: Solution
     #[pyo3(signature=(params, t_eval))]
     fn solve_dense<'py>(
         slf: PyRefMut<'py, Self>,
         params: PyReadonlyArray1<'py, f64>,
         t_eval: PyReadonlyArray1<'py, f64>,
-    ) -> Result<Bound<'py, PyUntypedArray2>, PyDiffsolError> {
+    ) -> Result<SolutionWrapper, PyDiffsolError> {
         let mut self_guard = slf.0.lock().unwrap();
         let params = params.as_array();
         let t_eval = t_eval.as_array();
@@ -234,7 +245,6 @@ impl OdeWrapper {
         let method = self_guard.method;
 
         self_guard.py_solve.solve_dense(
-            slf.py(),
             method,
             linear_solver,
             params.as_slice().unwrap(),
@@ -243,30 +253,23 @@ impl OdeWrapper {
     }
 
     /// Using the provided state, solve the problem up to time `t_eval[t_eval.len()-1]`.
-    /// Returns 2D array of solution values at timepoints given by `t_eval`.
-    /// Also returns a list of 2D arrays of sensitivities at the same timepoints
-    /// as the solution.
+    /// Returns a `Solution` object with values at `t_eval` and sensitivity arrays
+    /// at the same timepoints.
     /// The number of params must match the expected params in the diffsl code.
     /// The config may be optionally specified to override solver settings.
     /// :param params: 1D array of solver parameters
     /// :type params: numpy.ndarray
     /// :param t_eval: 1D array of solver times
     /// :type params: numpy.ndarray
-    /// :return: 2D array of values at times `t_eval` and a list of 2D arrays of sensitivities at the same timepoints
-    /// :rtype: (numpy.ndarray, List[numpy.ndarray])
+    /// :return: `Solution` object with fields `ys`, `ts`, and `sens`
+    /// :rtype: Solution
     #[allow(clippy::type_complexity)]
     #[pyo3(signature=(params, t_eval))]
     fn solve_fwd_sens<'py>(
         slf: PyRefMut<'py, Self>,
         params: PyReadonlyArray1<'py, f64>,
         t_eval: PyReadonlyArray1<'py, f64>,
-    ) -> Result<
-        (
-            Bound<'py, PyUntypedArray2>,
-            Vec<Bound<'py, PyUntypedArray2>>,
-        ),
-        PyDiffsolError,
-    > {
+    ) -> Result<SolutionWrapper, PyDiffsolError> {
         let mut self_guard = slf.0.lock().unwrap();
         let params = params.as_array();
         let t_eval = t_eval.as_array();
@@ -275,7 +278,6 @@ impl OdeWrapper {
         let method = self_guard.method;
 
         self_guard.py_solve.solve_fwd_sens(
-            slf.py(),
             method,
             linear_solver,
             params.as_slice().unwrap(),

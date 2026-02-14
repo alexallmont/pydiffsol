@@ -25,11 +25,13 @@ ode = ds.Ode(
 
 # Example overriding r input param with 2.0
 params = np.array([2.0])
-print(ode.solve(params, 0.4))
+solution = ode.solve(params, 0.4)
+print(solution.ys, solution.ts)
 
 # Above defaults to bdf. Try esdirk34 instead
 ode.method = ds.esdirk34
-print(ode.solve(params, 0.4))
+solution = ode.solve(params, 0.4)
+print(solution.ys, solution.ts)
 ```
 
 ## Known issues

@@ -2,7 +2,10 @@ use std::sync::{Arc, Mutex};
 
 use pyo3::{exceptions::PyRuntimeError, prelude::*};
 
-use crate::{py_solve::PySolve, py_state::PySolution, py_types::{PyUntypedArray1, PyUntypedArray2}};
+use crate::{
+    py_state::PySolution,
+    py_types::{PyUntypedArray1, PyUntypedArray2},
+};
 
 #[pyclass]
 pub(crate) struct Solution {
@@ -18,6 +21,10 @@ unsafe impl Sync for Solution {}
 pub struct SolutionWrapper(Arc<Mutex<Solution>>);
 
 impl SolutionWrapper {
+    pub(crate) fn new(py_solution: Box<dyn PySolution>) -> Self {
+        Self(Arc::new(Mutex::new(Solution { py_solution })))
+    }
+
     fn guard(&self) -> PyResult<std::sync::MutexGuard<'_, Solution>> {
         self.0
             .lock()
@@ -38,13 +45,13 @@ impl SolutionWrapper {
         let guard = self.guard()?;
         Ok(guard.py_solution.get_ts(py))
     }
-    
+
     #[getter]
     fn get_sens<'py>(&self, py: Python<'py>) -> PyResult<Vec<Bound<'py, PyUntypedArray2>>> {
         let guard = self.guard()?;
         Ok(guard.py_solution.get_sens(py))
     }
-    
+
     #[setter]
     fn set_current_state(&self, y: Vec<f64>) -> PyResult<()> {
         let mut guard = self.guard()?;
@@ -58,8 +65,3 @@ impl SolutionWrapper {
         Ok(guard.py_solution.get_state_y(py))
     }
 }
-
-
-
-
-
