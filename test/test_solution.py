@@ -106,6 +106,7 @@ def test_reject_append_when_existing_solution_has_sens_but_new_segment_does_not(
     ys_before = solution.ys.copy()
     ts_before = solution.ts.copy()
     sens_before = [s.copy() for s in solution.sens]
+    state_before = solution.current_state.copy()
 
     with pytest.raises(Exception, match="Cannot append solution with sensitivities"):
         ode.solve_dense(params, t_eval2, solution)
@@ -114,6 +115,7 @@ def test_reject_append_when_existing_solution_has_sens_but_new_segment_does_not(
     np.testing.assert_allclose(solution.ts, ts_before)
     for s_before, s_after in zip(sens_before, solution.sens):
         np.testing.assert_allclose(s_after, s_before)
+    np.testing.assert_allclose(solution.current_state, state_before)
 
 
 @pytest.mark.parametrize("scalar_type", [ds.f64, ds.f32])
