@@ -10,7 +10,7 @@ use crate::error::PyDiffsolError;
 use crate::py_convert::{MatrixToPy, VectorToPy};
 use crate::py_types::{PyUntypedArray1, PyUntypedArray2};
 
-pub(crate) trait PySolution: Any {
+pub(crate) trait PySolution: Any + Send + Sync {
     fn get_ys<'py>(&self, py: Python<'py>) -> Bound<'py, PyUntypedArray2>;
     fn get_ts<'py>(&self, py: Python<'py>) -> Bound<'py, PyUntypedArray1>;
     fn get_sens<'py>(&self, py: Python<'py>) -> Vec<Bound<'py, PyUntypedArray2>>;
@@ -161,8 +161,10 @@ fn copy_slice_to_vec<V: VectorHost>(state: &mut V, y: &[f64]) {
     }
 }
 
-impl<V: VectorHost + DefaultDenseMatrix + 'static> PySolution for GenericPySolution<V>
+impl<V: VectorHost + DefaultDenseMatrix + Send + Sync + 'static> PySolution
+    for GenericPySolution<V>
 where
+    <V as DefaultDenseMatrix>::M: Send + Sync,
     for<'b> <V as VectorCommon>::Inner: VectorToPy<'b, V::T>,
     for<'b> <<V as DefaultDenseMatrix>::M as MatrixCommon>::Inner: MatrixToPy<'b, V::T>,
 {

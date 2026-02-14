@@ -13,9 +13,6 @@ pub(crate) struct Solution {
     py_solution: Option<Box<dyn PySolution>>,
 }
 
-unsafe impl Send for Solution {}
-unsafe impl Sync for Solution {}
-
 #[pyclass]
 #[pyo3(name = "Solution")]
 #[derive(Clone)]

@@ -163,7 +163,8 @@ where
 impl<M> GenericPySolve<M>
 where
     M: Matrix<T: DiffSlScalar + Element>,
-    M::V: VectorHost + DefaultDenseMatrix + 'static,
+    M::V: VectorHost + DefaultDenseMatrix + Send + Sync + 'static,
+    <M::V as DefaultDenseMatrix>::M: Send + Sync,
 {
     pub fn new(code: &str) -> Result<Self, PyDiffsolError> {
         let problem = OdeBuilder::<M>::new().build_from_diffsl::<JitModule>(code)?;
@@ -235,7 +236,8 @@ where
         + MatrixKind,
     for<'b> <<M::V as DefaultDenseMatrix>::M as MatrixCommon>::Inner: MatrixToPy<'b, M::T>,
     for<'b> <M::V as VectorCommon>::Inner: VectorToPy<'b, M::T>,
-    M::V: VectorHost + DefaultDenseMatrix + 'static,
+    M::V: VectorHost + DefaultDenseMatrix + Send + Sync + 'static,
+    <M::V as DefaultDenseMatrix>::M: Send + Sync,
     for<'b> &'b M::V: VectorRef<M::V>,
     for<'b> &'b M: MatrixRef<M>,
 {
