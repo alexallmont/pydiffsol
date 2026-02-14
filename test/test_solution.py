@@ -1,6 +1,7 @@
 import numpy as np
 import pydiffsol as ds
 import pytest
+import os
 
 LOGISTIC_CODE = """
 in_i { r = 1, k = 1, y0 = 0.1 }
@@ -40,6 +41,58 @@ def test_solution_is_reused_and_appended_in_place():
     np.testing.assert_allclose(solution_2.ys[:, : ys_before.shape[1]], ys_before)
     np.testing.assert_allclose(solution_2.ts[: ts_before.shape[0]], ts_before)
     np.testing.assert_allclose(solution_2.ts, np.concatenate([t_eval_1, t_eval_2]))
+
+
+def test_solve_appends_into_existing_solution():
+    ode = make_ode()
+    params = np.array([1.0, 1.0, 0.1])
+
+    solution = ode.solve(params, 0.2)
+    ncols_before = solution.ys.shape[1]
+    nt_before = len(solution.ts)
+    ys_before = solution.ys.copy()
+    ts_before = solution.ts.copy()
+
+    solution2 = ode.solve(params, 0.4, solution)
+
+    assert solution2.ys.shape[1] > ncols_before
+    assert len(solution2.ts) > nt_before
+    np.testing.assert_allclose(solution2.ys[:, :ncols_before], ys_before)
+    np.testing.assert_allclose(solution2.ts[:nt_before], ts_before)
+
+
+def test_solve_dense_appends_into_existing_solution():
+    ode = make_ode()
+    params = np.array([1.0, 1.0, 0.1])
+
+    t_eval1 = np.array([0.0, 0.1, 0.2])
+    t_eval2 = np.array([0.3, 0.4])
+
+    solution = ode.solve_dense(params, t_eval1)
+    solution = ode.solve_dense(params, t_eval2, solution)
+
+    np.testing.assert_allclose(solution.ts, np.concatenate([t_eval1, t_eval2]))
+    assert solution.ys.shape == (1, len(t_eval1) + len(t_eval2))
+
+
+def test_solve_fwd_sens_appends_into_existing_solution():
+    if os.name == "nt":
+        return
+
+    ode = make_ode()
+    params = np.array([1.0, 1.0, 0.1])
+
+    t_eval1 = np.array([0.0, 0.1, 0.2])
+    t_eval2 = np.array([0.3, 0.4])
+
+    solution = ode.solve_fwd_sens(params, t_eval1)
+    solution = ode.solve_fwd_sens(params, t_eval2, solution)
+
+    np.testing.assert_allclose(solution.ts, np.concatenate([t_eval1, t_eval2]))
+    assert solution.ys.shape == (1, len(t_eval1) + len(t_eval2))
+    assert len(solution.sens) == 3
+    for sens_i in solution.sens:
+        assert sens_i.shape == (1, len(t_eval1) + len(t_eval2))
 
 
 @pytest.mark.parametrize("scalar_type", [ds.f64, ds.f32])
