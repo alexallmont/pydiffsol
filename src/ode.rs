@@ -54,10 +54,7 @@ impl OdeWrapper {
         if let Some(solution) = solution {
             let old_solution = solution.take_py_solution()?;
             match solve_call(py_solve, Some(old_solution)) {
-                Ok(py_solution) => {
-                    solution.replace_py_solution(py_solution)?;
-                    Ok(solution)
-                }
+                Ok(py_solution) => Ok(SolutionWrapper::new(py_solution)),
                 Err((err, maybe_old_solution)) => {
                     if let Some(old_solution) = maybe_old_solution {
                         solution.replace_py_solution(old_solution)?;
@@ -224,7 +221,7 @@ impl OdeWrapper {
     /// :type params: numpy.ndarray
     /// :param final_time: end time of solver
     /// :type final_time: float
-    /// :param solution: optional existing solution object to continue from; if provided, new values are appended in place
+    /// :param solution: optional existing solution object to continue from; if provided, it is consumed and the appended result is returned as a new Solution
     /// :type solution: Solution, optional
     /// :return: `Solution` object with fields `ys` and `ts`
     /// :rtype: Solution
@@ -261,7 +258,7 @@ impl OdeWrapper {
     /// :type params: numpy.ndarray
     /// :param t_eval: 1D array of solver times
     /// :type params: numpy.ndarray
-    /// :param solution: optional existing solution object to continue from; if provided, new values are appended in place
+    /// :param solution: optional existing solution object to continue from; if provided, it is consumed and the appended result is returned as a new Solution
     /// :type solution: Solution, optional
     /// :return: `Solution` object with fields `ys` and `ts`
     /// :rtype: Solution
@@ -294,7 +291,7 @@ impl OdeWrapper {
     /// :type params: numpy.ndarray
     /// :param t_eval: 1D array of solver times
     /// :type params: numpy.ndarray
-    /// :param solution: optional existing solution object to continue from; if provided, new values are appended in place
+    /// :param solution: optional existing solution object to continue from; if provided, it is consumed and the appended result is returned as a new Solution
     /// :type solution: Solution, optional
     /// :return: `Solution` object with fields `ys`, `ts`, and `sens`
     /// :rtype: Solution

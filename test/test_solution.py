@@ -23,7 +23,7 @@ def make_ode(scalar_type=ds.f64, method=ds.bdf):
     )
 
 
-def test_solution_is_reused_and_appended_in_place():
+def test_solution_is_consumed_and_appended_result_is_returned():
     ode = make_ode()
     params = np.array([1.0, 1.0, 0.1])
     t_eval_1 = np.array([0.0, 0.1, 0.2])
@@ -35,9 +35,12 @@ def test_solution_is_reused_and_appended_in_place():
 
     solution_2 = ode.solve_dense(params, t_eval_2, solution)
 
-    # Both Python wrappers should reflect the same underlying Rust solution.
-    np.testing.assert_allclose(solution.ts, solution_2.ts)
-    np.testing.assert_allclose(solution.ys, solution_2.ys)
+    assert solution_2 is not solution
+    with pytest.raises(RuntimeError, match="Solution payload missing"):
+        _ = solution.ts
+    with pytest.raises(RuntimeError, match="Solution payload missing"):
+        _ = solution.ys
+
     np.testing.assert_allclose(solution_2.ys[:, : ys_before.shape[1]], ys_before)
     np.testing.assert_allclose(solution_2.ts[: ts_before.shape[0]], ts_before)
     np.testing.assert_allclose(solution_2.ts, np.concatenate([t_eval_1, t_eval_2]))
