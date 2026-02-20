@@ -165,7 +165,11 @@ impl SolverMethod {
         match self {
             SolverMethod::Bdf => {
                 let mut solver = match initial_state {
-                    Some(GenericPyState::Bdf(state)) => problem.bdf_solver::<LS>(state)?,
+                    Some(GenericPyState::Bdf(state)) => {
+                        let mut solver = problem.bdf_solver::<LS>(state)?;
+                        solver.state_mut(); // ensure any user mutations to the state are reflected in the solver's internal state
+                        solver
+                    },
                     Some(GenericPyState::Rk(_)) => {
                         return Err(DiffsolError::Other(
                             "Expected a BDF state for bdf method".to_string(),
@@ -252,7 +256,11 @@ impl SolverMethod {
         match self {
             SolverMethod::Bdf => {
                 let mut solver = match initial_state {
-                    Some(GenericPyState::Bdf(state)) => problem.bdf_solver_sens::<LS>(state)?,
+                    Some(GenericPyState::Bdf(state)) => {
+                        let mut solver = problem.bdf_solver_sens::<LS>(state)?;
+                        solver.state_mut(); // ensure any user mutations to the state are reflected in the solver's internal state
+                        solver
+                    },
                     Some(GenericPyState::Rk(_)) => {
                         return Err(DiffsolError::Other(
                             "Expected a BDF state for bdf method".to_string(),

@@ -175,6 +175,34 @@ impl OdeWrapper {
         let mut self_guard = slf.0.lock().unwrap();
         self_guard.py_solve.y0(slf.py(), params.as_slice().unwrap())
     }
+    
+    /// Get the number of parameters expected by the diffsl code. 
+    #[getter]
+    fn get_nparams<'py>(slf: PyRefMut<'py, Self>) -> usize {
+        let self_guard = slf.0.lock().unwrap();
+        self_guard.py_solve.nparams()
+    }
+
+    /// Get the number of states in the ODE system.
+    #[getter]
+    fn get_nstates<'py>(slf: PyRefMut<'py, Self>) -> usize {
+        let self_guard = slf.0.lock().unwrap();
+        self_guard.py_solve.nstates()
+    }
+    
+    /// Get the number of outputs in the ODE system,
+    /// if there is no out tensor, this is the number of states.
+    #[getter]
+    fn get_nout<'py>(slf: PyRefMut<'py, Self>) -> usize {
+        let self_guard = slf.0.lock().unwrap();
+        self_guard.py_solve.nout()
+    }
+    
+    /// Check if the diffsl code has a stop event defined. 
+    fn has_stop<'py>(slf: PyRefMut<'py, Self>) -> bool {
+        let self_guard = slf.0.lock().unwrap();
+        self_guard.py_solve.has_stop()
+    }
 
     /// evaluate the right-hand side function at time `t` and state `y`.
     fn rhs<'py>(
