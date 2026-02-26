@@ -201,3 +201,18 @@ def test_solution_rejects_incompatible_ode_instance():
 
     with pytest.raises(Exception, match="incompatible with this Ode instance"):
         ode_f32.solve(params_f64, 0.4, solution)
+
+
+def test_solution_rejects_mixing_bdf_and_rk_state():
+    ode_bdf = make_ode(method=ds.bdf)
+    ode_rk = make_ode(method=ds.tsit45)
+    params = np.array([1.0, 1.0, 0.1])
+
+    solution_bdf = ode_bdf.solve(params, 0.2)
+
+    with pytest.raises(Exception, match="Expected an RK state"):
+        ode_rk.solve(params, 0.4, solution_bdf)
+        
+    solution_rk = ode_rk.solve(params, 0.2)
+    with pytest.raises(Exception, match="Expected a BDF state"):
+        ode_bdf.solve(params, 0.4, solution_rk)
