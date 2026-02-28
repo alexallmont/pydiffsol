@@ -1,9 +1,6 @@
 import numpy as np
-import matplotlib
-matplotlib.use("SVG")
 import matplotlib.pyplot as plt
 import pydiffsol as ds
-
 
 def solve():
     ode = ds.Ode(
@@ -56,7 +53,6 @@ def solve():
     ax.set_ylabel("amount [ng]")
     ax.legend()
     fig.savefig("docs/images/compartmental_drug_delivery.svg")
-
 
 if __name__ == "__main__":
     solve()

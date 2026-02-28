@@ -49,6 +49,5 @@ def solve():
     ax.set_ylabel("current")
     fig.savefig("docs/images/electrical_circuits.svg")
 
-
 if __name__ == "__main__":
     solve()

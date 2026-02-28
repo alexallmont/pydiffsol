@@ -40,7 +40,6 @@ halts when \\(x = 0\\). In this pydiffsol example, we:
 
 .. literalinclude:: ../../examples/3_2_bouncing_ball.py
   :encoding: latin-1
-  :lines: 1-71
   :language: python
 
 .. image:: ../images/bouncing_ball.svg

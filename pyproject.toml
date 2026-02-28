@@ -22,6 +22,7 @@ dependencies = [
 dev = [
     "matplotlib",
     "pytest",
+    "json5"
 ]
 bench = [
     "diffrax",
