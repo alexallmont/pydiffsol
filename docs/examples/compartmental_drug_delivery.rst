@@ -38,6 +38,7 @@ for the central compartment before continuing the solve. The example uses
 
 .. literalinclude:: ../../examples/3_1_compartmental_models_of_drug_delivery.py
   :encoding: latin-1
+  :lines: 1-58
   :language: python
 
 .. image:: ../images/compartmental_drug_delivery.svg
