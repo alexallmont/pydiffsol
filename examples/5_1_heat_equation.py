@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 import pydiffsol as ds
 
-
 def solve():
     ode = ds.Ode(
         """
@@ -55,7 +54,6 @@ def solve():
     ax.set_ylabel("h")
     ax.set_zlabel("T")
     fig.savefig("docs/images/heat_equation.svg")
-
 
 if __name__ == "__main__":
     solve()

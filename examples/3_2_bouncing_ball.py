@@ -1,28 +1,6 @@
 import numpy as np
-import matplotlib
-matplotlib.use("SVG")
 import matplotlib.pyplot as plt
 import pydiffsol as ds
-
-
-BALL_CODE = """
-in_i {
-    g = 9.81,
-    h = 10.0,
-}
-u_i {
-    x = h,
-    v = 0.0,
-}
-F_i {
-    v,
-    -g,
-}
-stop {
-    x,
-}
-"""
-
 
 def solve():
     restitution = 0.8
@@ -32,7 +10,23 @@ def solve():
     # Using a single-step method makes event restarts robust after resetting
     # state at each bounce.
     ode = ds.Ode(
-        BALL_CODE,
+        """
+        in_i {
+            g = 9.81,
+            h = 10.0,
+        }
+        u_i {
+            x = h,
+            v = 0.0,
+        }
+        F_i {
+            v,
+            -g,
+        }
+        stop {
+            x,
+        }
+        """,
         matrix_type=ds.nalgebra_dense,
         method=ds.tsit45,
         linear_solver=ds.lu,
@@ -72,7 +66,6 @@ def solve():
     ax.set_ylabel("state")
     ax.legend()
     fig.savefig("docs/images/bouncing_ball.svg")
-
 
 if __name__ == "__main__":
     solve()
