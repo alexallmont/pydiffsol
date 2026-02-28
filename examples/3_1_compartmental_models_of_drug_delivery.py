@@ -5,28 +5,25 @@ import matplotlib.pyplot as plt
 import pydiffsol as ds
 
 
-PK_CODE = """
-in_i {
-    Vc = 1000.0,
-    Vp1 = 1000.0,
-    CL = 100.0,
-    Qp1 = 50.0,
-    dose0 = 1000.0,
-}
-u_i {
-    qc = dose0,
-    qp1 = 0.0,
-}
-F_i {
-    - qc / Vc * CL - Qp1 * (qc / Vc - qp1 / Vp1),
-    Qp1 * (qc / Vc - qp1 / Vp1),
-}
-"""
-
-
 def solve():
     ode = ds.Ode(
-        PK_CODE,
+        """
+        in_i {
+            Vc = 1000.0,
+            Vp1 = 1000.0,
+            CL = 100.0,
+            Qp1 = 50.0,
+            dose0 = 1000.0,
+        }
+        u_i {
+            qc = dose0,
+            qp1 = 0.0,
+        }
+        F_i {
+            - qc / Vc * CL - Qp1 * (qc / Vc - qp1 / Vp1),
+            Qp1 * (qc / Vc - qp1 / Vp1),
+        }
+        """,
         matrix_type=ds.nalgebra_dense,
         method=ds.tsit45,
         linear_solver=ds.lu,
@@ -40,7 +37,7 @@ def solve():
 
     solution = None
     for i, (_t_dose, dose) in enumerate(doses):
-        if i > 0:
+        if solution:
             # Apply bolus directly to the central compartment.
             y = solution.current_state
             y[0] += dose
