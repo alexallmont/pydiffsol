@@ -31,6 +31,16 @@ impl SolutionWrapper {
             .map_err(|_| PyRuntimeError::new_err("Solution mutex poisoned"))
     }
 
+    /// Takes the PySolution out of the wrapper, leaving None in its place. This is used to temporarily
+    /// take ownership of the PySolution for operations that require mutable access, while ensuring that the wrapper
+    /// is left in a consistent state. 
+    /// 
+    /// The caller is responsible for putting the PySolution back into the wrapper
+    /// after the operation is complete using `replace_py_solution`. This is only 
+    /// relevent for operations from python that might raise an exception, as you
+    /// want to ensure that the PySolution is put back into the wrapper if an error
+    /// occurs, since the user will expect that the solution input argument is still 
+    /// valid after an error is raised.
     pub(crate) fn take_py_solution(&self) -> Result<Box<dyn PySolution>, PyDiffsolError> {
         let mut guard = self
             .0
