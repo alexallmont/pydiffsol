@@ -9,8 +9,10 @@ mod options_ode;
 mod py_convert;
 mod py_solve;
 mod py_solve_macros;
+mod py_solution;
 mod py_types;
 mod scalar_type;
+mod solution;
 mod solver_method;
 mod solver_type;
 mod valid_linear_solver;
@@ -45,6 +47,7 @@ fn pydiffsol(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<ode::OdeWrapper>()?;
     m.add_class::<options_ic::InitialConditionSolverOptions>()?;
     m.add_class::<options_ode::OdeSolverOptions>()?;
+    m.add_class::<solution::SolutionWrapper>()?;
 
     // Shorthand aliases, e.g. `ds.bdf` rather than `ds.SolverMethod.bdf`
     for mt in matrix_type::MatrixType::all_enums() {

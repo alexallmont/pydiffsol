@@ -61,7 +61,6 @@ We can solve this system of equations using Diffsol and plot the current and vol
 
 .. literalinclude:: ../../examples/4_1_electrical_circuits.py
   :encoding: latin-1
-  :lines: 1-48
   :language: python
 
 .. image:: ../images/electrical_circuits.svg

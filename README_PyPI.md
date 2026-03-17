@@ -23,9 +23,11 @@ ode = ds.Ode(
 
 # Solve with default solver for nalgebra_dense (bdf)
 p = np.array([])
-print(ode.solve(p, 0.4))
+solution = ode.solve(p, 0.4)
+print(solution.ys, solution.ts)
 
 # Above defaults to bdf. Try esdirk34 instead
 ode.method = ds.esdirk34
-print(ode.solve(p, 0.4))
+solution = ode.solve(p, 0.4)
+print(solution.ys, solution.ts)
 ```

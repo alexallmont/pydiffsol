@@ -54,9 +54,8 @@ We also have initial conditions for the populations at time \\(t = 0\\). We can 
 
 Let's solve this system of ODEs using pydiffsol.
 
-.. literalinclude:: ../../examples/1_1_population_dynamics.py
+.. literalinclude:: ../../examples/1_1_population_dynamics_solve.py
   :encoding: latin-1
-  :lines: 4,6-9,11-39
   :language: python
 
 .. image:: ../images/prey_predator.svg
@@ -72,9 +71,8 @@ Our initial conditions are now:
 
 so we can solve this system for different values of \\(y_0\\) and plot the phase plane for each case. We will use similar code as above, but we will introduce our new parameter and loop over different values of \\(y_0\\)
 
-.. literalinclude:: ../../examples/1_1_population_dynamics.py
+.. literalinclude:: ../../examples/1_2_population_dynamics_phase_plane.py
   :encoding: latin-1
-  :lines: 41-72
   :language: python
 
 .. image:: ../images/prey_predator2.svg
