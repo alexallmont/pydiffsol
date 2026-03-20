@@ -23,7 +23,8 @@ dev = [
     "matplotlib",
     "pytest",
     "json5",
-    "docutils"
+    "docutils",
+    "markdown-it-py",
 ]
 bench = [
     "diffrax",

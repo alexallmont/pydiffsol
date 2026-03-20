@@ -1,20 +1,22 @@
 import os
 import pytest
-import re
 import subprocess
 import sys
-import textwrap
 
 from docutils import nodes
 from docutils.core import publish_doctree
+from markdown_it import MarkdownIt
 from pathlib import Path
 
 
-FENCE_REGEX = re.compile(r"^```(:?py|python)\s*\n(.*?)\n```", re.S | re.M)
-
-
 def extract_md_python_blocks(text: str):
-    return [textwrap.dedent(m.group(2)) for m in FENCE_REGEX.finditer(text)]
+    md = MarkdownIt()
+    return [
+        token.content
+        for token in md.parse(text)
+        if token.type == "fence"
+        and (token.info or "").strip().split()[0] in {"python", "py"}
+    ]
 
 
 def extract_rst_python_blocks(text: str):
