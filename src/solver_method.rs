@@ -68,6 +68,7 @@ impl SolverMethod {
         }
     }
 
+    #[allow(clippy::type_complexity)]
     pub(crate) fn solve<M, LS>(
         &self,
         problem: &mut OdeSolverProblem<DiffSl<M, JitModule>>,
@@ -149,6 +150,7 @@ impl SolverMethod {
         }
     }
 
+    #[allow(clippy::type_complexity)]
     pub(crate) fn solve_dense<M, LS>(
         &self,
         problem: &mut OdeSolverProblem<DiffSl<M, JitModule>>,
