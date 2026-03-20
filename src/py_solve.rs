@@ -180,7 +180,7 @@ where
         let params: Vec<M::T> = params.iter().map(|&x| M::T::from_f64(x).unwrap()).collect();
         let params = M::V::from_slice(&params, M::C::default());
 
-        // Attempt to set problem from params and config
+        // Attempt to set problem from params
         let nparams = self.problem.eqn.nparams();
         if params.len() == nparams {
             self.problem.eqn.set_params(&params);
