@@ -1,22 +1,16 @@
 # Contributing to pydiffsol
 
-Contributions to `pydiffsol` are very welcome, whether that means bug reports, features, tests, or documentation improvements.
+Contributions to `pydiffsol` are welcome, whether that means bug reports, features, tests, or documentation improvements.
 
-`pydiffsol` is the Python-facing sibling of [`diffsol`](https://github.com/martinjrobins/diffsol). The numerical work lives in Rust; this repository wraps it in a Python API using PyO3 and packages it with `maturin`.
+`pydiffsol` is the Python-facing sibling of [`diffsol`](https://github.com/martinjrobins/diffsol). The numerical work lives in Rust and this repository wraps it in a Python API.
 
 ## Overview
 
-- `src/` Rust extension code
-- `test/` Python tests
-- `examples/` example scripts
-- `docs/` Sphinx docs
-- `.vscode/` local developer tooling
-
-One of the main design challenges is bridging Rust's static types with Python's dynamic API. In practice, that means much of the codebase is wrapper, conversion, and API-shaping code rather than solver logic itself. Effectively, `pydiffsol` builds preset combinations of static `matrix_type`, `scalar_type`, `linear_solver` and `method` types, and provides a friendly mechanism to select them dynamically.
+The main design challenge in `pydiffsol` is bridging Rust's static types with Python's dynamic API. In practice, `pydiffsol` builds preset combinations of static `matrix_type`, `scalar_type`, `linear_solver` and `method` types, and provides a friendly mechanism to select them dynamically and query results with a numpy interface.
 
 ## Getting set up
 
-You will usually want:
+You will need:
 
 - Rust via [`rustup`](https://rustup.rs/)
 - Python 3.9+
@@ -31,7 +25,7 @@ maturin develop --extras dev --features diffsol-llvm17 --features suitesparse
 maturin develop --extras dev --features diffsol-cranelift
 ```
 
-For VSCode developers, `.vscode/` contains a `launch.json` for common debug scenarios, including debugging Python for stepping through tests and debugging Rust code that has been launched from tests. The latter is useful for drilling into Rust bugs found via `pydiffsol`. Scenarios are set up for launching both unit tests and example code.
+For VSCode developers, `.vscode/` contains a `launch.json` for common run scenarios, including debugging Python or Rust code. The latter is useful for drilling into Rust bugs found via `pydiffsol`. Scenarios are set up for launching both unit tests and example code.
 
 When you launch one of the scenarios it will automatically build for you using the `maturin develop` task, which uses the default configuration for your platform as in the released wheel.
 
@@ -39,11 +33,13 @@ When you launch one of the scenarios it will automatically build for you using t
 
 For most changes:
 
+1. Implement feature/bug code changes
 1. Build locally with `maturin develop`.
-2. Run the relevant tests with `pytest`.
-3. Format with `cargo fmt`.
-4. If needed, run `cargo clippy` with the same feature flags as your build.
-5. Rebuild docs or examples if the change is user-facing.
+1. Run the relevant tests with `pytest`.
+1. Format with `cargo fmt`.
+1. If needed, run `cargo clippy` with the same feature flags as your build.
+1. Rebuild docs or examples if the change is user-facing.
+1. Update `CHANGELOG.md`
 
 Useful commands:
 
@@ -95,3 +91,24 @@ Please include:
 - the approach taken
 - any relevant feature flags or platform notes
 - tests or examples updated as part of the change
+
+## Project management
+
+Releases are drafted in [issues](https://github.com/alexallmont/pydiffsol/issues) and delivered by [milestone](https://github.com/alexallmont/pydiffsol/milestones). The [project board](https://github.com/users/alexallmont/projects/3/views/2) summarises work progress.
+
+## Releases
+
+To release v0.x.y, e.g. x and y from next unreleased draft [issue](https://github.com/alexallmont/pydiffsol/issues):
+
+1. Ensure all PRs are merged to `main` and there are no build issues.
+1. Ensure `Cargo.toml` is correct, e.g. `version = "0.x.y"`
+1. Ensure `CHANGELOG.md` is up-to-date with v0.x.y
+1. In `main` branch, edit `docs/requirements.txt` and change `pydiffsol==0.x.y` to the latest version.
+1. Go to the [releases](https://github.com/alexallmont/pydiffsol/releases), click **Draft a new release**.
+1. Click on 'Select tag' then 'Create new tag'.
+1. Set the tag and release name to v0.x.y, note the leading 'v'.
+1. Click 'Generate release notes' to get a changes digest and diff range.
+1. Replace release notes summary with latest `CHANGELOG.md` range.
+1. Click 'Publish release'
+
+The `docs/requirements.txt` change ensures that readthedocs gets the correct version.
