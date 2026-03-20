@@ -175,8 +175,8 @@ impl OdeWrapper {
         let mut self_guard = slf.0.lock().unwrap();
         self_guard.py_solve.y0(slf.py(), params.as_slice().unwrap())
     }
-    
-    /// Get the number of parameters expected by the diffsl code. 
+
+    /// Get the number of parameters expected by the diffsl code.
     #[getter]
     fn get_nparams<'py>(slf: PyRefMut<'py, Self>) -> usize {
         let self_guard = slf.0.lock().unwrap();
@@ -189,7 +189,7 @@ impl OdeWrapper {
         let self_guard = slf.0.lock().unwrap();
         self_guard.py_solve.nstates()
     }
-    
+
     /// Get the number of outputs in the ODE system,
     /// if there is no out tensor, this is the number of states.
     #[getter]
@@ -197,8 +197,8 @@ impl OdeWrapper {
         let self_guard = slf.0.lock().unwrap();
         self_guard.py_solve.nout()
     }
-    
-    /// Check if the diffsl code has a stop event defined. 
+
+    /// Check if the diffsl code has a stop event defined.
     fn has_stop<'py>(slf: PyRefMut<'py, Self>) -> bool {
         let self_guard = slf.0.lock().unwrap();
         self_guard.py_solve.has_stop()
@@ -270,9 +270,13 @@ impl OdeWrapper {
 
         let linear_solver = self_guard.linear_solver;
         let method = self_guard.method;
-        Self::run_solve_call(&mut *self_guard.py_solve, solution, |py_solve, py_solution| {
-            py_solve.solve(method, linear_solver, params, final_time, py_solution)
-        })
+        Self::run_solve_call(
+            &mut *self_guard.py_solve,
+            solution,
+            |py_solve, py_solution| {
+                py_solve.solve(method, linear_solver, params, final_time, py_solution)
+            },
+        )
     }
 
     /// Using the provided state, solve the problem up to time
@@ -305,9 +309,13 @@ impl OdeWrapper {
 
         let linear_solver = self_guard.linear_solver;
         let method = self_guard.method;
-        Self::run_solve_call(&mut *self_guard.py_solve, solution, |py_solve, py_solution| {
-            py_solve.solve_dense(method, linear_solver, params, t_eval, py_solution)
-        })
+        Self::run_solve_call(
+            &mut *self_guard.py_solve,
+            solution,
+            |py_solve, py_solution| {
+                py_solve.solve_dense(method, linear_solver, params, t_eval, py_solution)
+            },
+        )
     }
 
     /// Using the provided state, solve the problem up to time `t_eval[t_eval.len()-1]`.
@@ -339,9 +347,13 @@ impl OdeWrapper {
 
         let linear_solver = self_guard.linear_solver;
         let method = self_guard.method;
-        Self::run_solve_call(&mut *self_guard.py_solve, solution, |py_solve, py_solution| {
-            py_solve.solve_fwd_sens(method, linear_solver, params, t_eval, py_solution)
-        })
+        Self::run_solve_call(
+            &mut *self_guard.py_solve,
+            solution,
+            |py_solve, py_solution| {
+                py_solve.solve_fwd_sens(method, linear_solver, params, t_eval, py_solution)
+            },
+        )
     }
 
     /// Using the provided state, solve the adjoint problem for the sum of squares

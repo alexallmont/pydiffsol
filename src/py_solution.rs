@@ -174,8 +174,7 @@ fn copy_slice_to_vec<V: VectorHost>(state: &mut V, y: &[f64]) -> Result<(), PyDi
     Ok(())
 }
 
-impl<V: VectorHost + DefaultDenseMatrix + Send + Sync + 'static> PySolution
-    for GenericPySolution<V>
+impl<V: VectorHost + DefaultDenseMatrix + Send + Sync + 'static> PySolution for GenericPySolution<V>
 where
     <V as DefaultDenseMatrix>::M: Send + Sync,
     for<'b> <V as VectorCommon>::Inner: VectorToPy<'b, V::T>,

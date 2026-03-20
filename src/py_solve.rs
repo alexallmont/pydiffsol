@@ -36,7 +36,6 @@ type SolveResult = Result<Box<dyn PySolution>, SolveError>;
 // Each matrix type implements PySolve as bridge between diffsol and Python
 pub(crate) trait PySolve {
     fn matrix_type(&self) -> MatrixType;
-    
     fn nstates(&self) -> usize;
     fn nparams(&self) -> usize;
     fn nout(&self) -> usize;
@@ -249,19 +248,19 @@ where
     fn matrix_type(&self) -> MatrixType {
         MatrixType::from_diffsol::<M>()
     }
-    
+
     fn has_stop(&self) -> bool {
         self.problem.eqn.root().is_some()
     }
-    
+
     fn nout(&self) -> usize {
         self.problem.eqn.nout()
     }
-    
+
     fn nparams(&self) -> usize {
         self.problem.eqn.nparams()
     }
-    
+
     fn nstates(&self) -> usize {
         self.problem.eqn.nstates()
     }
