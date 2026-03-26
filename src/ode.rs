@@ -241,9 +241,6 @@ impl OdeWrapper {
     /// Using the provided state, solve the problem up to time `final_time`.
     ///
     /// The number of params must match the expected params in the diffsl code.
-    /// If specified, the config can be used to override the solver method
-    /// (Bdf by default) and SolverType (Lu by default) along with other solver
-    /// params like `rtol`.
     ///
     /// :param params: 1D array of solver parameters
     /// :type params: numpy.ndarray
@@ -284,7 +281,6 @@ impl OdeWrapper {
     /// timepoints given by `t_eval`.
     ///
     /// The number of params must match the expected params in the diffsl code.
-    /// The config may be optionally specified to override solver settings.
     ///
     /// :param params: 1D array of solver parameters
     /// :type params: numpy.ndarray
@@ -322,7 +318,7 @@ impl OdeWrapper {
     /// Returns a `Solution` object with values at `t_eval` and sensitivity arrays
     /// at the same timepoints.
     /// The number of params must match the expected params in the diffsl code.
-    /// The config may be optionally specified to override solver settings.
+    ///
     /// :param params: 1D array of solver parameters
     /// :type params: numpy.ndarray
     /// :param t_eval: 1D array of solver times

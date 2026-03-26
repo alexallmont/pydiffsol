@@ -12,10 +12,10 @@ import pydiffsol as ds
 import numpy as np
 
 # DiffSl code and matrix type specified in constructor
+# Defaults to f64 BDF solver unless specified
 ode = ds.Ode(
     """
-    in = [r]
-    r { 1.0 }
+    in { r = 1.0 }
     k { 1.0 }
     u { 0.1 }
     F { r * u * (1.0 - u / k) }
@@ -23,7 +23,7 @@ ode = ds.Ode(
     ds.nalgebra_dense
 )
 
-# Example overriding r input param with 2.0
+# Solve up to t = 0.4, overriding r input param = 2.0
 params = np.array([2.0])
 solution = ode.solve(params, 0.4)
 print(solution.ys, solution.ts)
