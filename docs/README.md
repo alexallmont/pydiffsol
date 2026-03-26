@@ -7,7 +7,7 @@ To test locally, build from the docs folder:
 ```shell
 pip install -r docs/requirements.txt
 cd docs
-sphinx-build -b html . _build/html
+make html
 ```
 
 Docs build from the latest published pydiffsol by default. If you have code changes you want to see in docs locally,

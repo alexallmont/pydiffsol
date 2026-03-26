@@ -68,6 +68,7 @@ impl SolverMethod {
         }
     }
 
+    #[allow(clippy::type_complexity)]
     pub(crate) fn solve<M, LS>(
         &self,
         problem: &mut OdeSolverProblem<DiffSl<M, JitModule>>,
@@ -95,7 +96,7 @@ impl SolverMethod {
                         let mut solver = problem.bdf_solver::<LS>(state)?;
                         solver.state_mut(); // ensure any user mutations to the state are reflected in the solver's internal state
                         solver
-                    },
+                    }
                     Some(GenericPyState::Rk(_)) => {
                         return Err(DiffsolError::Other(
                             "Expected a BDF state for bdf method".to_string(),
@@ -103,7 +104,7 @@ impl SolverMethod {
                     }
                     None => problem.bdf::<LS>()?,
                 };
-                
+
                 let (ys, ts) = solver.solve(final_time)?;
                 Ok((ys, ts, GenericPyState::Bdf(solver.into_state())))
             }
@@ -149,6 +150,7 @@ impl SolverMethod {
         }
     }
 
+    #[allow(clippy::type_complexity)]
     pub(crate) fn solve_dense<M, LS>(
         &self,
         problem: &mut OdeSolverProblem<DiffSl<M, JitModule>>,
@@ -169,7 +171,7 @@ impl SolverMethod {
                         let mut solver = problem.bdf_solver::<LS>(state)?;
                         solver.state_mut(); // ensure any user mutations to the state are reflected in the solver's internal state
                         solver
-                    },
+                    }
                     Some(GenericPyState::Rk(_)) => {
                         return Err(DiffsolError::Other(
                             "Expected a BDF state for bdf method".to_string(),
@@ -260,7 +262,7 @@ impl SolverMethod {
                         let mut solver = problem.bdf_solver_sens::<LS>(state)?;
                         solver.state_mut(); // ensure any user mutations to the state are reflected in the solver's internal state
                         solver
-                    },
+                    }
                     Some(GenericPyState::Rk(_)) => {
                         return Err(DiffsolError::Other(
                             "Expected a BDF state for bdf method".to_string(),
