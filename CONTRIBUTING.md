@@ -101,9 +101,9 @@ Releases are drafted in [issues](https://github.com/alexallmont/pydiffsol/issues
 To release v0.x.y, e.g. x and y from next unreleased draft [issue](https://github.com/alexallmont/pydiffsol/issues):
 
 1. Ensure all PRs are merged to `main` and there are no build issues.
-1. Ensure `Cargo.toml` is correct, e.g. `version = "0.x.y"`
-1. Ensure `CHANGELOG.md` is up-to-date with v0.x.y
-1. In `main` branch, edit `docs/requirements.txt` and change `pydiffsol==0.x.y` to the latest version.
+1. Ensure `Cargo.toml` is correct, e.g. `version = "0.x.y"`.
+1. Ensure `CHANGELOG.md` details latest changes up to v0.x.y.
+1. Edit `docs/requirements.txt` and change `pydiffsol==0.x.y` to the latest version.
 1. Go to the [releases](https://github.com/alexallmont/pydiffsol/releases), click **Draft a new release**.
 1. Click on 'Select tag' then 'Create new tag'.
 1. Set the tag and release name to v0.x.y, note the leading 'v'.
