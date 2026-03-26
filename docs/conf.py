@@ -1,7 +1,7 @@
 import pydiffsol
 
 project = 'pydiffsol'
-copyright = '2025, Alex Allmont'
+copyright = '2025-2026, Alex Allmont'
 author = 'Alex Allmont'
 release = pydiffsol.version()
 version = release
