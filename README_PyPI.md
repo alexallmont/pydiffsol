@@ -15,10 +15,10 @@ import numpy as np
 # Defaults to f64 BDF solver unless specified
 ode = ds.Ode(
     """
-    in_i { r = 1.0 }
-    k_i { 1.0 }
-    u_i { 0.1 }
-    F_i { r * u * (1.0 - u / k) }
+    in { r = 1.0 }
+    k { 1.0 }
+    u { 0.1 }
+    F { r * u * (1.0 - u / k) }
     """,
     ds.nalgebra_dense
 )
