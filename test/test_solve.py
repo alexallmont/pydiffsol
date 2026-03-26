@@ -25,7 +25,9 @@ def test_solve():
     y0 = 0.1
     params = np.array([r, k, y0])
 
-    ys, ts = ode.solve(params, 0.4)
+    solution = ode.solve(params, 0.4)
+    ys = solution.ys
+    ts = solution.ts
 
     assert len(ys) == 1
     assert len(ys[0]) == len(ts)
@@ -37,7 +39,9 @@ def test_solve():
 
     # Check that when re-running, that solve generates new arrays, i.e. that ts
     # and ys are new objects and not referring to mutated data.
-    ys2, ts2 = ode.solve(params, 1.0)
+    solution2 = ode.solve(params, 1.0)
+    ys2 = solution2.ys
+    ts2 = solution2.ts
 
     assert len(ys2[0]) == len(ts2)
     assert len(ys[0]) == len(ts)
@@ -48,7 +52,7 @@ def test_solve():
 
     # Example using solve_dense to get results at particular times
     t_eval = np.array([0.0, 0.1, 0.5])
-    ys = ode.solve_dense(params, t_eval)
+    ys = ode.solve_dense(params, t_eval).ys
     assert np.allclose(ys, [[0.1, 0.109366, 0.154828]], rtol=1e-4)
 
     # Check that code read back matches original
@@ -69,7 +73,9 @@ def test_solve_f32_near_f64(final_time, params):
             method=ds.bdf,
             linear_solver=ds.lu
         )
-        ys, ts = ode.solve(np.array(params), final_time)
+        solution = ode.solve(np.array(params), final_time)
+        ys = solution.ys
+        ts = solution.ts
         last_y.append(ys[0][-1])
         last_t.append(ts[-1])
 
@@ -98,9 +104,11 @@ def test_solve_fwd_sens():
     t_eval = np.array([0.0, 0.1, 0.5])
     if os.name == 'nt':
         with pytest.raises(Exception, match="Sensitivity analysis is not supported on Windows"):
-            ys, sens = ode.solve_fwd_sens(params, t_eval)
+            ode.solve_fwd_sens(params, t_eval)
         return
-    ys, sens = ode.solve_fwd_sens(params, t_eval)
+    solution = ode.solve_fwd_sens(params, t_eval)
+    ys = solution.ys
+    sens = solution.sens
     assert ys.shape == (1, 3)
     assert len(sens) == 3
     assert sens[0].shape == (1, 3)
@@ -134,7 +142,7 @@ def test_solve_sum_squares_adjoint():
     params = np.array([r, k, y0])
     t_eval = np.array([0.0, 0.1, 0.5])
     data_params = np.array([0.9 * r, 0.9 * k, 0.9 * y0])
-    data = ode.solve_dense(data_params, t_eval)
+    data = ode.solve_dense(data_params, t_eval).ys
     if os.name == 'nt':
         with pytest.raises(Exception, match="Sensitivity analysis is not supported on Windows"):
             ys, sens = ode.solve_sum_squares_adj(params, data, t_eval)

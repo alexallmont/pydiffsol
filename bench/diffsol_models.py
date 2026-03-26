@@ -42,5 +42,5 @@ def setup(ngroups: int, tol: float, method: str, problem: str):
 def bench(model):
     ode, t_final = model
     params = np.array([])
-    ys = ode.solve_dense(params, np.array([t_final]))
+    ys = ode.solve_dense(params, np.array([t_final])).ys
     return ys[:, -1]

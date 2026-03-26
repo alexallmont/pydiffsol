@@ -39,14 +39,15 @@ def solve():
     )
 
     params = np.array([])
-    ys, ts = ode.solve(params, 1.0)
+    solution = ode.solve(params, 1.0)
+    ys = solution.ys
+    ts = solution.ts
 
     fig, ax = plt.subplots()
     ax.plot(ts, ys[0], label="x")
     ax.set_xlabel("t")
     ax.set_ylabel("current")
     fig.savefig("docs/images/electrical_circuits.svg")
-
 
 if __name__ == "__main__":
     solve()

@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 import pydiffsol as ds
 
-
 def solve():
     ode = ds.Ode(
         """
@@ -39,7 +38,9 @@ def solve():
         ds.nalgebra_dense,
     )
     params = np.array([])
-    ys, ts = ode.solve(params, 0.1)
+    solution = ode.solve(params, 0.1)
+    ys = solution.ys
+    ts = solution.ts
 
     fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
     ax.plot_surface(
@@ -53,7 +54,6 @@ def solve():
     ax.set_ylabel("h")
     ax.set_zlabel("T")
     fig.savefig("docs/images/heat_equation.svg")
-
 
 if __name__ == "__main__":
     solve()

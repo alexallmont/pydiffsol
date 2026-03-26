@@ -77,13 +77,13 @@ def test_valid_config_solve(matrix_type, linear_solver, method):
     ode = ds.Ode(DIFFSL_LOGISTIC, matrix_type=matrix_type, method=method, linear_solver=linear_solver)
 
     # All valid solver configs should generate approximately the same value
-    ys, _ = ode.solve(np.array([]), 0.4)
+    ys = ode.solve(np.array([]), 0.4).ys
     last_y = ys[0][-1]
     assert np.isclose(last_y, 0.142189, rtol=1e-4)
 
     # Also check solve_dense works over set times
     t_eval = np.array([0.0, 0.1, 0.5])
-    ys = ode.solve_dense(np.array([]), t_eval)
+    ys = ode.solve_dense(np.array([]), t_eval).ys
     assert np.allclose(ys, [[0.1, 0.109366, 0.154828]], rtol=1e-4)
 
 
