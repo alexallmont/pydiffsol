@@ -108,7 +108,9 @@ To release v0.x.y, e.g. x and y from next unreleased draft [issue](https://githu
 1. Click on 'Select tag' then 'Create new tag'.
 1. Set the tag and release name to v0.x.y, note the leading 'v'.
 1. Click 'Generate release notes' to get a changes digest and diff range.
-1. Replace release notes summary with latest `CHANGELOG.md` range.
+1. Replace the text under `## What's Changed` with latest `CHANGELOG.md` range. Keep the `**Full Changelog**` at bottom.
 1. Click 'Publish release'
+1. Check build action completes and the new package is on [PyPI](https://pypi.org/project/pydiffsol/).
+1. Log in to [readthedocs](https://app.readthedocs.org/dashboard/), rebuild `latest`, `stable` and add a new version for `v0.x.y`
 
-The `docs/requirements.txt` change ensures that readthedocs gets the correct version.
+The final step - to manually rebuild readthedocs - is needed because the docs are built through introspection and require the latest PyPI version of pydiffsol, but readthedocs is triggered by watching GitHub and not PyPI, so presently there is a bug where the docs try to build before the package is available.
