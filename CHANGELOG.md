@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0]
+
+### Added
+
+- Support for solution continuation by making all solve methods return common `Solution` type that may be passed back into to next solve call (#48)
+- Add Pharmacokinetic (PK) and bouncing ball examples (#48)
+- Contributing guide (#62)
+- Docs QA and tests (#61)
+
+### Changed
+
+- Solution continuation (#48) changes the return type of all solve calls from a tuple to a common `Solution` class. For example instead of `ys, ts = ode.solve(...)` you now have a result `s = ode.solve(...)` and get values from `s.ys` and `s.ts`. See PK example for usage.
+
 ## [0.3.1]
 
 ### Added
