@@ -25,16 +25,13 @@ Contents
    Home <self>
    usage
    examples
-   bench 
+   bench
    api
 
 * :ref:`genindex`
-
-* :ref:`search`
 
 Links
 -----
 
 - **PyPI**: https://pypi.org/project/pydiffsol/
 - **Source code**: https://github.com/alexallmont/pydiffsol/
-
