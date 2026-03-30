@@ -28,9 +28,9 @@ numpy==2.3.2
     # via pydiffsol
 packaging==25.0
     # via sphinx
-pydiffsol==0.4.0
+pydiffsol==0.2.0
     # via -r requirements.in
-pygments==2.19.2
+pygments==2.20.0
     # via sphinx
 requests==2.33.0
     # via sphinx
