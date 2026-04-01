@@ -20,7 +20,8 @@
             ],
             "presentation": {
                 "clear": true
-            }
+            },
+            "group": "build"
         }
     ]
 }
