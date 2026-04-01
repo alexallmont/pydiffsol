@@ -34,7 +34,7 @@ jobs:
         if: runner.os == 'macOS'
         uses: KyleMayes/install-llvm-action@v2
         with:
-          version: "21.0"
+          version: 21
       - name: Install SuiteSparse
         if: runner.os == 'macOS'
         run: brew install suite-sparse
