@@ -31,4 +31,3 @@ num-traits = "0.2.17"
 
 [dev-dependencies]
 pyo3 = { version = "*", features = ["auto-initialize"] }
-

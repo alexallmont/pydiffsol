@@ -48,14 +48,14 @@ matrix types). Also specify `dev` extras for pytest, running examples and docs
 image generation. For example:
 
 ```sh
-maturin develop --extras dev --features diffsol-llvm17 --features suitesparse
+maturin develop --extras dev --features diffsol-llvm21 --features suitesparse
 ```
 
 The `.vscode` setup includes examples for running tests and examples in python
 via lldb so underlying rust can be debugged. The build task in `tasks.json` runs
-with `diffsol-llvm17` and `suitesparse` and assumes that you have these
-installed, for example on macos with `brew install llvm@17 suite-sparse` or for
-debian-flavoured linux `apt install llvm-17 libsuitesparse-dev`. If you have a
+with `diffsol-llvm21` and `suitesparse` and assumes that you have these
+installed, for example on macos with `brew install llvm@21 suite-sparse` or for
+debian-flavoured linux `apt install llvm-21 libsuitesparse-dev`. If you have a
 different configuration, you may need to edit `tasks.json` and `settings.json`.
 
 The python path is hard-coded in `launch.json` to `.venv/bin/activate` (this is
