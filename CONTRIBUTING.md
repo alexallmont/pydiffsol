@@ -17,11 +17,17 @@ You will need:
 - a virtual environment
 - [`maturin`](https://www.maturin.rs/)
 
-Depending on the backend, you may also need LLVM and optionally SuiteSparse. Typical local builds are:
+Depending on the backend, you may also need LLVM and optionally SuiteSparse. LLVM may require setting the prefix path, for example on macOS:
 
 ```sh
-maturin develop --extras dev --features diffsol-llvm17
-maturin develop --extras dev --features diffsol-llvm17 --features suitesparse
+export LLVM_SYS_211_PREFIX=$(brew --prefix llvm@21)
+```
+
+Typical local builds are:
+
+```sh
+maturin develop --extras dev --features diffsol-llvm21
+maturin develop --extras dev --features diffsol-llvm21 --features suitesparse
 maturin develop --extras dev --features diffsol-cranelift
 ```
 
@@ -46,7 +52,7 @@ Useful commands:
 ```sh
 pytest
 cargo fmt
-cargo clippy --features diffsol-llvm17
+cargo clippy --features diffsol-llvm21
 ```
 
 To build the docs locally:

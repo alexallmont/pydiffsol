@@ -34,7 +34,7 @@ jobs:
         if: runner.os == 'macOS'
         uses: KyleMayes/install-llvm-action@v2
         with:
-          version: "17.0"
+          version: 21
       - name: Install SuiteSparse
         if: runner.os == 'macOS'
         run: brew install suite-sparse
@@ -47,8 +47,8 @@ jobs:
           SCCACHE_VERSION: 0.2.13
           CIBW_BEFORE_ALL_LINUX: "curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y && yum install -y openssl-devel && source .github/workflows/maturin_linux_setup.sh"
           CIBW_BUILD_VERBOSITY: "1"
-          CIBW_ENVIRONMENT_LINUX: 'PATH="$PATH:$HOME/.cargo/bin" MATURIN_PEP517_ARGS="--features diffsol-llvm17 --features suitesparse" RUSTFLAGS="-C linker-features=-lld"'
-          CIBW_ENVIRONMENT_MACOS: 'PATH="$PATH:$HOME/.cargo/bin" MACOSX_DEPLOYMENT_TARGET=14.0 MATURIN_PEP517_ARGS="--features diffsol-llvm17"'
+          CIBW_ENVIRONMENT_LINUX: 'PATH="$PATH:$HOME/.cargo/bin" MATURIN_PEP517_ARGS="--features diffsol-llvm21 --features suitesparse" RUSTFLAGS="-C linker-features=-lld"'
+          CIBW_ENVIRONMENT_MACOS: 'PATH="$PATH:$HOME/.cargo/bin" MACOSX_DEPLOYMENT_TARGET=14.0 MATURIN_PEP517_ARGS="--features diffsol-llvm21"'
           CIBW_ENVIRONMENT_WINDOWS: 'PATH="$PATH:$HOME/.cargo/bin" MATURIN_PEP517_ARGS="--features diffsol-cranelift"'
           CIBW_SKIP: "*-win32 *-musllinux_*"
       - name: Upload wheels
