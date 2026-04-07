@@ -20,19 +20,20 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+    "docutils",
+    "json5",
+    "markdown-it-py",
     "matplotlib",
     "pytest",
-    "json5",
-    "docutils",
-    "markdown-it-py",
+    "tomli"
 ]
 bench = [
-    "diffrax",
     "casadi",
+    "diffrax",
+    "jax<0.7.0",
+    "matplotlib",
     "numpy",
     "pandas",
-    "matplotlib",
-    "jax<0.7.0",
 ]
 
 [tool.maturin]
