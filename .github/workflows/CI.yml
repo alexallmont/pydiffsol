@@ -66,7 +66,7 @@ jobs:
           set -e
           python3 -m venv .venv
           source $ACTIVATE
-          pip install "$(echo ./wheelhouse/pydiffsol-*.whl)[dev,bench]" # Explicit local whl avoids falling back to PyPI
+          pip install "$(echo ./wheelhouse/*cp314*.whl)[dev,bench]" # Explicit local whl avoids falling back to PyPI
           pytest -s -v $PYTEST_DIRS
 
   sdist:
