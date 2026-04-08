@@ -39,6 +39,7 @@ fn is_sens_available() -> bool {
 
 #[pyfunction]
 fn diffsol_version() -> String {
+    // Compile-time baked version from rustc-env via build.rs
     option_env!("PYDIFFSOL_DIFFSOL_VERSION")
         .unwrap_or("unknown")
         .to_string()
@@ -46,6 +47,7 @@ fn diffsol_version() -> String {
 
 #[pyfunction]
 fn diffsl_version() -> String {
+    // Compile-time baked version from rustc-env via build.rs
     option_env!("PYDIFFSOL_DIFFSL_VERSION")
         .unwrap_or("unknown")
         .to_string()
