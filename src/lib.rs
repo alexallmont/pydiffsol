@@ -37,6 +37,22 @@ fn is_sens_available() -> bool {
     cfg!(not(target_os = "windows"))
 }
 
+#[pyfunction]
+fn diffsol_version() -> String {
+    // Compile-time baked version from rustc-env via build.rs
+    option_env!("PYDIFFSOL_DIFFSOL_VERSION")
+        .unwrap_or("unknown")
+        .to_string()
+}
+
+#[pyfunction]
+fn diffsl_version() -> String {
+    // Compile-time baked version from rustc-env via build.rs
+    option_env!("PYDIFFSOL_DIFFSL_VERSION")
+        .unwrap_or("unknown")
+        .to_string()
+}
+
 #[pymodule]
 fn pydiffsol(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Register all Python API classes
@@ -66,6 +82,9 @@ fn pydiffsol(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // General utility methods
     m.add_function(wrap_pyfunction!(version, m)?)?;
     m.add_function(wrap_pyfunction!(is_klu_available, m)?)?;
+    m.add_function(wrap_pyfunction!(is_sens_available, m)?)?;
+    m.add_function(wrap_pyfunction!(diffsol_version, m)?)?;
+    m.add_function(wrap_pyfunction!(diffsl_version, m)?)?;
 
     pyo3_log::init();
 
