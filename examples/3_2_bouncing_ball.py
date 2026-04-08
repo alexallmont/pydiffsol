@@ -24,7 +24,7 @@ def solve():
             -g,
         }
         stop {
-            x,
+            x,          // stop when height x reaches zero
         }
         """,
         matrix_type=ds.nalgebra_dense,
