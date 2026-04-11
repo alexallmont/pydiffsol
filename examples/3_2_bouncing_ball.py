@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pydiffsol as ds
-from _common import select_jit_backend
 
 
 def solve():
@@ -30,7 +29,6 @@ def solve():
             -e * v,
         }
         """,
-        jit_backend=select_jit_backend(),
         matrix_type=ds.nalgebra_dense,
         ode_solver=ds.tsit45,
         linear_solver=ds.lu,

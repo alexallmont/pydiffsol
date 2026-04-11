@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import pydiffsol as ds
-from _common import select_jit_backend
 
 def solve():
     ode = ds.Ode(
@@ -36,7 +35,6 @@ def solve():
         """,
         # Note that faer_sparse may be a better choice than nalgebra_dense for
         # larger systems because the RHS Jacobian will mostly be zeroes.
-        jit_backend=select_jit_backend(),
         matrix_type=ds.nalgebra_dense,
     )
     params = np.array([])
