@@ -23,7 +23,7 @@ velocity \\(v = dx/dt\\), we write:
 
 with initial conditions \\(x(0)=h\\), \\(v(0)=0\\).
 
-At each ground contact, we apply a discrete reset:
+At each ground contact, we would ideally apply a discrete reset:
 
 .. math::
 
@@ -32,11 +32,8 @@ At each ground contact, we apply a discrete reset:
 where \\(e\\) is the coefficient of restitution.
 
 In DiffSL we define an event (root) function ``stop { x }`` so integration
-halts when \\(x = 0\\). In this pydiffsol example, we:
-
-1. call ``ode.solve_dense(...)`` on a fine grid from the current time to final time
-2. if an event occurred, update ``solution.current_state`` with the bounce rule
-3. continue solving from that updated state
+halts when \\(x = 0\\). This Python example therefore plots the trajectory up to
+the first impact using the current ``diffsol-c``-aligned API surface.
 
 .. literalinclude:: ../../examples/3_2_bouncing_ball.py
   :encoding: latin-1

@@ -31,10 +31,8 @@ We use:
 - \\(CL = 100\\) mL/h
 - \\(Q_{p1} = 50\\) mL/h
 
-Bolus doses of 1000 ng are applied at 0, 6, 12, and 18 hours. In this Python
-version, each bolus event is implemented by updating ``solution.current_state``
-for the central compartment before continuing the solve. The example uses
-``ode.solve(...)`` segment-by-segment between dose times.
+This Python version keeps the example aligned with the current ``diffsol-c``
+API by solving a single initial bolus dose over a 24 hour window.
 
 .. literalinclude:: ../../examples/3_1_compartmental_models_of_drug_delivery.py
   :encoding: latin-1

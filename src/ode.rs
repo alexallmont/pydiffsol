@@ -1,387 +1,285 @@
-// Ode Python class, this wraps up a diffsol Problem class
-
-use std::sync::{Arc, Mutex};
-
-use numpy::PyReadonlyArray1;
-use pyo3::{exceptions::PyRuntimeError, prelude::*};
+use numpy::{PyReadonlyArray1, PyReadonlyArray2};
+use pyo3::{prelude::*, PyAny};
 
 use crate::{
     error::PyDiffsolError,
+    host_array::{
+        host_array_to_py, pyarray1_to_host, pyarray2_to_host_f64, pyarray2_to_owned_f32_host,
+    },
+    jit::JitBackendType,
+    linear_solver_type::LinearSolverType,
     matrix_type::MatrixType,
+    ode_solver_type::OdeSolverType,
     options_ic::InitialConditionSolverOptions,
     options_ode::OdeSolverOptions,
-    py_solution::PySolution,
-    py_solve::{py_solve_factory, PySolve},
-    py_types::{PyReadonlyUntypedArray2, PyUntypedArray1},
     scalar_type::ScalarType,
     solution::SolutionWrapper,
-    solver_method::SolverMethod,
-    solver_type::SolverType,
 };
-
-#[pyclass]
-pub(crate) struct Ode {
-    code: String,
-    linear_solver: SolverType,
-    method: SolverMethod,
-    pub(crate) py_solve: Box<dyn PySolve>,
-}
-unsafe impl Send for Ode {}
-unsafe impl Sync for Ode {}
 
 #[pyclass]
 #[pyo3(name = "Ode")]
 #[derive(Clone)]
-pub struct OdeWrapper(Arc<Mutex<Ode>>);
-
-type SolveCallResult = Result<Box<dyn PySolution>, (PyDiffsolError, Option<Box<dyn PySolution>>)>;
+pub struct OdeWrapper(diffsol_c::OdeWrapper);
 
 impl OdeWrapper {
-    fn guard(&self) -> PyResult<std::sync::MutexGuard<'_, Ode>> {
-        self.0
-            .lock()
-            .map_err(|_| PyRuntimeError::new_err("Ode mutex poisoned"))
-    }
-
-    fn run_solve_call<F>(
-        py_solve: &mut dyn PySolve,
-        solution: Option<SolutionWrapper>,
-        solve_call: F,
-    ) -> Result<SolutionWrapper, PyDiffsolError>
-    where
-        F: FnOnce(&mut dyn PySolve, Option<Box<dyn PySolution>>) -> SolveCallResult,
-    {
-        if let Some(solution) = solution {
-            let old_solution = solution.take_py_solution()?;
-            match solve_call(py_solve, Some(old_solution)) {
-                Ok(py_solution) => Ok(SolutionWrapper::new(py_solution)),
-                Err((err, maybe_old_solution)) => {
-                    if let Some(old_solution) = maybe_old_solution {
-                        solution.replace_py_solution(old_solution)?;
-                    }
-                    Err(err)
-                }
-            }
-        } else {
-            let py_solution = solve_call(py_solve, None).map_err(|(err, _)| err)?;
-            Ok(SolutionWrapper::new(py_solution))
+    fn resolve_jit_backend(
+        jit_backend: Option<JitBackendType>,
+    ) -> Result<diffsol_c::JitBackendType, PyDiffsolError> {
+        match jit_backend {
+            Some(jit_backend) => Ok(jit_backend.into()),
+            None => diffsol_c::default_enabled_jit_backend().ok_or_else(|| {
+                PyDiffsolError::Conversion(
+                    "No default JIT backend is available; pass jit_backend explicitly".to_string(),
+                )
+            }),
         }
     }
 }
 
 #[pymethods]
 impl OdeWrapper {
-    /// Construct an ODE solver for specified diffsol using a given matrix type.
-    /// The code is JIT-compiled immediately based on the matrix type, so after
-    /// construction, both code and matrix_type fields are read-only.
-    /// All other fields are editable, for example setting the solver type or
-    /// method, or changing solver tolerances.
     #[new]
-    #[pyo3(signature=(code, matrix_type=MatrixType::NalgebraDense, scalar_type=ScalarType::F64, method=SolverMethod::Bdf, linear_solver=SolverType::Default))]
+    #[pyo3(signature=(code, jit_backend=None, scalar_type=ScalarType::F64, matrix_type=MatrixType::NalgebraDense, linear_solver=LinearSolverType::Default, ode_solver=OdeSolverType::Bdf))]
     fn new(
         code: &str,
-        matrix_type: MatrixType,
+        jit_backend: Option<JitBackendType>,
         scalar_type: ScalarType,
-        method: SolverMethod,
-        linear_solver: SolverType,
+        matrix_type: MatrixType,
+        linear_solver: LinearSolverType,
+        ode_solver: OdeSolverType,
     ) -> Result<Self, PyDiffsolError> {
-        let py_solve = py_solve_factory(code, matrix_type, scalar_type)?;
-        py_solve.check(linear_solver)?;
-        Ok(OdeWrapper(Arc::new(Mutex::new(Ode {
-            code: code.to_string(),
-            py_solve,
-            method,
-            linear_solver,
-        }))))
+        let inner = diffsol_c::OdeWrapper::new_jit(
+            code,
+            Self::resolve_jit_backend(jit_backend)?,
+            scalar_type.into(),
+            matrix_type.into(),
+            linear_solver.into(),
+            ode_solver.into(),
+        )?;
+        Ok(Self(inner))
     }
 
-    /// Matrix type used in the ODE solver. This is fixed after construction.
     #[getter]
-    fn get_matrix_type(&self) -> PyResult<MatrixType> {
-        Ok(self.guard()?.py_solve.matrix_type())
+    fn get_matrix_type(&self) -> Result<MatrixType, PyDiffsolError> {
+        Ok(self.0.get_matrix_type()?.into())
     }
 
-    /// Ode solver method, default Bdf (backward differentiation formula).
     #[getter]
-    fn get_method(&self) -> PyResult<SolverMethod> {
-        Ok(self.guard()?.method)
+    fn get_scalar_type(&self) -> Result<ScalarType, PyDiffsolError> {
+        Ok(self.0.get_scalar_type()?.into())
+    }
+
+    #[getter]
+    fn get_jit_backend(&self) -> Result<Option<JitBackendType>, PyDiffsolError> {
+        Ok(self.0.get_jit_backend()?.map(Into::into))
+    }
+
+    #[getter]
+    fn get_ode_solver(&self) -> Result<OdeSolverType, PyDiffsolError> {
+        Ok(self.0.get_ode_solver()?.into())
     }
 
     #[setter]
-    fn set_method(&self, value: SolverMethod) -> PyResult<()> {
-        self.guard()?.method = value;
+    fn set_ode_solver(&self, value: OdeSolverType) -> Result<(), PyDiffsolError> {
+        self.0.set_ode_solver(value.into())?;
         Ok(())
     }
 
-    /// Linear solver type used in the ODE solver. Set to default to use the
-    /// solver's default choice, which is typically an LU solver.
     #[getter]
-    fn get_linear_solver(&self) -> PyResult<SolverType> {
-        Ok(self.guard()?.linear_solver)
+    fn get_linear_solver(&self) -> Result<LinearSolverType, PyDiffsolError> {
+        Ok(self.0.get_linear_solver()?.into())
     }
 
     #[setter]
-    fn set_linear_solver(&self, value: SolverType) -> PyResult<()> {
-        self.guard()?.py_solve.check(value)?;
-        self.guard()?.linear_solver = value;
+    fn set_linear_solver(&self, value: LinearSolverType) -> Result<(), PyDiffsolError> {
+        self.0.set_linear_solver(value.into())?;
         Ok(())
     }
 
-    /// Relative tolerance for the solver, default 1e-6. Governs the error relative to the solution size.
     #[getter]
-    fn get_rtol(&self) -> PyResult<f64> {
-        Ok(self.guard()?.py_solve.rtol())
+    fn get_rtol(&self) -> Result<f64, PyDiffsolError> {
+        Ok(self.0.get_rtol()?)
     }
 
     #[setter]
-    fn set_rtol(&self, value: f64) -> PyResult<()> {
-        self.guard()?.py_solve.set_rtol(value);
+    fn set_rtol(&self, value: f64) -> Result<(), PyDiffsolError> {
+        self.0.set_rtol(value)?;
         Ok(())
     }
 
-    /// Absolute tolerance for the solver, default 1e-6. Governs the error as the solution goes to zero.
     #[getter]
-    fn get_atol(&self) -> PyResult<f64> {
-        Ok(self.guard()?.py_solve.atol())
+    fn get_atol(&self) -> Result<f64, PyDiffsolError> {
+        Ok(self.0.get_atol()?)
     }
 
     #[setter]
-    fn set_atol(&self, value: f64) -> PyResult<()> {
-        self.guard()?.py_solve.set_atol(value);
+    fn set_atol(&self, value: f64) -> Result<(), PyDiffsolError> {
+        self.0.set_atol(value)?;
         Ok(())
     }
 
-    /// Get the DiffSl compiled to generate this ODE
     #[getter]
-    fn get_code(&self) -> PyResult<String> {
-        Ok(self.guard()?.code.clone())
+    fn get_code(&self) -> Result<String, PyDiffsolError> {
+        Ok(self.0.get_code()?)
+    }
+
+    #[getter]
+    fn get_nparams(&self) -> Result<usize, PyDiffsolError> {
+        Ok(self.0.get_nparams()?)
+    }
+
+    #[getter]
+    fn get_nstates(&self) -> Result<usize, PyDiffsolError> {
+        Ok(self.0.get_nstates()?)
+    }
+
+    #[getter]
+    fn get_nout(&self) -> Result<usize, PyDiffsolError> {
+        Ok(self.0.get_nout()?)
+    }
+
+    fn has_stop(&self) -> Result<bool, PyDiffsolError> {
+        Ok(self.0.has_stop()?)
     }
 
     #[getter]
     fn get_ic_options(&self) -> InitialConditionSolverOptions {
-        InitialConditionSolverOptions::new(self.0.clone())
+        InitialConditionSolverOptions::new(self.0.get_ic_options())
     }
 
     #[getter]
     fn get_options(&self) -> OdeSolverOptions {
-        OdeSolverOptions::new(self.0.clone())
+        OdeSolverOptions::new(self.0.get_options())
     }
 
-    /// Get the initial condition vector y0 as a 1D numpy array.
     fn y0<'py>(
-        slf: PyRefMut<'py, Self>,
+        &self,
+        py: Python<'py>,
         params: PyReadonlyArray1<'py, f64>,
-    ) -> Result<Bound<'py, PyUntypedArray1>, PyDiffsolError> {
-        let mut self_guard = slf.0.lock().unwrap();
-        self_guard.py_solve.y0(slf.py(), params.as_slice().unwrap())
+    ) -> Result<Bound<'py, PyAny>, PyDiffsolError> {
+        host_array_to_py(py, self.0.y0(pyarray1_to_host(params)?)?)
     }
 
-    /// Get the number of parameters expected by the diffsl code.
-    #[getter]
-    fn get_nparams<'py>(slf: PyRefMut<'py, Self>) -> usize {
-        let self_guard = slf.0.lock().unwrap();
-        self_guard.py_solve.nparams()
-    }
-
-    /// Get the number of states in the ODE system.
-    #[getter]
-    fn get_nstates<'py>(slf: PyRefMut<'py, Self>) -> usize {
-        let self_guard = slf.0.lock().unwrap();
-        self_guard.py_solve.nstates()
-    }
-
-    /// Get the number of outputs in the ODE system,
-    /// if there is no out tensor, this is the number of states.
-    #[getter]
-    fn get_nout<'py>(slf: PyRefMut<'py, Self>) -> usize {
-        let self_guard = slf.0.lock().unwrap();
-        self_guard.py_solve.nout()
-    }
-
-    /// Check if the diffsl code has a stop event defined.
-    fn has_stop<'py>(slf: PyRefMut<'py, Self>) -> bool {
-        let self_guard = slf.0.lock().unwrap();
-        self_guard.py_solve.has_stop()
-    }
-
-    /// evaluate the right-hand side function at time `t` and state `y`.
     fn rhs<'py>(
-        slf: PyRefMut<'py, Self>,
+        &self,
+        py: Python<'py>,
         params: PyReadonlyArray1<'py, f64>,
         t: f64,
         y: PyReadonlyArray1<'py, f64>,
-    ) -> Result<Bound<'py, PyUntypedArray1>, PyDiffsolError> {
-        let mut self_guard = slf.0.lock().unwrap();
-        self_guard.py_solve.rhs(
-            slf.py(),
-            params.as_slice().unwrap(),
-            t,
-            y.as_slice().unwrap(),
+    ) -> Result<Bound<'py, PyAny>, PyDiffsolError> {
+        host_array_to_py(
+            py,
+            self.0
+                .rhs(pyarray1_to_host(params)?, t, pyarray1_to_host(y)?)?,
         )
     }
 
-    /// evaluate the right-hand side Jacobian-vector product `Jv`` at time `t` and state `y`.
     fn rhs_jac_mul<'py>(
-        slf: PyRefMut<'py, Self>,
+        &self,
+        py: Python<'py>,
         params: PyReadonlyArray1<'py, f64>,
         t: f64,
         y: PyReadonlyArray1<'py, f64>,
         v: PyReadonlyArray1<'py, f64>,
-    ) -> Result<Bound<'py, PyUntypedArray1>, PyDiffsolError> {
-        let mut self_guard = slf.0.lock().unwrap();
-        self_guard.py_solve.rhs_jac_mul(
-            slf.py(),
-            params.as_slice().unwrap(),
-            t,
-            y.as_slice().unwrap(),
-            v.as_slice().unwrap(),
+    ) -> Result<Bound<'py, PyAny>, PyDiffsolError> {
+        host_array_to_py(
+            py,
+            self.0.rhs_jac_mul(
+                pyarray1_to_host(params)?,
+                t,
+                pyarray1_to_host(y)?,
+                pyarray1_to_host(v)?,
+            )?,
         )
     }
 
-    /// Using the provided state, solve the problem up to time `final_time`.
-    ///
-    /// The number of params must match the expected params in the diffsl code.
-    ///
-    /// :param params: 1D array of solver parameters
-    /// :type params: numpy.ndarray
-    /// :param final_time: end time of solver
-    /// :type final_time: float
-    /// :param solution: optional existing solution object to continue from; if provided, it is consumed and the appended result is returned as a new Solution
-    /// :type solution: Solution, optional
-    /// :return: `Solution` object with fields `ys` and `ts`
-    /// :rtype: Solution
-    ///
-    /// Example:
-    ///     >>> print(ode.solve(np.array([]), 0.5))
-    #[allow(clippy::type_complexity)]
-    #[pyo3(signature=(params, final_time, solution=None))]
-    fn solve<'py>(
-        slf: PyRefMut<'py, Self>,
-        params: PyReadonlyArray1<'py, f64>,
+    fn solve(
+        &self,
+        params: PyReadonlyArray1<'_, f64>,
         final_time: f64,
-        solution: Option<SolutionWrapper>,
     ) -> Result<SolutionWrapper, PyDiffsolError> {
-        let mut self_guard = slf.0.lock().unwrap();
-        let params_array = params.as_array();
-        let params = params_array.as_slice().unwrap();
-
-        let linear_solver = self_guard.linear_solver;
-        let method = self_guard.method;
-        Self::run_solve_call(
-            &mut *self_guard.py_solve,
-            solution,
-            |py_solve, py_solution| {
-                py_solve.solve(method, linear_solver, params, final_time, py_solution)
-            },
-        )
+        Ok(SolutionWrapper::new(
+            self.0.solve(pyarray1_to_host(params)?, final_time)?,
+        ))
     }
 
-    /// Using the provided state, solve the problem up to time
-    /// `t_eval[t_eval.len()-1]`. Returns a `Solution` object with values at
-    /// timepoints given by `t_eval`.
-    ///
-    /// The number of params must match the expected params in the diffsl code.
-    ///
-    /// :param params: 1D array of solver parameters
-    /// :type params: numpy.ndarray
-    /// :param t_eval: 1D array of solver times
-    /// :type params: numpy.ndarray
-    /// :param solution: optional existing solution object to continue from; if provided, it is consumed and the appended result is returned as a new Solution
-    /// :type solution: Solution, optional
-    /// :return: `Solution` object with fields `ys` and `ts`
-    /// :rtype: Solution
-    #[pyo3(signature=(params, t_eval, solution=None))]
-    fn solve_dense<'py>(
-        slf: PyRefMut<'py, Self>,
-        params: PyReadonlyArray1<'py, f64>,
-        t_eval: PyReadonlyArray1<'py, f64>,
-        solution: Option<SolutionWrapper>,
+    fn solve_hybrid(
+        &self,
+        params: PyReadonlyArray1<'_, f64>,
+        final_time: f64,
     ) -> Result<SolutionWrapper, PyDiffsolError> {
-        let mut self_guard = slf.0.lock().unwrap();
-        let params_array = params.as_array();
-        let params = params_array.as_slice().unwrap();
-        let t_eval_array = t_eval.as_array();
-        let t_eval = t_eval_array.as_slice().unwrap();
-
-        let linear_solver = self_guard.linear_solver;
-        let method = self_guard.method;
-        Self::run_solve_call(
-            &mut *self_guard.py_solve,
-            solution,
-            |py_solve, py_solution| {
-                py_solve.solve_dense(method, linear_solver, params, t_eval, py_solution)
-            },
-        )
+        Ok(SolutionWrapper::new(
+            self.0.solve_hybrid(pyarray1_to_host(params)?, final_time)?,
+        ))
     }
 
-    /// Using the provided state, solve the problem up to time `t_eval[t_eval.len()-1]`.
-    /// Returns a `Solution` object with values at `t_eval` and sensitivity arrays
-    /// at the same timepoints.
-    /// The number of params must match the expected params in the diffsl code.
-    ///
-    /// :param params: 1D array of solver parameters
-    /// :type params: numpy.ndarray
-    /// :param t_eval: 1D array of solver times
-    /// :type params: numpy.ndarray
-    /// :param solution: optional existing solution object to continue from; if provided, it is consumed and the appended result is returned as a new Solution
-    /// :type solution: Solution, optional
-    /// :return: `Solution` object with fields `ys`, `ts`, and `sens`
-    /// :rtype: Solution
-    #[allow(clippy::type_complexity)]
-    #[pyo3(signature=(params, t_eval, solution=None))]
-    fn solve_fwd_sens<'py>(
-        slf: PyRefMut<'py, Self>,
-        params: PyReadonlyArray1<'py, f64>,
-        t_eval: PyReadonlyArray1<'py, f64>,
-        solution: Option<SolutionWrapper>,
+    fn solve_dense(
+        &self,
+        params: PyReadonlyArray1<'_, f64>,
+        t_eval: PyReadonlyArray1<'_, f64>,
     ) -> Result<SolutionWrapper, PyDiffsolError> {
-        let mut self_guard = slf.0.lock().unwrap();
-        let params_array = params.as_array();
-        let params = params_array.as_slice().unwrap();
-        let t_eval_array = t_eval.as_array();
-        let t_eval = t_eval_array.as_slice().unwrap();
-
-        let linear_solver = self_guard.linear_solver;
-        let method = self_guard.method;
-        Self::run_solve_call(
-            &mut *self_guard.py_solve,
-            solution,
-            |py_solve, py_solution| {
-                py_solve.solve_fwd_sens(method, linear_solver, params, t_eval, py_solution)
-            },
-        )
+        Ok(SolutionWrapper::new(self.0.solve_dense(
+            pyarray1_to_host(params)?,
+            pyarray1_to_host(t_eval)?,
+        )?))
     }
 
-    /// Using the provided state, solve the adjoint problem for the sum of squares
-    /// objective given data at timepoints `t_eval`.
-    /// Returns the objective value and a list of 1D arrays of adjoint sensitivities
-    /// for each parameter.
-    #[allow(clippy::type_complexity)]
-    #[pyo3(signature=(params, data, t_eval))]
+    fn solve_hybrid_dense(
+        &self,
+        params: PyReadonlyArray1<'_, f64>,
+        t_eval: PyReadonlyArray1<'_, f64>,
+    ) -> Result<SolutionWrapper, PyDiffsolError> {
+        Ok(SolutionWrapper::new(self.0.solve_hybrid_dense(
+            pyarray1_to_host(params)?,
+            pyarray1_to_host(t_eval)?,
+        )?))
+    }
+
+    fn solve_fwd_sens(
+        &self,
+        params: PyReadonlyArray1<'_, f64>,
+        t_eval: PyReadonlyArray1<'_, f64>,
+    ) -> Result<SolutionWrapper, PyDiffsolError> {
+        Ok(SolutionWrapper::new(self.0.solve_fwd_sens(
+            pyarray1_to_host(params)?,
+            pyarray1_to_host(t_eval)?,
+        )?))
+    }
+
+    fn solve_hybrid_fwd_sens(
+        &self,
+        params: PyReadonlyArray1<'_, f64>,
+        t_eval: PyReadonlyArray1<'_, f64>,
+    ) -> Result<SolutionWrapper, PyDiffsolError> {
+        Ok(SolutionWrapper::new(self.0.solve_hybrid_fwd_sens(
+            pyarray1_to_host(params)?,
+            pyarray1_to_host(t_eval)?,
+        )?))
+    }
+
     fn solve_sum_squares_adj<'py>(
-        slf: PyRefMut<'py, Self>,
+        &self,
+        py: Python<'py>,
         params: PyReadonlyArray1<'py, f64>,
-        data: Bound<'py, PyReadonlyUntypedArray2>,
+        data: PyReadonlyArray2<'py, f64>,
         t_eval: PyReadonlyArray1<'py, f64>,
-    ) -> Result<(f64, Bound<'py, PyUntypedArray1>), PyDiffsolError> {
-        let mut self_guard = slf.0.lock().unwrap();
-        let params_array = params.as_array();
-        let params = params_array.as_slice().unwrap();
-        let t_eval_array = t_eval.as_array();
-        let t_eval = t_eval_array.as_slice().unwrap();
-
-        let linear_solver = self_guard.linear_solver;
-        let method = self_guard.method;
-
-        self_guard.py_solve.solve_sum_squares_adj(
-            slf.py(),
-            method,
-            linear_solver,
-            method,
-            linear_solver,
-            params,
-            data,
-            t_eval,
-        )
+    ) -> Result<(f64, Bound<'py, PyAny>), PyDiffsolError> {
+        let scalar_type: ScalarType = self.0.get_scalar_type()?.into();
+        let (value, sens) = match scalar_type {
+            ScalarType::F32 => {
+                let (_owned_data, data_host) = pyarray2_to_owned_f32_host(data)?;
+                self.0.solve_sum_squares_adj(
+                    pyarray1_to_host(params)?,
+                    data_host,
+                    pyarray1_to_host(t_eval)?,
+                )?
+            }
+            ScalarType::F64 => self.0.solve_sum_squares_adj(
+                pyarray1_to_host(params)?,
+                pyarray2_to_host_f64(data)?,
+                pyarray1_to_host(t_eval)?,
+            )?,
+        };
+        Ok((value, host_array_to_py(py, sens)?))
     }
 }

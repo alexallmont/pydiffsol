@@ -15,7 +15,7 @@ def solve():
             -k/m * x - c/m * v,
         }
         """,
-        ds.nalgebra_dense,
+        matrix_type=ds.nalgebra_dense,
     )
 
     params = np.array([])
