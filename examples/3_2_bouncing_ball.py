@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import pydiffsol as ds
 from _common import select_jit_backend
 
+
 def solve():
     final_time = 10.0
 
@@ -11,6 +12,7 @@ def solve():
         in_i {
             g = 9.81,
             h = 10.0,
+            e = 0.8,
         }
         u_i {
             x = h,
@@ -20,8 +22,12 @@ def solve():
             v,
             -g,
         }
-        stop {
+        stop_i {
             x,
+        }
+        reset_i {
+            1e-12,
+            -e * v,
         }
         """,
         jit_backend=select_jit_backend(),
@@ -30,9 +36,9 @@ def solve():
         linear_solver=ds.lu,
     )
 
-    params = np.array([9.81, 10.0])
+    params = np.array([9.81, 10.0, 0.8])
     t_eval = np.linspace(0.0, final_time, 200)
-    solution = ode.solve_dense(params, t_eval)
+    solution = ode.solve_hybrid_dense(params, t_eval)
 
     ts = solution.ts
     x, v = solution.ys
@@ -44,6 +50,7 @@ def solve():
     ax.set_ylabel("state")
     ax.legend()
     fig.savefig("docs/images/bouncing_ball.svg")
+
 
 if __name__ == "__main__":
     solve()
