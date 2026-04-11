@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pydiffsol as ds
+from _common import select_jit_backend
 
 def solve():
     ode = ds.Ode(
@@ -21,27 +22,15 @@ def solve():
             Qp1 * (qc / Vc - qp1 / Vp1),
         }
         """,
+        jit_backend=select_jit_backend(),
         matrix_type=ds.nalgebra_dense,
-        method=ds.tsit45,
+        ode_solver=ds.tsit45,
         linear_solver=ds.lu,
     )
 
     # [Vc, Vp1, CL, Qp1, dose0]
     params = np.array([1000.0, 1000.0, 100.0, 50.0, 1000.0])
-    # (time [h], bolus amount [ng])
-    doses = [(0.0, 1000.0), (6.0, 1000.0), (12.0, 1000.0), (18.0, 1000.0)]
-    final_time = 24.0
-
-    solution = None
-    for i, (_t_dose, dose) in enumerate(doses):
-        if solution:
-            # Apply bolus directly to the central compartment.
-            y = solution.current_state
-            y[0] += dose
-            solution.current_state = y
-
-        next_t = doses[i + 1][0] if i + 1 < len(doses) else final_time
-        solution = ode.solve(params, next_t, solution=solution)
+    solution = ode.solve(params, 24.0)
 
     ts = solution.ts
     q_c, q_p1 = solution.ys

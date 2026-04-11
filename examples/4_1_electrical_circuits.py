@@ -1,6 +1,7 @@
 import pydiffsol as ds
 import numpy as np
 import matplotlib.pyplot as plt
+from _common import select_jit_backend
 
 def solve():
     ode = ds.Ode(
@@ -35,7 +36,8 @@ def solve():
             iR,
         }
         """,
-        ds.nalgebra_dense
+        jit_backend=select_jit_backend(),
+        matrix_type=ds.nalgebra_dense,
     )
 
     params = np.array([])

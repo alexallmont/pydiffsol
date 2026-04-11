@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pydiffsol as ds
+from _common import select_jit_backend
 
 def solve():
     ode = ds.Ode(
@@ -15,7 +16,8 @@ def solve():
             -k/m * x - c/m * v,
         }
         """,
-        ds.nalgebra_dense,
+        jit_backend=select_jit_backend(),
+        matrix_type=ds.nalgebra_dense,
     )
 
     params = np.array([])

@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pydiffsol as ds
+from _common import select_jit_backend
 
 def phase_plane():
     ode = ds.Ode(
@@ -16,9 +17,10 @@ def phase_plane():
             c * y1 * y2 - d * y2,
         }
         """,
+        jit_backend=select_jit_backend(),
         matrix_type=ds.nalgebra_dense,
         linear_solver=ds.lu,
-        method=ds.bdf,
+        ode_solver=ds.bdf,
     )
 
     ode.rtol = 1e-6

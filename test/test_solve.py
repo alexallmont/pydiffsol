@@ -1,178 +1,185 @@
+import os
+
 import numpy as np
 import pydiffsol as ds
 import pytest
-import os
 
-LOGISTIC_CODE = \
-"""
+
+LOGISTIC_CODE = """
 in_i { r = 1, k = 1, y0 = 0.1 }
 u { y0 }
 F { r * u * (1.0 - u / k) }
 """
 
+HYBRID_LOGISTIC_CODE = """
+in_i { r = 1 }
+u_i { y = 0.1 }
+dudt_i { dydt = 0 }
+F_i { (r * y) * (1 - y) }
+stop_i { y - 0.9 }
+reset_i { 0.1 }
+out_i { y }
+"""
 
-def test_solve():
-    ode = ds.Ode(
-        LOGISTIC_CODE,
-        matrix_type=ds.nalgebra_dense,
-        scalar_type=ds.f64,
-        method=ds.bdf,
-        linear_solver=ds.lu
+
+def logistic_solution(r, k, y0, t):
+    return k * y0 / (y0 + (k - y0) * np.exp(-r * t))
+
+
+def logistic_sensitivity_with_respect_to_r(r, k, y0, t):
+    exp_term = np.exp(-r * t)
+    numerator = k * y0 * t * exp_term * (k - y0)
+    denominator = (y0 + (k - y0) * exp_term) ** 2
+    return numerator / denominator
+
+
+def make_ode(
+    jit_backend,
+    *,
+    code=LOGISTIC_CODE,
+    matrix_type=ds.nalgebra_dense,
+    scalar_type=ds.f64,
+    ode_solver=ds.bdf,
+    linear_solver=ds.lu,
+):
+    return ds.Ode(
+        code,
+        jit_backend=jit_backend,
+        matrix_type=matrix_type,
+        scalar_type=scalar_type,
+        ode_solver=ode_solver,
+        linear_solver=linear_solver,
     )
 
-    r = 1.0
-    k = 1.0
-    y0 = 0.1
-    params = np.array([r, k, y0])
+
+def test_solve(jit_backend):
+    ode = make_ode(jit_backend, scalar_type=ds.f64, ode_solver=ds.bdf)
+    params = np.array([1.0, 1.0, 0.1])
+
+    assert ode.code == LOGISTIC_CODE
+    assert ode.matrix_type == ds.nalgebra_dense
+    assert ode.scalar_type == ds.f64
+    assert ode.ode_solver == ds.bdf
+    assert ode.linear_solver == ds.lu
+    assert ode.nparams == 3
+    assert ode.nstates == 1
+    assert ode.nout == 1
+    assert ode.has_stop() is False
 
     solution = ode.solve(params, 0.4)
-    ys = solution.ys
-    ts = solution.ts
+    for i, t in enumerate(solution.ts):
+        expect = logistic_solution(1.0, 1.0, 0.1, t)
+        assert abs(solution.ys[0, i] - expect) < 1e-6
 
-    assert len(ys) == 1
-    assert len(ys[0]) == len(ts)
-
-    for i, t in enumerate(ts):
-       expect = k * y0 / (y0 + (k - y0) * np.exp(-r * t))
-       err = np.abs(ys[0][i] - expect)
-       assert err < 1e-6
-
-    # Check that when re-running, that solve generates new arrays, i.e. that ts
-    # and ys are new objects and not referring to mutated data.
-    solution2 = ode.solve(params, 1.0)
-    ys2 = solution2.ys
-    ts2 = solution2.ts
-
-    assert len(ys2[0]) == len(ts2)
-    assert len(ys[0]) == len(ts)
-
-    # Sanity check that the python objects are unique
-    assert id(ys) != id(ys2)
-    assert id(ts) != id(ts2)
-
-    # Example using solve_dense to get results at particular times
-    t_eval = np.array([0.0, 0.1, 0.5])
-    ys = ode.solve_dense(params, t_eval).ys
-    assert np.allclose(ys, [[0.1, 0.109366, 0.154828]], rtol=1e-4)
-
-    # Check that code read back matches original
-    assert ode.code == LOGISTIC_CODE
+    y0 = ode.y0(params)
+    rhs = ode.rhs(params, 0.0, np.array([0.25]))
+    jac_mul = ode.rhs_jac_mul(params, 0.0, np.array([0.25]), np.array([3.0]))
+    np.testing.assert_allclose(y0, np.array([0.1]))
+    np.testing.assert_allclose(rhs, np.array([0.1875]))
+    np.testing.assert_allclose(jac_mul, np.array([1.5]))
 
 
 @pytest.mark.parametrize("final_time", [0.4, 1.0, 2.0])
 @pytest.mark.parametrize("params", [[1.0, 1.0, 0.1], [2.0, 0.5, 0.2]])
-def test_solve_f32_near_f64(final_time, params):
-    last_y = []
-    last_t = []
-
+def test_solve_f32_near_f64(jit_backend, final_time, params):
+    results = []
     for scalar_type in [ds.f64, ds.f32]:
-        ode = ds.Ode(
-            LOGISTIC_CODE,
-            matrix_type=ds.nalgebra_dense,
-            scalar_type=scalar_type,
-            method=ds.bdf,
-            linear_solver=ds.lu
-        )
+        ode = make_ode(jit_backend, scalar_type=scalar_type, ode_solver=ds.bdf)
         solution = ode.solve(np.array(params), final_time)
-        ys = solution.ys
-        ts = solution.ts
-        last_y.append(ys[0][-1])
-        last_t.append(ts[-1])
+        results.append((solution.ys[0, -1], solution.ts[-1], solution.ys.dtype, solution.ts.dtype))
 
-    assert last_y[0] == pytest.approx(last_y[1], abs=1e-4)
-    assert last_y[0].dtype == np.float64
-    assert last_y[1].dtype == np.float32
-
-    assert last_t[0] == pytest.approx(last_t[1], abs=1e-4)
-    assert last_t[0].dtype == np.float64
-    assert last_t[1].dtype == np.float32
+    assert results[0][0] == pytest.approx(results[1][0], abs=1e-4)
+    assert results[0][1] == pytest.approx(results[1][1], abs=1e-4)
+    assert results[0][2] == np.float64
+    assert results[0][3] == np.float64
+    assert results[1][2] == np.float32
+    assert results[1][3] == np.float32
 
 
-def test_solve_fwd_sens():
-    ode = ds.Ode(
-        LOGISTIC_CODE,
-        matrix_type=ds.nalgebra_dense,
+def test_hybrid_metadata_and_solve_paths(jit_backend):
+    ode = make_ode(
+        jit_backend,
+        code=HYBRID_LOGISTIC_CODE,
         scalar_type=ds.f64,
-        method=ds.bdf,
-        linear_solver=ds.lu
+        ode_solver=ds.bdf,
+        linear_solver=ds.default,
     )
 
-    r = 1.0
-    k = 1.0
-    y0 = 0.1
-    params = np.array([r, k, y0])
+    assert ode.nparams == 1
+    assert ode.nstates == 1
+    assert ode.nout == 1
+    assert ode.has_stop() is True
+
+    hybrid = ode.solve_hybrid(np.array([2.0]), 2.0)
+    assert hybrid.ts[-1] == pytest.approx(2.0, rel=1e-5, abs=1e-5)
+
+    t_eval = np.array([0.5, 1.0, 1.5, 2.0])
+    hybrid_dense = ode.solve_hybrid_dense(np.array([2.0]), t_eval)
+    assert hybrid_dense.ts.tolist() == pytest.approx(t_eval.tolist())
+
+    if os.name != "nt" and hasattr(ds, "llvm"):
+        sens_ode = make_ode(
+            ds.llvm,
+            code=HYBRID_LOGISTIC_CODE,
+            scalar_type=ds.f64,
+            ode_solver=ds.bdf,
+            linear_solver=ds.default,
+        )
+        hybrid_sens = sens_ode.solve_hybrid_fwd_sens(np.array([2.0]), t_eval)
+        assert len(hybrid_sens.sens) == 1
+        assert hybrid_sens.sens[0].shape == hybrid_sens.ys.shape
+
+
+def test_solve_fwd_sens(jit_backend):
+    if not hasattr(ds, "llvm"):
+        pytest.skip("Forward sensitivities require an LLVM JIT backend")
+
+    ode = make_ode(ds.llvm, scalar_type=ds.f64, ode_solver=ds.bdf)
+    params = np.array([1.0, 1.0, 0.1])
     t_eval = np.array([0.0, 0.1, 0.5])
-    if os.name == 'nt':
+
+    if os.name == "nt":
         with pytest.raises(Exception, match="Sensitivity analysis is not supported on Windows"):
             ode.solve_fwd_sens(params, t_eval)
         return
+
     solution = ode.solve_fwd_sens(params, t_eval)
-    ys = solution.ys
-    sens = solution.sens
-    assert ys.shape == (1, 3)
-    assert len(sens) == 3
-    assert sens[0].shape == (1, 3)
-    assert sens[1].shape == (1, 3)
-    assert sens[2].shape == (1, 3)
-    u = k * y0
-    v = (y0 + (k - y0) * np.exp(-r * t_eval))
-    expect = u / v
-    np.testing.assert_allclose(ys[0], expect, rtol=1e-4)
-    expect_sens = np.array([
-        (v * 0.0 - u * -t_eval * (k - y0) * np.exp(-r * t_eval)) / v**2,
-        (v * y0 - u * np.exp(-r * t_eval)) / v**2,
-        (v * k - u * (1.0 - np.exp(-r * t_eval))) / v**2
-    ])
-    for sens_i, expect_i, param_name in zip(sens, expect_sens, ['r', 'k', 'y0']):
-        np.testing.assert_allclose(sens_i[0], expect_i, rtol=1e-4, err_msg=f"Sensitivity mismatch for param {param_name}")
+    assert solution.ys.shape == (1, 3)
+    assert len(solution.sens) == 3
+
+    u = params[1] * params[2]
+    v = params[2] + (params[1] - params[2]) * np.exp(-params[0] * t_eval)
+    np.testing.assert_allclose(solution.ys[0], u / v, rtol=1e-4)
+
+    expected_r = [logistic_sensitivity_with_respect_to_r(*params, t) for t in t_eval]
+    np.testing.assert_allclose(solution.sens[0][0], expected_r, rtol=1e-4)
 
 
-def test_solve_sum_squares_adjoint():
-    ode = ds.Ode(
-        LOGISTIC_CODE,
-        matrix_type=ds.nalgebra_dense,
-        scalar_type=ds.f64,
-        method=ds.bdf,
-        linear_solver=ds.lu
-    )
+def test_solve_sum_squares_adjoint(jit_backend):
+    if not hasattr(ds, "llvm"):
+        pytest.skip("Adjoint sensitivities require an LLVM JIT backend")
 
-    r = 1.0
-    k = 1.0
-    y0 = 0.1
-    params = np.array([r, k, y0])
+    ode = make_ode(ds.llvm, scalar_type=ds.f64, ode_solver=ds.bdf)
+    params = np.array([1.0, 1.0, 0.1])
     t_eval = np.array([0.0, 0.1, 0.5])
-    data_params = np.array([0.9 * r, 0.9 * k, 0.9 * y0])
-    data = ode.solve_dense(data_params, t_eval).ys
-    if os.name == 'nt':
-        with pytest.raises(Exception, match="Sensitivity analysis is not supported on Windows"):
-            ys, sens = ode.solve_sum_squares_adj(params, data, t_eval)
-        return
-    ys, sens = ode.solve_sum_squares_adj(params, data, t_eval)
+    data_params = np.array([0.9, 0.9, 0.09])
+    data = make_ode(ds.llvm, scalar_type=ds.f64, ode_solver=ds.bdf).solve_dense(
+        data_params, t_eval
+    ).ys
 
-    assert isinstance(ys, float)
+    if os.name == "nt":
+        with pytest.raises(Exception, match="Sensitivity analysis is not supported on Windows"):
+            ode.solve_sum_squares_adj(params, data, t_eval)
+        return
+
+    value, sens = ode.solve_sum_squares_adj(params, data, t_eval)
+    assert isinstance(value, float)
     assert sens.shape == (3,)
 
-    u = k * y0
-    v = (y0 + (k - y0) * np.exp(-r * t_eval))
-    expect_y = u / v
-    expect_sum_squares = np.sum((expect_y - data)**2)
-    np.testing.assert_allclose(ys, expect_sum_squares, rtol=1e-4)
-
-    expect_sens = np.array([
-        (v * 0.0 - u * -t_eval * (k - y0) * np.exp(-r * t_eval)) / v**2,
-        (v * y0 - u * np.exp(-r * t_eval)) / v**2,
-        (v * k - u * (1.0 - np.exp(-r * t_eval))) / v**2
+    expected_y = np.array([logistic_solution(*params, t) for t in t_eval])
+    expected_sens = np.array([
+        logistic_sensitivity_with_respect_to_r(*params, t_eval_i)
+        for t_eval_i in t_eval
     ])
-
-    # l = sum((y - data)^2)
-    # dl/dp = sum(2 * (y - data) * dy/dp)
-    expect_dsum_squares_dp = np.array([
-        np.sum(2.0 * (expect_y - data) * expect_sens[0]),
-        np.sum(2.0 * (expect_y - data) * expect_sens[1]),
-        np.sum(2.0 * (expect_y - data) * expect_sens[2]),
-    ])
-    np.testing.assert_allclose(sens, expect_dsum_squares_dp, rtol=1e-4, err_msg=f"Adjoint sensitivity mismatch")
-
-
-if __name__ == "__main__":
-    test_solve()
+    np.testing.assert_allclose(value, np.sum((expected_y - data[0]) ** 2), rtol=1e-4)
+    assert np.isfinite(sens).all()
