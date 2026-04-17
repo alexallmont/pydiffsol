@@ -31,8 +31,8 @@ We use:
 - \\(CL = 100\\) mL/h
 - \\(Q_{p1} = 50\\) mL/h
 
-This Python version keeps the example aligned with the current ``diffsol-c``
-API by solving a single initial bolus dose over a 24 hour window.
+This Python version solves the model over a 24 hour window with multiple bolus dosing
+events applied via hybrid stop/reset callbacks.
 
 .. literalinclude:: ../../examples/3_1_compartmental_models_of_drug_delivery.py
   :encoding: latin-1
