@@ -23,7 +23,7 @@ def make_ode(jit_backend, scalar_type=ds.f64, ode_solver=ds.bdf):
 
 @pytest.mark.parametrize("scalar_type", [ds.f64, ds.f32])
 @pytest.mark.parametrize("ode_solver", [ds.bdf, ds.esdirk34, ds.tr_bdf2, ds.tsit45])
-def test_solution_exposes_read_only_arrays(jit_backend, scalar_type, ode_solver):
+def test_solution_check_dims_and_dtypes(jit_backend, scalar_type, ode_solver):
     ode = make_ode(jit_backend, scalar_type=scalar_type, ode_solver=ode_solver)
     solution = ode.solve(np.array([1.0, 1.0, 0.1]), 0.4)
 
