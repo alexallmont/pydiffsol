@@ -357,10 +357,6 @@ impl OdeWrapper {
     /// Returns the objective value and a 1D array of adjoint sensitivities
     /// for each parameter.
     ///
-    /// `data` may be a float32 or float64 NumPy array. When the ODE was
-    /// constructed with ``scalar_type=f32`` and float64 data is supplied, the
-    /// data is automatically cast to float32.
-    ///
     /// :param params: 1D array of solver parameters
     /// :type params: numpy.ndarray
     /// :param data: 2D array of observed data, shape (nout, len(t_eval)); float32 or float64
