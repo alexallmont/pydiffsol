@@ -38,6 +38,11 @@ impl OdeWrapper {
 
 #[pymethods]
 impl OdeWrapper {
+    /// Construct an ODE solver for specified diffsol using a given matrix type.
+    /// The code is JIT-compiled immediately based on the matrix type and jit_backend, 
+    /// so after construction, both code and matrix_type fields are read-only.
+    /// All other fields are editable, for example setting the solver type or
+    /// method, or changing solver tolerances.
     #[new]
     #[pyo3(signature=(code, jit_backend=None, scalar_type=ScalarType::F64, matrix_type=MatrixType::NalgebraDense, linear_solver=LinearSolverType::Default, ode_solver=OdeSolverType::Bdf))]
     fn new(
@@ -59,21 +64,25 @@ impl OdeWrapper {
         Ok(Self(inner))
     }
 
+    /// Matrix type used in the ODE solver. This is fixed after construction.
     #[getter]
     fn get_matrix_type(&self) -> Result<MatrixType, PyDiffsolError> {
         Ok(self.0.get_matrix_type()?.into())
     }
 
+    /// Scalar type used in the ODE solver. This is fixed after construction.
     #[getter]
     fn get_scalar_type(&self) -> Result<ScalarType, PyDiffsolError> {
         Ok(self.0.get_scalar_type()?.into())
     }
 
+    /// JIT backend used for compilation. This is fixed after construction.
     #[getter]
     fn get_jit_backend(&self) -> Result<Option<JitBackendType>, PyDiffsolError> {
         Ok(self.0.get_jit_backend()?.map(Into::into))
     }
 
+    /// ODE solver method, default Bdf (backward differentiation formula).
     #[getter]
     fn get_ode_solver(&self) -> Result<OdeSolverType, PyDiffsolError> {
         Ok(self.0.get_ode_solver()?.into())
@@ -85,6 +94,8 @@ impl OdeWrapper {
         Ok(())
     }
 
+    /// Linear solver type used in the ODE solver. Set to default to use the
+    /// solver's default choice, which is typically an LU solver.
     #[getter]
     fn get_linear_solver(&self) -> Result<LinearSolverType, PyDiffsolError> {
         Ok(self.0.get_linear_solver()?.into())
@@ -96,6 +107,7 @@ impl OdeWrapper {
         Ok(())
     }
 
+    /// Relative tolerance for the solver, default 1e-6. Governs the error relative to the solution size.
     #[getter]
     fn get_rtol(&self) -> Result<f64, PyDiffsolError> {
         Ok(self.0.get_rtol()?)
@@ -107,6 +119,7 @@ impl OdeWrapper {
         Ok(())
     }
 
+    /// Absolute tolerance for the solver, default 1e-6. Governs the error as the solution goes to zero.
     #[getter]
     fn get_atol(&self) -> Result<f64, PyDiffsolError> {
         Ok(self.0.get_atol()?)
@@ -118,26 +131,32 @@ impl OdeWrapper {
         Ok(())
     }
 
+    /// Get the DiffSl code used to generate this ODE.
     #[getter]
     fn get_code(&self) -> Result<String, PyDiffsolError> {
         Ok(self.0.get_code()?)
     }
 
+    /// Get the number of parameters expected by the diffsl code.
     #[getter]
     fn get_nparams(&self) -> Result<usize, PyDiffsolError> {
         Ok(self.0.get_nparams()?)
     }
 
+    /// Get the number of states in the ODE system.
     #[getter]
     fn get_nstates(&self) -> Result<usize, PyDiffsolError> {
         Ok(self.0.get_nstates()?)
     }
 
+    /// Get the number of outputs in the ODE system.
+    /// If there is no out tensor, this is the number of states.
     #[getter]
     fn get_nout(&self) -> Result<usize, PyDiffsolError> {
         Ok(self.0.get_nout()?)
     }
 
+    /// Check if the diffsl code has a stop event defined.
     fn has_stop(&self) -> Result<bool, PyDiffsolError> {
         Ok(self.0.has_stop()?)
     }
@@ -152,6 +171,7 @@ impl OdeWrapper {
         OdeSolverOptions::new(self.0.get_options())
     }
 
+    /// Get the initial condition vector y0 as a 1D numpy array.
     fn y0<'py>(
         &self,
         py: Python<'py>,
@@ -160,6 +180,7 @@ impl OdeWrapper {
         host_array_to_py(py, self.0.y0(pyarray1_to_host(params)?)?)
     }
 
+    /// Evaluate the right-hand side function at time `t` and state `y`.
     fn rhs<'py>(
         &self,
         py: Python<'py>,
@@ -174,6 +195,7 @@ impl OdeWrapper {
         )
     }
 
+    /// Evaluate the right-hand side Jacobian-vector product `Jv` at time `t` and state `y`.
     fn rhs_jac_mul<'py>(
         &self,
         py: Python<'py>,
@@ -193,6 +215,19 @@ impl OdeWrapper {
         )
     }
 
+    /// Solve the problem up to time `final_time`.
+    ///
+    /// The number of params must match the expected params in the diffsl code.
+    ///
+    /// :param params: 1D array of solver parameters
+    /// :type params: numpy.ndarray
+    /// :param final_time: end time of solver
+    /// :type final_time: float
+    /// :return: `Solution` object with fields `ys` and `ts`
+    /// :rtype: Solution
+    ///
+    /// Example:
+    ///     >>> print(ode.solve(np.array([]), 0.5))
     fn solve(
         &self,
         params: PyReadonlyArray1<'_, f64>,
@@ -203,6 +238,17 @@ impl OdeWrapper {
         ))
     }
 
+    /// Solve the problem up to time `final_time`, stopping and restarting at
+    /// each stop event defined in the diffsl code.
+    ///
+    /// The number of params must match the expected params in the diffsl code.
+    ///
+    /// :param params: 1D array of solver parameters
+    /// :type params: numpy.ndarray
+    /// :param final_time: end time of solver
+    /// :type final_time: float
+    /// :return: `Solution` object with fields `ys` and `ts`
+    /// :rtype: Solution
     fn solve_hybrid(
         &self,
         params: PyReadonlyArray1<'_, f64>,
@@ -213,6 +259,17 @@ impl OdeWrapper {
         ))
     }
 
+    /// Solve the problem up to time `t_eval[t_eval.len()-1]`.
+    /// Returns a `Solution` object with values at timepoints given by `t_eval`.
+    ///
+    /// The number of params must match the expected params in the diffsl code.
+    ///
+    /// :param params: 1D array of solver parameters
+    /// :type params: numpy.ndarray
+    /// :param t_eval: 1D array of solver times
+    /// :type t_eval: numpy.ndarray
+    /// :return: `Solution` object with fields `ys` and `ts`
+    /// :rtype: Solution
     fn solve_dense(
         &self,
         params: PyReadonlyArray1<'_, f64>,
@@ -224,6 +281,18 @@ impl OdeWrapper {
         )?))
     }
 
+    /// Solve the problem up to time `t_eval[t_eval.len()-1]`, stopping and
+    /// restarting at each stop event defined in the diffsl code.
+    /// Returns a `Solution` object with values at timepoints given by `t_eval`.
+    ///
+    /// The number of params must match the expected params in the diffsl code.
+    ///
+    /// :param params: 1D array of solver parameters
+    /// :type params: numpy.ndarray
+    /// :param t_eval: 1D array of solver times
+    /// :type t_eval: numpy.ndarray
+    /// :return: `Solution` object with fields `ys` and `ts`
+    /// :rtype: Solution
     fn solve_hybrid_dense(
         &self,
         params: PyReadonlyArray1<'_, f64>,
@@ -235,6 +304,18 @@ impl OdeWrapper {
         )?))
     }
 
+    /// Solve the problem up to time `t_eval[t_eval.len()-1]`.
+    /// Returns a `Solution` object with values at `t_eval` and sensitivity arrays
+    /// at the same timepoints.
+    ///
+    /// The number of params must match the expected params in the diffsl code.
+    ///
+    /// :param params: 1D array of solver parameters
+    /// :type params: numpy.ndarray
+    /// :param t_eval: 1D array of solver times
+    /// :type t_eval: numpy.ndarray
+    /// :return: `Solution` object with fields `ys`, `ts`, and `sens`
+    /// :rtype: Solution
     fn solve_fwd_sens(
         &self,
         params: PyReadonlyArray1<'_, f64>,
@@ -246,6 +327,19 @@ impl OdeWrapper {
         )?))
     }
 
+    /// Solve the problem up to time `t_eval[t_eval.len()-1]`, stopping and
+    /// restarting at each stop event defined in the diffsl code.
+    /// Returns a `Solution` object with values at `t_eval` and sensitivity arrays
+    /// at the same timepoints.
+    ///
+    /// The number of params must match the expected params in the diffsl code.
+    ///
+    /// :param params: 1D array of solver parameters
+    /// :type params: numpy.ndarray
+    /// :param t_eval: 1D array of solver times
+    /// :type t_eval: numpy.ndarray
+    /// :return: `Solution` object with fields `ys`, `ts`, and `sens`
+    /// :rtype: Solution
     fn solve_hybrid_fwd_sens(
         &self,
         params: PyReadonlyArray1<'_, f64>,
@@ -257,6 +351,19 @@ impl OdeWrapper {
         )?))
     }
 
+    /// Solve the adjoint problem for the sum of squares objective given data
+    /// at timepoints `t_eval`.
+    /// Returns the objective value and a 1D array of adjoint sensitivities
+    /// for each parameter.
+    ///
+    /// :param params: 1D array of solver parameters
+    /// :type params: numpy.ndarray
+    /// :param data: 2D array of observed data, shape (nout, len(t_eval))
+    /// :type data: numpy.ndarray
+    /// :param t_eval: 1D array of solver times
+    /// :type t_eval: numpy.ndarray
+    /// :return: tuple of (objective value, 1D array of sensitivities)
+    /// :rtype: tuple[float, numpy.ndarray]
     fn solve_sum_squares_adj<'py>(
         &self,
         py: Python<'py>,

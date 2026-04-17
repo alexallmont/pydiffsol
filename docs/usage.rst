@@ -20,16 +20,6 @@ Basic Usage
    import pydiffsol as ds
    import numpy as np
 
-   def select_jit_backend():
-      backend = ds.default_enabled_jit_backend()
-      if backend is not None:
-         return backend
-      if hasattr(ds, "cranelift"):
-         return ds.cranelift
-      if hasattr(ds, "llvm"):
-         return ds.llvm
-      raise RuntimeError("No JIT backend available")
-
    ode = ds.Ode(
       """
       in { r = 1.0 }
@@ -37,7 +27,6 @@ Basic Usage
       u { 0.1 }
       F { r * u * (1.0 - u / k) }
       """,
-      jit_backend=select_jit_backend(),
       matrix_type=ds.nalgebra_dense,
    )
 

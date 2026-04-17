@@ -84,10 +84,8 @@ impl JitBackendType {
         match self {
             #[cfg(feature = "diffsol-cranelift")]
             Self::Cranelift => 0,
-            #[cfg(all(feature = "diffsol-cranelift", feature = "diffsol-llvm"))]
+            #[cfg(feature = "diffsol-llvm")]
             Self::Llvm => 1,
-            #[cfg(all(not(feature = "diffsol-cranelift"), feature = "diffsol-llvm"))]
-            Self::Llvm => 0,
         }
     }
 }
