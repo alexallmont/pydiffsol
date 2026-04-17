@@ -1,5 +1,3 @@
-// Data type Python enum
-
 use pyo3::{
     exceptions::PyValueError,
     prelude::*,
@@ -17,37 +15,50 @@ pub enum ScalarType {
 }
 
 impl ScalarType {
-    pub(crate) fn all_enums() -> Vec<ScalarType> {
-        vec![ScalarType::F32, ScalarType::F64]
+    pub(crate) fn all_enums() -> Vec<Self> {
+        vec![Self::F32, Self::F64]
     }
 
     pub(crate) fn get_name(&self) -> &str {
         match self {
-            ScalarType::F32 => "f32",
-            ScalarType::F64 => "f64",
+            Self::F32 => "f32",
+            Self::F64 => "f64",
+        }
+    }
+}
+
+impl From<ScalarType> for diffsol_c::ScalarType {
+    fn from(value: ScalarType) -> Self {
+        match value {
+            ScalarType::F32 => diffsol_c::ScalarType::F32,
+            ScalarType::F64 => diffsol_c::ScalarType::F64,
+        }
+    }
+}
+
+impl From<diffsol_c::ScalarType> for ScalarType {
+    fn from(value: diffsol_c::ScalarType) -> Self {
+        match value {
+            diffsol_c::ScalarType::F32 => ScalarType::F32,
+            diffsol_c::ScalarType::F64 => ScalarType::F64,
         }
     }
 }
 
 #[pymethods]
 impl ScalarType {
-    /// Create ScalarType from string name
-    /// :param name: string representation of data type
-    /// :return: valid ScalarType or exception if name is invalid
     #[classmethod]
-    fn from_str(_cls: &Bound<'_, PyType>, name: &str) -> PyResult<Self> {
-        match name {
-            "f32" => Ok(ScalarType::F32),
-            "f64" => Ok(ScalarType::F64),
+    fn from_str(_cls: &Bound<'_, PyType>, value: &str) -> PyResult<Self> {
+        match value {
+            "f32" => Ok(Self::F32),
+            "f64" => Ok(Self::F64),
             _ => Err(PyValueError::new_err("Invalid ScalarType value")),
         }
     }
 
-    /// Get all available data types
-    /// :return: list of ScalarType
     #[classmethod]
     fn all<'py>(cls: &Bound<'py, PyType>) -> PyResult<Bound<'py, PyList>> {
-        PyList::new(cls.py(), ScalarType::all_enums())
+        PyList::new(cls.py(), Self::all_enums())
     }
 
     fn __str__(&self) -> String {
@@ -56,8 +67,8 @@ impl ScalarType {
 
     fn __hash__(&self) -> u64 {
         match self {
-            ScalarType::F32 => 0,
-            ScalarType::F64 => 1,
+            Self::F32 => 0,
+            Self::F64 => 1,
         }
     }
 }

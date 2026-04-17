@@ -18,7 +18,7 @@ def phase_plane():
         """,
         matrix_type=ds.nalgebra_dense,
         linear_solver=ds.lu,
-        method=ds.bdf,
+        ode_solver=ds.bdf,
     )
 
     ode.rtol = 1e-6
