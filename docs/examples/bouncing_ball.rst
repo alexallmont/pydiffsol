@@ -31,9 +31,11 @@ At each ground contact, we would ideally apply a discrete reset:
 
 where \\(e\\) is the coefficient of restitution.
 
-In DiffSL we define an event (root) function ``stop { x }`` so integration
-halts when \\(x = 0\\). This Python example therefore plots the trajectory up to
-the first impact using the current ``diffsol-c``-aligned API surface.
+In DiffSL we define an event (root) function ``stop_i { x }`` so integration
+halts when \\(x = 0\\). A ``reset_i`` block applies the discrete velocity reset
+\\(v^+ = -e v^-\\) at each impact. The example calls ``solve_hybrid_dense(...)``
+which automatically handles repeated bounce events throughout the integration,
+returning the full trajectory up to ``final_time``.
 
 .. literalinclude:: ../../examples/3_2_bouncing_ball.py
   :encoding: latin-1
