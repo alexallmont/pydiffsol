@@ -4,7 +4,7 @@ use pyo3::{
 };
 
 pub enum PyDiffsolError {
-    Diffsol(diffsol_c::DiffsolJsError),
+    Diffsol(diffsol_c::DiffsolRtError),
     Conversion(String),
     Python(PyErr),
 }
@@ -19,8 +19,8 @@ impl From<PyDiffsolError> for PyErr {
     }
 }
 
-impl From<diffsol_c::DiffsolJsError> for PyDiffsolError {
-    fn from(err: diffsol_c::DiffsolJsError) -> Self {
+impl From<diffsol_c::DiffsolRtError> for PyDiffsolError {
+    fn from(err: diffsol_c::DiffsolRtError) -> Self {
         PyDiffsolError::Diffsol(err)
     }
 }
