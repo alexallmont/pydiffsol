@@ -1,6 +1,6 @@
 [package]
 name = "pydiffsol"
-version = "0.4.0"
+version = "0.5.0"
 edition = "2021"
 
 [lib]
@@ -21,7 +21,7 @@ suitesparse = ["diffsol-c/suitesparse"]
 
 [dependencies]
 pyo3 = { version = "0.27.2", default-features = false, features = ["abi3-py39", "extension-module"] }
-diffsol-c = { path = "../diffsol/diffsol-c" }
+diffsol-c = { version = "0.2.0" }
 numpy = "0.27.1"
 pyo3-log = "0.13.2"
 

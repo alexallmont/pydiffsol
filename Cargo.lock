@@ -515,9 +515,9 @@ checksum = "930c7171c8df9fb1782bdf9b918ed9ed2d33d1d22300abb754f9085bc48bf8e8"
 
 [[package]]
 name = "diffsl"
-version = "0.11.0"
+version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fb46eff9f7d43f2b106a9d106b05be3546e7f3dd0deb54de83a18428be16c20d"
+checksum = "6bb1a13f8ff78eff0831a0cfd3e4509e6a64aa09920d95310e4ccd76b43fd4a3"
 dependencies = [
  "aliasable",
  "anyhow",
@@ -556,7 +556,9 @@ dependencies = [
 
 [[package]]
 name = "diffsol"
-version = "0.11.0"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5817f8c90213202e8c5dcbba84ca7fa7b792918006bd5313450cc22048cb0b10"
 dependencies = [
  "diffsl",
  "faer",
@@ -573,7 +575,9 @@ dependencies = [
 
 [[package]]
 name = "diffsol-c"
-version = "0.1.0"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "885a5ce3b72a327104dac2dba9361655b6d7214682b834809179721eafc3a927"
 dependencies = [
  "diffsl",
  "diffsol",
@@ -2015,7 +2019,7 @@ dependencies = [
 
 [[package]]
 name = "pydiffsol"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "cargo-lock",
  "diffsol-c",
