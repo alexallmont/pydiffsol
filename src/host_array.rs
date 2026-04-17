@@ -37,6 +37,18 @@ pub(crate) fn pyarray1_to_host(
     ))
 }
 
+pub(crate) fn pyarray2_to_host_f32(
+    array: PyReadonlyArray2<'_, f32>,
+) -> Result<HostArray, PyDiffsolError> {
+    let view = array.as_array();
+    Ok(HostArray::new(
+        view.as_ptr() as *mut u8,
+        view.shape().to_vec(),
+        byte_strides(view.strides(), size_of::<f32>())?,
+        diffsol_c::ScalarType::F32,
+    ))
+}
+
 pub(crate) fn pyarray2_to_host_f64(
     array: PyReadonlyArray2<'_, f64>,
 ) -> Result<HostArray, PyDiffsolError> {
@@ -59,6 +71,20 @@ pub(crate) fn pyarray2_to_owned_f32_host(
         owned.shape().to_vec(),
         byte_strides(owned.strides(), size_of::<f32>())?,
         diffsol_c::ScalarType::F32,
+    );
+    Ok((owned, host))
+}
+
+/// Converts a 2D NumPy array of f32 to an owned Array2<f64>
+pub(crate) fn pyarray2_to_owned_f64_host(
+    array: PyReadonlyArray2<'_, f32>,
+) -> Result<(Array2<f64>, HostArray), PyDiffsolError> {
+    let owned = array.as_array().mapv(|value| value as f64);
+    let host = HostArray::new(
+        owned.as_ptr() as *mut u8,
+        owned.shape().to_vec(),
+        byte_strides(owned.strides(), size_of::<f64>())?,
+        diffsol_c::ScalarType::F64,
     );
     Ok((owned, host))
 }

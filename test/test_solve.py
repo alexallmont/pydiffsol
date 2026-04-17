@@ -155,17 +155,26 @@ def test_solve_fwd_sens(jit_backend):
     np.testing.assert_allclose(solution.sens[0][0], expected_r, rtol=1e-4)
 
 
-def test_solve_sum_squares_adjoint(jit_backend):
+@pytest.mark.parametrize("scalar_type,data_dtype", [
+    (ds.f64, np.float64),  # match:    f64 data → f64 ODE (borrow directly)
+    (ds.f64, np.float32),  # mismatch: f32 data → f64 ODE (convert to f64)
+    (ds.f32, np.float64),  # mismatch: f64 data → f32 ODE (convert to f32)
+    (ds.f32, np.float32),  # match:    f32 data → f32 ODE (borrow directly)
+])
+def test_solve_sum_squares_adjoint(jit_backend, scalar_type, data_dtype):
     if not hasattr(ds, "llvm"):
         pytest.skip("Adjoint sensitivities require an LLVM JIT backend")
 
-    ode = make_ode(ds.llvm, scalar_type=ds.f64, ode_solver=ds.bdf)
     params = np.array([1.0, 1.0, 0.1])
     t_eval = np.array([0.0, 0.1, 0.5])
     data_params = np.array([0.9, 0.9, 0.09])
-    data = make_ode(ds.llvm, scalar_type=ds.f64, ode_solver=ds.bdf).solve_dense(
-        data_params, t_eval
-    ).ys
+
+    ode = make_ode(ds.llvm, scalar_type=scalar_type, ode_solver=ds.bdf)
+
+    # Generate reference data using f64, then cast to the target data dtype
+    ref_ode = make_ode(ds.llvm, scalar_type=ds.f64, ode_solver=ds.bdf)
+    data = ref_ode.solve_dense(data_params, t_eval).ys.astype(data_dtype)
+    assert data.dtype == data_dtype
 
     if os.name == "nt":
         with pytest.raises(Exception, match="Sensitivity analysis is not supported on Windows"):
@@ -175,11 +184,23 @@ def test_solve_sum_squares_adjoint(jit_backend):
     value, sens = ode.solve_sum_squares_adj(params, data, t_eval)
     assert isinstance(value, float)
     assert sens.shape == (3,)
-
-    expected_y = np.array([logistic_solution(*params, t) for t in t_eval])
-    expected_sens = np.array([
-        logistic_sensitivity_with_respect_to_r(*params, t_eval_i)
-        for t_eval_i in t_eval
-    ])
-    np.testing.assert_allclose(value, np.sum((expected_y - data[0]) ** 2), rtol=1e-4)
+    assert np.isfinite(value)
     assert np.isfinite(sens).all()
+
+    # For the f64/f64 case, also verify the value against the analytical solution
+    if scalar_type == ds.f64 and data_dtype == np.float64:
+        expected_y = np.array([logistic_solution(*params, t) for t in t_eval])
+        np.testing.assert_allclose(value, np.sum((expected_y - data[0]) ** 2), rtol=1e-4)
+
+
+def test_solve_sum_squares_adjoint_invalid_dtype(jit_backend):
+    if not hasattr(ds, "llvm"):
+        pytest.skip("Adjoint sensitivities require an LLVM JIT backend")
+
+    ode = make_ode(ds.llvm, scalar_type=ds.f64, ode_solver=ds.bdf)
+    params = np.array([1.0, 1.0, 0.1])
+    t_eval = np.array([0.0, 0.1, 0.5])
+    bad_data = np.zeros((1, 3), dtype=np.int32)
+
+    with pytest.raises(Exception, match="float32 or float64"):
+        ode.solve_sum_squares_adj(params, bad_data, t_eval)

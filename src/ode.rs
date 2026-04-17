@@ -4,7 +4,8 @@ use pyo3::{prelude::*, PyAny};
 use crate::{
     error::PyDiffsolError,
     host_array::{
-        host_array_to_py, pyarray1_to_host, pyarray2_to_host_f64, pyarray2_to_owned_f32_host,
+        host_array_to_py, pyarray1_to_host, pyarray2_to_host_f32, pyarray2_to_host_f64,
+        pyarray2_to_owned_f32_host, pyarray2_to_owned_f64_host,
     },
     jit::JitBackendType,
     linear_solver_type::LinearSolverType,
@@ -356,9 +357,13 @@ impl OdeWrapper {
     /// Returns the objective value and a 1D array of adjoint sensitivities
     /// for each parameter.
     ///
+    /// `data` may be a float32 or float64 NumPy array. When the ODE was
+    /// constructed with ``scalar_type=f32`` and float64 data is supplied, the
+    /// data is automatically cast to float32.
+    ///
     /// :param params: 1D array of solver parameters
     /// :type params: numpy.ndarray
-    /// :param data: 2D array of observed data, shape (nout, len(t_eval))
+    /// :param data: 2D array of observed data, shape (nout, len(t_eval)); float32 or float64
     /// :type data: numpy.ndarray
     /// :param t_eval: 1D array of solver times
     /// :type t_eval: numpy.ndarray
@@ -368,24 +373,40 @@ impl OdeWrapper {
         &self,
         py: Python<'py>,
         params: PyReadonlyArray1<'py, f64>,
-        data: PyReadonlyArray2<'py, f64>,
+        data: &Bound<'py, PyAny>,
         t_eval: PyReadonlyArray1<'py, f64>,
     ) -> Result<(f64, Bound<'py, PyAny>), PyDiffsolError> {
+        let params_host = pyarray1_to_host(params)?;
+        let t_eval_host = pyarray1_to_host(t_eval)?;
         let scalar_type: ScalarType = self.0.get_scalar_type()?.into();
-        let (value, sens) = match scalar_type {
-            ScalarType::F32 => {
-                let (_owned_data, data_host) = pyarray2_to_owned_f32_host(data)?;
-                self.0.solve_sum_squares_adj(
-                    pyarray1_to_host(params)?,
-                    data_host,
-                    pyarray1_to_host(t_eval)?,
-                )?
+        let (value, sens) = if let Ok(data_f32) = data.extract::<PyReadonlyArray2<f32>>() {
+            match scalar_type {
+                ScalarType::F32 => self.0.solve_sum_squares_adj(
+                    params_host,
+                    pyarray2_to_host_f32(data_f32)?,
+                    t_eval_host,
+                )?,
+                ScalarType::F64 => {
+                    let (_owned_data, data_host) = pyarray2_to_owned_f64_host(data_f32)?;
+                    self.0.solve_sum_squares_adj(params_host, data_host, t_eval_host)?
+                }
             }
-            ScalarType::F64 => self.0.solve_sum_squares_adj(
-                pyarray1_to_host(params)?,
-                pyarray2_to_host_f64(data)?,
-                pyarray1_to_host(t_eval)?,
-            )?,
+        } else if let Ok(data_f64) = data.extract::<PyReadonlyArray2<f64>>() {
+            match scalar_type {
+                ScalarType::F32 => {
+                    let (_owned_data, data_host) = pyarray2_to_owned_f32_host(data_f64)?;
+                    self.0.solve_sum_squares_adj(params_host, data_host, t_eval_host)?
+                }
+                ScalarType::F64 => self.0.solve_sum_squares_adj(
+                    params_host,
+                    pyarray2_to_host_f64(data_f64)?,
+                    t_eval_host,
+                )?,
+            }
+        } else {
+            return Err(PyDiffsolError::Conversion(
+                "data must be a 2D NumPy array of float32 or float64".to_string(),
+            ));
         };
         Ok((value, host_array_to_py(py, sens)?))
     }
