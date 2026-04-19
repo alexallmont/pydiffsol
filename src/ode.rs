@@ -1,5 +1,10 @@
 use numpy::{PyReadonlyArray1, PyReadonlyArray2};
-use pyo3::{prelude::*, PyAny};
+use pyo3::{
+    exceptions::{PyRuntimeError, PyValueError},
+    prelude::*,
+    types::{PyTuple, PyType},
+    PyAny,
+};
 
 use crate::{
     error::PyDiffsolError,
@@ -17,7 +22,7 @@ use crate::{
     solution::SolutionWrapper,
 };
 
-#[pyclass]
+#[pyclass(module = "pydiffsol")]
 #[pyo3(name = "Ode")]
 #[derive(Clone)]
 pub struct OdeWrapper(diffsol_c::OdeWrapper);
@@ -35,12 +40,22 @@ impl OdeWrapper {
             }),
         }
     }
+
+    fn serialize_state_bytes(&self) -> Result<Vec<u8>, PyDiffsolError> {
+        serde_json::to_vec(&self.0).map_err(|err| PyRuntimeError::new_err(err.to_string()).into())
+    }
+
+    fn deserialize_state_bytes(state: &[u8]) -> Result<Self, PyDiffsolError> {
+        serde_json::from_slice(state)
+            .map(Self)
+            .map_err(|err| PyValueError::new_err(err.to_string()).into())
+    }
 }
 
 #[pymethods]
 impl OdeWrapper {
     /// Construct an ODE solver for specified diffsol using a given matrix type.
-    /// The code is JIT-compiled immediately based on the matrix type and jit_backend, 
+    /// The code is JIT-compiled immediately based on the matrix type and jit_backend,
     /// so after construction, both code and matrix_type fields are read-only.
     /// All other fields are editable, for example setting the solver type or
     /// method, or changing solver tolerances.
@@ -63,6 +78,39 @@ impl OdeWrapper {
             ode_solver.into(),
         )?;
         Ok(Self(inner))
+    }
+
+    #[classmethod]
+    fn _from_state_bytes(_cls: &Bound<'_, PyType>, state: Vec<u8>) -> Result<Self, PyDiffsolError> {
+        Self::deserialize_state_bytes(state.as_slice())
+    }
+
+    fn __copy__(&self) -> Self {
+        self.clone()
+    }
+
+    fn __deepcopy__(&self, _memo: &Bound<'_, PyAny>) -> Result<Self, PyDiffsolError> {
+        let state = self.serialize_state_bytes()?;
+        Self::deserialize_state_bytes(state.as_slice())
+    }
+
+    fn __getstate__(&self) -> Result<Vec<u8>, PyDiffsolError> {
+        self.serialize_state_bytes()
+    }
+
+    fn __setstate__(&mut self, state: Vec<u8>) -> Result<(), PyDiffsolError> {
+        *self = Self::deserialize_state_bytes(state.as_slice())?;
+        Ok(())
+    }
+
+    fn __reduce__<'py>(
+        slf: &Bound<'py, Self>,
+        py: Python<'py>,
+    ) -> Result<(Bound<'py, PyAny>, Bound<'py, PyTuple>), PyDiffsolError> {
+        let cls = slf.getattr("__class__")?;
+        let reconstructor = cls.getattr("_from_state_bytes")?;
+        let state = slf.borrow().serialize_state_bytes()?;
+        Ok((reconstructor, PyTuple::new(py, [state])?))
     }
 
     /// Matrix type used in the ODE solver. This is fixed after construction.
@@ -384,14 +432,16 @@ impl OdeWrapper {
                 )?,
                 ScalarType::F64 => {
                     let (_owned_data, data_host) = pyarray2_to_owned_f64_host(data_f32)?;
-                    self.0.solve_sum_squares_adj(params_host, data_host, t_eval_host)?
+                    self.0
+                        .solve_sum_squares_adj(params_host, data_host, t_eval_host)?
                 }
             }
         } else if let Ok(data_f64) = data.extract::<PyReadonlyArray2<f64>>() {
             match scalar_type {
                 ScalarType::F32 => {
                     let (_owned_data, data_host) = pyarray2_to_owned_f32_host(data_f64)?;
-                    self.0.solve_sum_squares_adj(params_host, data_host, t_eval_host)?
+                    self.0
+                        .solve_sum_squares_adj(params_host, data_host, t_eval_host)?
                 }
                 ScalarType::F64 => self.0.solve_sum_squares_adj(
                     params_host,
