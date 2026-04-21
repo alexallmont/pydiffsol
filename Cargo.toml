@@ -21,7 +21,7 @@ suitesparse = ["diffsol-c/suitesparse"]
 
 [dependencies]
 pyo3 = { version = "0.27.2", default-features = false, features = ["abi3-py39", "extension-module"] }
-diffsol-c = { version = "0.3.0" }
+diffsol-c = { version = "0.3.2" }
 numpy = "0.27.1"
 pyo3-log = "0.13.2"
 serde_json = "1.0"
