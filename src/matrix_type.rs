@@ -1,9 +1,17 @@
+// Wrap diffsol-c matrix type with Python enum. This is the internal matrix
+// mechanism, either nalgebra_dense, faer_dense, or faer_sparse.
+
 use pyo3::{
     exceptions::PyValueError,
     prelude::*,
     types::{PyList, PyType},
 };
 
+/// Enumerates the possible matrix types for diffsol
+///
+/// :attr nalgebra_dense: dense matrix using nalgebra crate (https://nalgebra.rs/)
+/// :attr faer_dense: dense matrix using faer crate (https://faer.veganb.tw/)
+/// :attr faer_sparse: sparse matrix using faer crate (https://faer.veganb.tw/)
 #[pyclass(eq)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum MatrixType {
@@ -53,6 +61,9 @@ impl From<diffsol_c::MatrixType> for MatrixType {
 
 #[pymethods]
 impl MatrixType {
+    /// Create MatrixType from string name
+    /// :param name: string representation of matrix type
+    /// :return: valid MatrixType or exception if name is invalid
     #[classmethod]
     fn from_str(_cls: &Bound<'_, PyType>, value: &str) -> PyResult<Self> {
         match value {
@@ -63,6 +74,8 @@ impl MatrixType {
         }
     }
 
+    /// Get all available matrix types
+    /// :return: list of MatrixType
     #[classmethod]
     fn all<'py>(cls: &Bound<'py, PyType>) -> PyResult<Bound<'py, PyList>> {
         PyList::new(cls.py(), Self::all_enums())

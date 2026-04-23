@@ -1,3 +1,5 @@
+// Python enum for underlying data type used in matrix types. Supports 32 or 64 bit float.
+
 use pyo3::{
     exceptions::PyValueError,
     prelude::*,

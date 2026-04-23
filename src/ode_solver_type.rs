@@ -1,3 +1,6 @@
+// Wrap diffsol-c ode solver type - such as bdf or esdirk34 - with Pytho
+// enum, and provide dynamic dispatch to underlying solve methods based on value.
+
 use pyo3::{
     exceptions::PyValueError,
     prelude::*,

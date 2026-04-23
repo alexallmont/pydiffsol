@@ -24,7 +24,7 @@ fn byte_strides(strides: &[isize], elem_size: usize) -> Result<Vec<usize>, PyDif
         .collect()
 }
 
-pub(crate) fn pyarray1_to_host(
+pub(crate) fn pyarray1_to_host_f64(
     array: PyReadonlyArray1<'_, f64>,
 ) -> Result<HostArray, PyDiffsolError> {
     let slice = array.as_slice().map_err(|_| {
@@ -96,14 +96,14 @@ pub(crate) fn host_array_to_py<'py>(
     py: Python<'py>,
     array: HostArray,
 ) -> Result<Bound<'py, PyAny>, PyDiffsolError> {
-    // for 1D arrays, we convert to a slice and then COPY (to_pyarray) to a new PyArray 
+    // for 1D arrays, we convert to a slice and then COPY (to_pyarray) to a new PyArray
     if let Ok(values) = array.as_slice::<f32>() {
         return Ok(values.to_pyarray(py).into_any());
     }
     if let Ok(values) = array.as_slice::<f64>() {
         return Ok(values.to_pyarray(py).into_any());
     }
-    
+
     // for 2D arrays, we convert to an ArrayView and then COPY (to_pyarray) to a new PyArray
     if let Ok(values) = array.as_array::<f32>() {
         return Ok(values.to_pyarray(py).into_any());
@@ -111,7 +111,7 @@ pub(crate) fn host_array_to_py<'py>(
     if let Ok(values) = array.as_array::<f64>() {
         return Ok(values.to_pyarray(py).into_any());
     }
-    
+
     // anything else is unsupported and we return an error
     Err(PyDiffsolError::Conversion(
         "Unsupported host array returned by diffsol-c".to_string(),

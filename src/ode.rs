@@ -1,3 +1,7 @@
+// Wrap diffsol-c ode solver type with a Python class. This is the main user-facing
+// class for ODE solving in pydiffsol, including all creation, configuration and solving
+// methods. The ODE solver is JIT-compiled on construction.
+
 use numpy::{PyReadonlyArray1, PyReadonlyArray2};
 use pyo3::{
     exceptions::{PyRuntimeError, PyValueError},
@@ -9,7 +13,7 @@ use pyo3::{
 use crate::{
     error::PyDiffsolError,
     host_array::{
-        host_array_to_py, pyarray1_to_host, pyarray2_to_host_f32, pyarray2_to_host_f64,
+        host_array_to_py, pyarray1_to_host_f64, pyarray2_to_host_f32, pyarray2_to_host_f64,
         pyarray2_to_owned_f32_host, pyarray2_to_owned_f64_host,
     },
     jit::JitBackendType,
@@ -94,15 +98,26 @@ impl OdeWrapper {
         Self::deserialize_state_bytes(state.as_slice())
     }
 
+    /// Serialize this solver for Python pickling.
+    ///
+    /// The pickle payload uses diffsol-c's native serde-based serialization,
+    /// pickling/unpickling can restore an equivalent solver much faster than
+    /// JIT compiling twice.
     fn __getstate__(&self) -> Result<Vec<u8>, PyDiffsolError> {
         self.serialize_state_bytes()
     }
 
+    /// Restore a solver from bytes produced by `__getstate__`.
+    ///
+    /// See `__getstate__` for picklng details.
     fn __setstate__(&mut self, state: Vec<u8>) -> Result<(), PyDiffsolError> {
         *self = Self::deserialize_state_bytes(state.as_slice())?;
         Ok(())
     }
 
+    /// Implement the Python pickle protocol for solver.
+    ///
+    /// See `__getstate__` for picklng details.
     fn __reduce__<'py>(
         slf: &Bound<'py, Self>,
         py: Python<'py>,
@@ -226,7 +241,7 @@ impl OdeWrapper {
         py: Python<'py>,
         params: PyReadonlyArray1<'py, f64>,
     ) -> Result<Bound<'py, PyAny>, PyDiffsolError> {
-        host_array_to_py(py, self.0.y0(pyarray1_to_host(params)?)?)
+        host_array_to_py(py, self.0.y0(pyarray1_to_host_f64(params)?)?)
     }
 
     /// Evaluate the right-hand side function at time `t` and state `y`.
@@ -240,7 +255,7 @@ impl OdeWrapper {
         host_array_to_py(
             py,
             self.0
-                .rhs(pyarray1_to_host(params)?, t, pyarray1_to_host(y)?)?,
+                .rhs(pyarray1_to_host_f64(params)?, t, pyarray1_to_host_f64(y)?)?,
         )
     }
 
@@ -256,10 +271,10 @@ impl OdeWrapper {
         host_array_to_py(
             py,
             self.0.rhs_jac_mul(
-                pyarray1_to_host(params)?,
+                pyarray1_to_host_f64(params)?,
                 t,
-                pyarray1_to_host(y)?,
-                pyarray1_to_host(v)?,
+                pyarray1_to_host_f64(y)?,
+                pyarray1_to_host_f64(v)?,
             )?,
         )
     }
@@ -283,7 +298,7 @@ impl OdeWrapper {
         final_time: f64,
     ) -> Result<SolutionWrapper, PyDiffsolError> {
         Ok(SolutionWrapper::new(
-            self.0.solve(pyarray1_to_host(params)?, final_time)?,
+            self.0.solve(pyarray1_to_host_f64(params)?, final_time)?,
         ))
     }
 
@@ -304,7 +319,7 @@ impl OdeWrapper {
         final_time: f64,
     ) -> Result<SolutionWrapper, PyDiffsolError> {
         Ok(SolutionWrapper::new(
-            self.0.solve_hybrid(pyarray1_to_host(params)?, final_time)?,
+            self.0.solve_hybrid(pyarray1_to_host_f64(params)?, final_time)?,
         ))
     }
 
@@ -325,8 +340,8 @@ impl OdeWrapper {
         t_eval: PyReadonlyArray1<'_, f64>,
     ) -> Result<SolutionWrapper, PyDiffsolError> {
         Ok(SolutionWrapper::new(self.0.solve_dense(
-            pyarray1_to_host(params)?,
-            pyarray1_to_host(t_eval)?,
+            pyarray1_to_host_f64(params)?,
+            pyarray1_to_host_f64(t_eval)?,
         )?))
     }
 
@@ -348,8 +363,8 @@ impl OdeWrapper {
         t_eval: PyReadonlyArray1<'_, f64>,
     ) -> Result<SolutionWrapper, PyDiffsolError> {
         Ok(SolutionWrapper::new(self.0.solve_hybrid_dense(
-            pyarray1_to_host(params)?,
-            pyarray1_to_host(t_eval)?,
+            pyarray1_to_host_f64(params)?,
+            pyarray1_to_host_f64(t_eval)?,
         )?))
     }
 
@@ -371,8 +386,8 @@ impl OdeWrapper {
         t_eval: PyReadonlyArray1<'_, f64>,
     ) -> Result<SolutionWrapper, PyDiffsolError> {
         Ok(SolutionWrapper::new(self.0.solve_fwd_sens(
-            pyarray1_to_host(params)?,
-            pyarray1_to_host(t_eval)?,
+            pyarray1_to_host_f64(params)?,
+            pyarray1_to_host_f64(t_eval)?,
         )?))
     }
 
@@ -395,8 +410,8 @@ impl OdeWrapper {
         t_eval: PyReadonlyArray1<'_, f64>,
     ) -> Result<SolutionWrapper, PyDiffsolError> {
         Ok(SolutionWrapper::new(self.0.solve_hybrid_fwd_sens(
-            pyarray1_to_host(params)?,
-            pyarray1_to_host(t_eval)?,
+            pyarray1_to_host_f64(params)?,
+            pyarray1_to_host_f64(t_eval)?,
         )?))
     }
 
@@ -420,8 +435,8 @@ impl OdeWrapper {
         data: &Bound<'py, PyAny>,
         t_eval: PyReadonlyArray1<'py, f64>,
     ) -> Result<(f64, Bound<'py, PyAny>), PyDiffsolError> {
-        let params_host = pyarray1_to_host(params)?;
-        let t_eval_host = pyarray1_to_host(t_eval)?;
+        let params_host = pyarray1_to_host_f64(params)?;
+        let t_eval_host = pyarray1_to_host_f64(t_eval)?;
         let scalar_type: ScalarType = self.0.get_scalar_type()?.into();
         let (value, sens) = if let Ok(data_f32) = data.extract::<PyReadonlyArray2<f32>>() {
             match scalar_type {

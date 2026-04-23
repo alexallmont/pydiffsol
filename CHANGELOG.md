@@ -9,7 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- New Ode `solve_hybrid` methods for models that may stop and restart. See PK and bouncing ball examples for usage.
+- Select ODE JIT backend rather than it being determined by platform.
+- Pickling support allows restoration of equivalent solver much faster than JIT compiling twice.
 - Methods to get underlying `diffsol_version` and `diffsl_version`
+
+### Changed
+
+- `Solution` class removed and `Ode` `solve` methods no longer take an optional `solution`. Instead use `solve_hybrid` for models that may stop and restart.
+- `SolverMethod` class renamed to `OdeSolverType`. Similarly, usage of `ode_solver` in `Ode` `solve` methods replaced with `ode_solver`.
+- `SolverType` class renamed to `LinearSolverType`.
 
 ## [0.4.0]
 

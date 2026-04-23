@@ -1,9 +1,18 @@
+// Wrap diffsol-c solver type with Python enum. This is the internal solver
+// mechanism, either LU or KLU in diffsol, with default selecting whichever
+// is most appropriate given the matrix type.
+
 use pyo3::{
     exceptions::PyValueError,
     prelude::*,
     types::{PyList, PyType},
 };
 
+/// Enumerates the possible linear solver types for diffsol
+///
+/// :attr default: use the solver's default linear solver choice, typically LU
+/// :attr lu: use LU decomposition linear solver (dense or sparse as appropriate)
+/// :attr klu: use KLU sparse linear solver
 #[pyclass(eq)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum LinearSolverType {
