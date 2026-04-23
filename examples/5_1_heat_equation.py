@@ -35,7 +35,7 @@ def solve():
         """,
         # Note that faer_sparse may be a better choice than nalgebra_dense for
         # larger systems because the RHS Jacobian will mostly be zeroes.
-        ds.nalgebra_dense,
+        matrix_type=ds.nalgebra_dense,
     )
     params = np.array([])
     solution = ode.solve(params, 0.1)

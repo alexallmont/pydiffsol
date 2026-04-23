@@ -1,84 +1,82 @@
-use std::sync::{Arc, Mutex};
-
-use crate::ode::Ode;
-
 use pyo3::prelude::*;
 
+use crate::error::PyDiffsolError;
+
 #[pyclass]
-pub struct InitialConditionSolverOptions {
-    ode: Arc<Mutex<Ode>>,
-}
+#[derive(Clone)]
+pub struct InitialConditionSolverOptions(diffsol_c::InitialConditionSolverOptions);
+
 impl InitialConditionSolverOptions {
-    pub(crate) fn new(ode: Arc<Mutex<Ode>>) -> Self {
-        Self { ode }
-    }
-    fn guard(&self) -> PyResult<std::sync::MutexGuard<'_, Ode>> {
-        self.ode.lock().map_err(|_| {
-            PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
-                "Failed to acquire lock on Ode object",
-            )
-        })
+    pub(crate) fn new(inner: diffsol_c::InitialConditionSolverOptions) -> Self {
+        Self(inner)
     }
 }
 
 #[pymethods]
 impl InitialConditionSolverOptions {
     #[getter]
-    fn get_use_linesearch(&self) -> PyResult<bool> {
-        Ok(self.guard()?.py_solve.ic_use_linesearch())
+    fn get_use_linesearch(&self) -> Result<bool, PyDiffsolError> {
+        Ok(self.0.get_use_linesearch()?)
     }
+
     #[setter]
-    fn set_use_linesearch(&self, value: bool) -> PyResult<()> {
-        self.guard()?.py_solve.set_ic_use_linesearch(value);
+    fn set_use_linesearch(&self, value: bool) -> Result<(), PyDiffsolError> {
+        self.0.set_use_linesearch(value)?;
         Ok(())
     }
+
     #[getter]
-    fn get_max_linesearch_iterations(&self) -> PyResult<usize> {
-        Ok(self.guard()?.py_solve.ic_max_linesearch_iterations())
+    fn get_max_linesearch_iterations(&self) -> Result<usize, PyDiffsolError> {
+        Ok(self.0.get_max_linesearch_iterations()?)
     }
+
     #[setter]
-    fn set_max_linesearch_iterations(&self, value: usize) -> PyResult<()> {
-        self.guard()?
-            .py_solve
-            .set_ic_max_linesearch_iterations(value);
+    fn set_max_linesearch_iterations(&self, value: usize) -> Result<(), PyDiffsolError> {
+        self.0.set_max_linesearch_iterations(value)?;
         Ok(())
     }
+
     #[getter]
-    fn get_max_newton_iterations(&self) -> PyResult<usize> {
-        Ok(self.guard()?.py_solve.ic_max_newton_iterations())
+    fn get_max_newton_iterations(&self) -> Result<usize, PyDiffsolError> {
+        Ok(self.0.get_max_newton_iterations()?)
     }
+
     #[setter]
-    fn set_max_newton_iterations(&self, value: usize) -> PyResult<()> {
-        self.guard()?.py_solve.set_ic_max_newton_iterations(value);
+    fn set_max_newton_iterations(&self, value: usize) -> Result<(), PyDiffsolError> {
+        self.0.set_max_newton_iterations(value)?;
         Ok(())
     }
+
     #[getter]
-    fn get_max_linear_solver_setups(&self) -> PyResult<usize> {
-        Ok(self.guard()?.py_solve.ic_max_linear_solver_setups())
+    fn get_max_linear_solver_setups(&self) -> Result<usize, PyDiffsolError> {
+        Ok(self.0.get_max_linear_solver_setups()?)
     }
+
     #[setter]
-    fn set_max_linear_solver_setups(&self, value: usize) -> PyResult<()> {
-        self.guard()?
-            .py_solve
-            .set_ic_max_linear_solver_setups(value);
+    fn set_max_linear_solver_setups(&self, value: usize) -> Result<(), PyDiffsolError> {
+        self.0.set_max_linear_solver_setups(value)?;
         Ok(())
     }
+
     #[getter]
-    fn get_step_reduction_factor(&self) -> PyResult<f64> {
-        Ok(self.guard()?.py_solve.ic_step_reduction_factor())
+    fn get_step_reduction_factor(&self) -> Result<f64, PyDiffsolError> {
+        Ok(self.0.get_step_reduction_factor()?)
     }
+
     #[setter]
-    fn set_step_reduction_factor(&self, value: f64) -> PyResult<()> {
-        self.guard()?.py_solve.set_ic_step_reduction_factor(value);
+    fn set_step_reduction_factor(&self, value: f64) -> Result<(), PyDiffsolError> {
+        self.0.set_step_reduction_factor(value)?;
         Ok(())
     }
+
     #[getter]
-    fn get_armijo_constant(&self) -> PyResult<f64> {
-        Ok(self.guard()?.py_solve.ic_armijo_constant())
+    fn get_armijo_constant(&self) -> Result<f64, PyDiffsolError> {
+        Ok(self.0.get_armijo_constant()?)
     }
+
     #[setter]
-    fn set_armijo_constant(&self, value: f64) -> PyResult<()> {
-        self.guard()?.py_solve.set_ic_armijo_constant(value);
+    fn set_armijo_constant(&self, value: f64) -> Result<(), PyDiffsolError> {
+        self.0.set_armijo_constant(value)?;
         Ok(())
     }
 }
