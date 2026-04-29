@@ -33,6 +33,44 @@ def test_config_tol(jit_backend, rtol, atol):
     np.testing.assert_allclose(solution.ys[0], expected, rtol=rtol, atol=atol)
 
 
+def test_config_scalar_and_adjoint_options(jit_backend):
+    ode = make_ode(jit_backend)
+
+    ode.t0 = 0.125
+    ode.h0 = 0.25
+    ode.integrate_out = True
+    ode.sens_rtol = 1e-5
+    ode.sens_atol = 1e-7
+    ode.out_rtol = 1e-4
+    ode.out_atol = 1e-6
+    ode.param_rtol = 1e-3
+    ode.param_atol = 1e-8
+
+    assert ode.t0 == pytest.approx(0.125)
+    assert ode.h0 == pytest.approx(0.25)
+    assert ode.integrate_out is True
+    assert ode.sens_rtol == pytest.approx(1e-5)
+    assert ode.sens_atol == pytest.approx(1e-7)
+    assert ode.out_rtol == pytest.approx(1e-4)
+    assert ode.out_atol == pytest.approx(1e-6)
+    assert ode.param_rtol == pytest.approx(1e-3)
+    assert ode.param_atol == pytest.approx(1e-8)
+
+    ode.sens_rtol = None
+    ode.sens_atol = None
+    ode.out_rtol = None
+    ode.out_atol = None
+    ode.param_rtol = None
+    ode.param_atol = None
+
+    assert ode.sens_rtol is None
+    assert ode.sens_atol is None
+    assert ode.out_rtol is None
+    assert ode.out_atol is None
+    assert ode.param_rtol is None
+    assert ode.param_atol is None
+
+
 def test_config_ic(jit_backend):
     ode = make_ode(jit_backend)
     ic_opts = ode.ic_options

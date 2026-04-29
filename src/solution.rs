@@ -12,6 +12,10 @@ impl SolutionWrapper {
     pub(crate) fn new(inner: diffsol_c::SolutionWrapper) -> Self {
         Self(inner)
     }
+
+    pub(crate) fn inner(&self) -> &diffsol_c::SolutionWrapper {
+        &self.0
+    }
 }
 
 #[pymethods]
