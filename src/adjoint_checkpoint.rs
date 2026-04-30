@@ -1,3 +1,7 @@
+// Wrap diffsol-c adjoint checkpoint state with Python handle type.
+// This does not have any accessors, it's purely for passing underlying
+// Rust type between adjoint solve forward and backward calls.
+
 use pyo3::prelude::*;
 
 #[pyclass(module = "pydiffsol")]

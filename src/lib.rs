@@ -1,3 +1,5 @@
+// Main pydiffsol Python extension module registration.
+
 use pyo3::prelude::*;
 
 #[cfg(not(any(feature = "diffsol-cranelift", feature = "diffsol-llvm")))]

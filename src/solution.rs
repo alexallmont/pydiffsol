@@ -1,3 +1,5 @@
+// Wrap diffsol-c solution arrays with Python properties returning NumPy arrays.
+
 use pyo3::{prelude::*, PyAny};
 
 use crate::error::PyDiffsolError;

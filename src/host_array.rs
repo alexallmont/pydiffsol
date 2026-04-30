@@ -1,3 +1,5 @@
+// Convert between NumPy arrays and diffsol-c host arrays while preserving dtypes.
+
 use std::mem::size_of;
 
 use diffsol_c::host_array::HostArray;
