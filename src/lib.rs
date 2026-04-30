@@ -1,8 +1,11 @@
+// Main pydiffsol Python extension module registration.
+
 use pyo3::prelude::*;
 
 #[cfg(not(any(feature = "diffsol-cranelift", feature = "diffsol-llvm")))]
 compile_error!("pydiffsol requires at least one JIT backend feature enabled");
 
+mod adjoint_checkpoint;
 mod error;
 mod host_array;
 mod jit;
@@ -59,6 +62,7 @@ fn pydiffsol(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<linear_solver_type::LinearSolverType>()?;
     m.add_class::<ode_solver_type::OdeSolverType>()?;
     m.add_class::<jit::JitBackendType>()?;
+    m.add_class::<adjoint_checkpoint::AdjointCheckpointWrapper>()?;
     m.add_class::<ode::OdeWrapper>()?;
     m.add_class::<options_ic::InitialConditionSolverOptions>()?;
     m.add_class::<options_ode::OdeSolverOptions>()?;

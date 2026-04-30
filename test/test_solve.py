@@ -21,6 +21,14 @@ reset_i { 0.1 }
 out_i { y }
 """
 
+ADJOINT_LOGISTIC_CODE = """
+in_i { r = 1 }
+u_i { y = 0.1 }
+dudt_i { dydt = 0 }
+F_i { (r * y) * (1 - y) }
+out_i { y }
+"""
+
 
 def logistic_solution(r, k, y0, t):
     return k * y0 / (y0 + (k - y0) * np.exp(-r * t))
@@ -110,11 +118,11 @@ def test_hybrid_metadata_and_solve_paths(jit_backend):
     assert ode.nout == 1
     assert ode.has_stop() is True
 
-    hybrid = ode.solve_hybrid(np.array([2.0]), 2.0)
+    hybrid = ode.solve(np.array([2.0]), 2.0)
     assert hybrid.ts[-1] == pytest.approx(2.0, rel=1e-5, abs=1e-5)
 
     t_eval = np.array([0.5, 1.0, 1.5, 2.0])
-    hybrid_dense = ode.solve_hybrid_dense(np.array([2.0]), t_eval)
+    hybrid_dense = ode.solve_dense(np.array([2.0]), t_eval)
     assert hybrid_dense.ts.tolist() == pytest.approx(t_eval.tolist())
 
     if os.name != "nt" and hasattr(ds, "llvm"):
@@ -125,15 +133,13 @@ def test_hybrid_metadata_and_solve_paths(jit_backend):
             ode_solver=ds.bdf,
             linear_solver=ds.default,
         )
-        hybrid_sens = sens_ode.solve_hybrid_fwd_sens(np.array([2.0]), t_eval)
+        hybrid_sens = sens_ode.solve_fwd_sens(np.array([2.0]), t_eval)
         assert len(hybrid_sens.sens) == 1
         assert hybrid_sens.sens[0].shape == hybrid_sens.ys.shape
 
 
-def test_solve_fwd_sens(jit_backend):
-    if not hasattr(ds, "llvm"):
-        pytest.skip("Forward sensitivities require an LLVM JIT backend")
-
+@pytest.mark.skipif(not hasattr(ds, "llvm"), reason="Forward sensitivities require an LLVM JIT backend")
+def test_solve_fwd_sens():
     ode = make_ode(ds.llvm, scalar_type=ds.f64, ode_solver=ds.bdf)
     params = np.array([1.0, 1.0, 0.1])
     t_eval = np.array([0.0, 0.1, 0.5])
@@ -155,52 +161,62 @@ def test_solve_fwd_sens(jit_backend):
     np.testing.assert_allclose(solution.sens[0][0], expected_r, rtol=1e-4)
 
 
-@pytest.mark.parametrize("scalar_type,data_dtype", [
-    (ds.f64, np.float64),  # match:    f64 data → f64 ODE (borrow directly)
-    (ds.f64, np.float32),  # mismatch: f32 data → f64 ODE (convert to f64)
-    (ds.f32, np.float64),  # mismatch: f64 data → f32 ODE (convert to f32)
-    (ds.f32, np.float32),  # match:    f32 data → f32 ODE (borrow directly)
-])
-def test_solve_sum_squares_adjoint(jit_backend, scalar_type, data_dtype):
-    if not hasattr(ds, "llvm"):
-        pytest.skip("Adjoint sensitivities require an LLVM JIT backend")
-
-    params = np.array([1.0, 1.0, 0.1])
-    t_eval = np.array([0.0, 0.1, 0.5])
-    data_params = np.array([0.9, 0.9, 0.09])
-
-    ode = make_ode(ds.llvm, scalar_type=scalar_type, ode_solver=ds.bdf)
-
-    # Generate reference data using f64, then cast to the target data dtype
-    ref_ode = make_ode(ds.llvm, scalar_type=ds.f64, ode_solver=ds.bdf)
-    data = ref_ode.solve_dense(data_params, t_eval).ys.astype(data_dtype)
-    assert data.dtype == data_dtype
+@pytest.mark.skipif(not hasattr(ds, "llvm"), reason="Adjoint sensitivities require an LLVM JIT backend")
+def test_solve_continuous_adjoint():
+    ode = make_ode(ds.llvm, code=ADJOINT_LOGISTIC_CODE, scalar_type=ds.f64, ode_solver=ds.bdf)
+    params = np.array([2.0])
 
     if os.name == "nt":
         with pytest.raises(Exception, match="Sensitivity analysis is not supported on Windows"):
-            ode.solve_sum_squares_adj(params, data, t_eval)
+            ode.solve_continuous_adjoint(params, 1.0)
         return
 
-    value, sens = ode.solve_sum_squares_adj(params, data, t_eval)
-    assert isinstance(value, float)
-    assert sens.shape == (3,)
-    assert np.isfinite(value)
-    assert np.isfinite(sens).all()
-
-    # For the f64/f64 case, also verify the value against the analytical solution
-    if scalar_type == ds.f64 and data_dtype == np.float64:
-        expected_y = np.array([logistic_solution(*params, t) for t in t_eval])
-        np.testing.assert_allclose(value, np.sum((expected_y - data[0]) ** 2), rtol=1e-4)
+    integral, gradient = ode.solve_continuous_adjoint(params, 1.0)
+    assert integral.shape == (1,)
+    assert gradient.shape == (1, 1)
+    assert np.isfinite(integral).all()
+    assert np.isfinite(gradient).all()
 
 
-def test_solve_sum_squares_adjoint_invalid_dtype(jit_backend):
-    if not hasattr(ds, "llvm"):
-        pytest.skip("Adjoint sensitivities require an LLVM JIT backend")
-
-    ode = make_ode(ds.llvm, scalar_type=ds.f64, ode_solver=ds.bdf)
-    params = np.array([1.0, 1.0, 0.1])
+@pytest.mark.skipif(not hasattr(ds, "llvm"), reason="Adjoint sensitivities require an LLVM JIT backend")
+@pytest.mark.parametrize("dgdu_dtype", [
+    np.float64, # dgdu type matches scalar_type so can be borrowed directly
+    np.float32, # dgdu type differs from scalar_type so must be converted to f64
+])
+def test_split_adjoint(dgdu_dtype):
+    ode = make_ode(ds.llvm, code=ADJOINT_LOGISTIC_CODE, scalar_type=ds.f64, ode_solver=ds.bdf)
+    params = np.array([1.0])
     t_eval = np.array([0.0, 0.1, 0.5])
-    bad_data = np.zeros((1, 3), dtype=np.int32)
 
+    if os.name == "nt":
+        with pytest.raises(Exception, match="Sensitivity analysis is not supported on Windows"):
+            ode.solve_adjoint_fwd(params, t_eval)
+        return
+
+    solution, checkpoint = ode.solve_adjoint_fwd(params, t_eval)
+    assert isinstance(solution, ds.Solution)
+    assert isinstance(checkpoint, ds.AdjointCheckpoint)
+    assert solution.ts.tolist() == pytest.approx(t_eval.tolist())
+
+    dgdu_eval = np.ones_like(solution.ys).astype(dgdu_dtype)
+    gradient = ode.solve_adjoint_bkwd(solution, checkpoint, dgdu_eval)
+    assert gradient.shape == (1, 1)
+    assert np.isfinite(gradient).all()
+
+
+@pytest.mark.skipif(not hasattr(ds, "llvm"), reason="Adjoint sensitivities require an LLVM JIT backend")
+@pytest.mark.skipif(os.name == "nt", reason="Adjoint sensitivities are not supported on Windows")
+def test_split_adjoint_invalid_dgdu():
+    ode = make_ode(ds.llvm, code=ADJOINT_LOGISTIC_CODE, scalar_type=ds.f64, ode_solver=ds.bdf)
+    params = np.array([1.0])
+    t_eval = np.array([0.0, 0.1, 0.5])
+
+    solution, checkpoint = ode.solve_adjoint_fwd(params, t_eval)
+
+    bad_dtype = np.zeros((1, 3), dtype=np.int32)
     with pytest.raises(Exception, match="float32 or float64"):
-        ode.solve_sum_squares_adj(params, bad_data, t_eval)
+        ode.solve_adjoint_bkwd(solution, checkpoint, bad_dtype)
+
+    bad_shape = np.zeros((2, 3), dtype=np.float64)
+    with pytest.raises(Exception, match="Expected dgdu_eval to have 1 rows"):
+        ode.solve_adjoint_bkwd(solution, checkpoint, bad_shape)

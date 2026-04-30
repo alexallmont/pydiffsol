@@ -11,6 +11,7 @@ use pyo3::{
 };
 
 use crate::{
+    adjoint_checkpoint::AdjointCheckpointWrapper,
     error::PyDiffsolError,
     host_array::{
         host_array_to_py, pyarray1_to_host_f64, pyarray2_to_host_f32, pyarray2_to_host_f64,
@@ -195,6 +196,114 @@ impl OdeWrapper {
         Ok(())
     }
 
+    /// Initial time for the solver, default 0.0.
+    #[getter]
+    fn get_t0(&self) -> Result<f64, PyDiffsolError> {
+        Ok(self.0.get_t0()?)
+    }
+
+    #[setter]
+    fn set_t0(&self, value: f64) -> Result<(), PyDiffsolError> {
+        self.0.set_t0(value)?;
+        Ok(())
+    }
+
+    /// Initial step size for the solver, default 1.0.
+    #[getter]
+    fn get_h0(&self) -> Result<f64, PyDiffsolError> {
+        Ok(self.0.get_h0()?)
+    }
+
+    #[setter]
+    fn set_h0(&self, value: f64) -> Result<(), PyDiffsolError> {
+        self.0.set_h0(value)?;
+        Ok(())
+    }
+
+    /// Whether to integrate output equations alongside state equations.
+    #[getter]
+    fn get_integrate_out(&self) -> Result<bool, PyDiffsolError> {
+        Ok(self.0.get_integrate_out()?)
+    }
+
+    #[setter]
+    fn set_integrate_out(&self, value: bool) -> Result<(), PyDiffsolError> {
+        self.0.set_integrate_out(value)?;
+        Ok(())
+    }
+
+    /// Relative tolerance for forward sensitivity or adjoint equations.
+    #[getter]
+    fn get_sens_rtol(&self) -> Result<Option<f64>, PyDiffsolError> {
+        Ok(self.0.get_sens_rtol()?)
+    }
+
+    #[setter]
+    fn set_sens_rtol(&self, value: Option<f64>) -> Result<(), PyDiffsolError> {
+        self.0.set_sens_rtol(value)?;
+        Ok(())
+    }
+
+    /// Absolute tolerance for forward sensitivity or adjoint equations.
+    #[getter]
+    fn get_sens_atol(&self) -> Result<Option<f64>, PyDiffsolError> {
+        Ok(self.0.get_sens_atol()?)
+    }
+
+    #[setter]
+    fn set_sens_atol(&self, value: Option<f64>) -> Result<(), PyDiffsolError> {
+        self.0.set_sens_atol(value)?;
+        Ok(())
+    }
+
+    /// Relative tolerance for integrated output equations.
+    #[getter]
+    fn get_out_rtol(&self) -> Result<Option<f64>, PyDiffsolError> {
+        Ok(self.0.get_out_rtol()?)
+    }
+
+    #[setter]
+    fn set_out_rtol(&self, value: Option<f64>) -> Result<(), PyDiffsolError> {
+        self.0.set_out_rtol(value)?;
+        Ok(())
+    }
+
+    /// Absolute tolerance for integrated output equations.
+    #[getter]
+    fn get_out_atol(&self) -> Result<Option<f64>, PyDiffsolError> {
+        Ok(self.0.get_out_atol()?)
+    }
+
+    #[setter]
+    fn set_out_atol(&self, value: Option<f64>) -> Result<(), PyDiffsolError> {
+        self.0.set_out_atol(value)?;
+        Ok(())
+    }
+
+    /// Relative tolerance for adjoint parameter gradient equations.
+    #[getter]
+    fn get_param_rtol(&self) -> Result<Option<f64>, PyDiffsolError> {
+        Ok(self.0.get_param_rtol()?)
+    }
+
+    #[setter]
+    fn set_param_rtol(&self, value: Option<f64>) -> Result<(), PyDiffsolError> {
+        self.0.set_param_rtol(value)?;
+        Ok(())
+    }
+
+    /// Absolute tolerance for adjoint parameter gradient equations.
+    #[getter]
+    fn get_param_atol(&self) -> Result<Option<f64>, PyDiffsolError> {
+        Ok(self.0.get_param_atol()?)
+    }
+
+    #[setter]
+    fn set_param_atol(&self, value: Option<f64>) -> Result<(), PyDiffsolError> {
+        self.0.set_param_atol(value)?;
+        Ok(())
+    }
+
     /// Get the DiffSl code used to generate this ODE.
     #[getter]
     fn get_code(&self) -> Result<String, PyDiffsolError> {
@@ -280,6 +389,7 @@ impl OdeWrapper {
     }
 
     /// Solve the problem up to time `final_time`.
+    /// Stop/reset events defined in the DiffSL code are handled automatically.
     ///
     /// The number of params must match the expected params in the diffsl code.
     ///
@@ -302,29 +412,9 @@ impl OdeWrapper {
         ))
     }
 
-    /// Solve the problem up to time `final_time`, stopping and restarting at
-    /// each stop event defined in the diffsl code.
-    ///
-    /// The number of params must match the expected params in the diffsl code.
-    ///
-    /// :param params: 1D array of solver parameters
-    /// :type params: numpy.ndarray
-    /// :param final_time: end time of solver
-    /// :type final_time: float
-    /// :return: `Solution` object with fields `ys` and `ts`
-    /// :rtype: Solution
-    fn solve_hybrid(
-        &self,
-        params: PyReadonlyArray1<'_, f64>,
-        final_time: f64,
-    ) -> Result<SolutionWrapper, PyDiffsolError> {
-        Ok(SolutionWrapper::new(
-            self.0.solve_hybrid(pyarray1_to_host_f64(params)?, final_time)?,
-        ))
-    }
-
     /// Solve the problem up to time `t_eval[t_eval.len()-1]`.
     /// Returns a `Solution` object with values at timepoints given by `t_eval`.
+    /// Stop/reset events defined in the DiffSL code are handled automatically.
     ///
     /// The number of params must match the expected params in the diffsl code.
     ///
@@ -345,32 +435,10 @@ impl OdeWrapper {
         )?))
     }
 
-    /// Solve the problem up to time `t_eval[t_eval.len()-1]`, stopping and
-    /// restarting at each stop event defined in the diffsl code.
-    /// Returns a `Solution` object with values at timepoints given by `t_eval`.
-    ///
-    /// The number of params must match the expected params in the diffsl code.
-    ///
-    /// :param params: 1D array of solver parameters
-    /// :type params: numpy.ndarray
-    /// :param t_eval: 1D array of solver times
-    /// :type t_eval: numpy.ndarray
-    /// :return: `Solution` object with fields `ys` and `ts`
-    /// :rtype: Solution
-    fn solve_hybrid_dense(
-        &self,
-        params: PyReadonlyArray1<'_, f64>,
-        t_eval: PyReadonlyArray1<'_, f64>,
-    ) -> Result<SolutionWrapper, PyDiffsolError> {
-        Ok(SolutionWrapper::new(self.0.solve_hybrid_dense(
-            pyarray1_to_host_f64(params)?,
-            pyarray1_to_host_f64(t_eval)?,
-        )?))
-    }
-
     /// Solve the problem up to time `t_eval[t_eval.len()-1]`.
     /// Returns a `Solution` object with values at `t_eval` and sensitivity arrays
     /// at the same timepoints.
+    /// Stop/reset events defined in the DiffSL code are handled automatically.
     ///
     /// The number of params must match the expected params in the diffsl code.
     ///
@@ -391,84 +459,92 @@ impl OdeWrapper {
         )?))
     }
 
-    /// Solve the problem up to time `t_eval[t_eval.len()-1]`, stopping and
-    /// restarting at each stop event defined in the diffsl code.
-    /// Returns a `Solution` object with values at `t_eval` and sensitivity arrays
-    /// at the same timepoints.
+    /// Solve the continuous adjoint problem for the integral of the model output
+    /// from the initial time to `final_time`.
     ///
-    /// The number of params must match the expected params in the diffsl code.
-    ///
-    /// :param params: 1D array of solver parameters
-    /// :type params: numpy.ndarray
-    /// :param t_eval: 1D array of solver times
-    /// :type t_eval: numpy.ndarray
-    /// :return: `Solution` object with fields `ys`, `ts`, and `sens`
-    /// :rtype: Solution
-    fn solve_hybrid_fwd_sens(
-        &self,
-        params: PyReadonlyArray1<'_, f64>,
-        t_eval: PyReadonlyArray1<'_, f64>,
-    ) -> Result<SolutionWrapper, PyDiffsolError> {
-        Ok(SolutionWrapper::new(self.0.solve_hybrid_fwd_sens(
-            pyarray1_to_host_f64(params)?,
-            pyarray1_to_host_f64(t_eval)?,
-        )?))
-    }
-
-    /// Solve the adjoint problem for the sum of squares objective given data
-    /// at timepoints `t_eval`.
-    /// Returns the objective value and a 1D array of adjoint sensitivities
-    /// for each parameter.
-    ///
-    /// :param params: 1D array of solver parameters
-    /// :type params: numpy.ndarray
-    /// :param data: 2D array of observed data, shape (nout, len(t_eval)); float32 or float64
-    /// :type data: numpy.ndarray
-    /// :param t_eval: 1D array of solver times
-    /// :type t_eval: numpy.ndarray
-    /// :return: tuple of (objective value, 1D array of sensitivities)
-    /// :rtype: tuple[float, numpy.ndarray]
-    fn solve_sum_squares_adj<'py>(
+    /// :return: tuple of (integral, gradient)
+    /// :rtype: tuple[numpy.ndarray, numpy.ndarray]
+    fn solve_continuous_adjoint<'py>(
         &self,
         py: Python<'py>,
         params: PyReadonlyArray1<'py, f64>,
-        data: &Bound<'py, PyAny>,
-        t_eval: PyReadonlyArray1<'py, f64>,
-    ) -> Result<(f64, Bound<'py, PyAny>), PyDiffsolError> {
-        let params_host = pyarray1_to_host_f64(params)?;
-        let t_eval_host = pyarray1_to_host_f64(t_eval)?;
+        final_time: f64,
+    ) -> Result<(Bound<'py, PyAny>, Bound<'py, PyAny>), PyDiffsolError> {
+        let (integral, gradient) = self
+            .0
+            .solve_continuous_adjoint(pyarray1_to_host_f64(params)?, final_time)?;
+        Ok((
+            host_array_to_py(py, integral)?,
+            host_array_to_py(py, gradient)?,
+        ))
+    }
+
+    /// Solve the forward problem at `t_eval` and retain checkpoint data for a
+    /// later discrete adjoint backward pass.
+    ///
+    /// :return: tuple of (solution, checkpoint)
+    /// :rtype: tuple[Solution, AdjointCheckpoint]
+    fn solve_adjoint_fwd(
+        &self,
+        params: PyReadonlyArray1<'_, f64>,
+        t_eval: PyReadonlyArray1<'_, f64>,
+    ) -> Result<(SolutionWrapper, AdjointCheckpointWrapper), PyDiffsolError> {
+        let (solution, checkpoint) = self
+            .0
+            .solve_adjoint_fwd(pyarray1_to_host_f64(params)?, pyarray1_to_host_f64(t_eval)?)?;
+        Ok((
+            SolutionWrapper::new(solution),
+            AdjointCheckpointWrapper::new(checkpoint),
+        ))
+    }
+
+    /// Solve the discrete adjoint backward pass using a prior forward adjoint
+    /// checkpoint and the gradient of a scalar objective with respect to model
+    /// outputs at each saved evaluation time.
+    ///
+    /// :param dgdu_eval: 2D array, shape (nout, len(solution.ts)); float32 or float64
+    /// :type dgdu_eval: numpy.ndarray
+    /// :return: parameter gradient matrix
+    /// :rtype: numpy.ndarray
+    fn solve_adjoint_bkwd<'py>(
+        &self,
+        py: Python<'py>,
+        solution: &SolutionWrapper,
+        checkpoint: &AdjointCheckpointWrapper,
+        dgdu_eval: &Bound<'py, PyAny>,
+    ) -> Result<Bound<'py, PyAny>, PyDiffsolError> {
         let scalar_type: ScalarType = self.0.get_scalar_type()?.into();
-        let (value, sens) = if let Ok(data_f32) = data.extract::<PyReadonlyArray2<f32>>() {
+        let gradient = if let Ok(dgdu_f32) = dgdu_eval.extract::<PyReadonlyArray2<f32>>() {
             match scalar_type {
-                ScalarType::F32 => self.0.solve_sum_squares_adj(
-                    params_host,
-                    pyarray2_to_host_f32(data_f32)?,
-                    t_eval_host,
+                ScalarType::F32 => self.0.solve_adjoint_bkwd(
+                    solution.inner(),
+                    checkpoint.inner(),
+                    pyarray2_to_host_f32(dgdu_f32)?,
                 )?,
                 ScalarType::F64 => {
-                    let (_owned_data, data_host) = pyarray2_to_owned_f64_host(data_f32)?;
+                    let (_owned_dgdu, dgdu_host) = pyarray2_to_owned_f64_host(dgdu_f32)?;
                     self.0
-                        .solve_sum_squares_adj(params_host, data_host, t_eval_host)?
+                        .solve_adjoint_bkwd(solution.inner(), checkpoint.inner(), dgdu_host)?
                 }
             }
-        } else if let Ok(data_f64) = data.extract::<PyReadonlyArray2<f64>>() {
+        } else if let Ok(dgdu_f64) = dgdu_eval.extract::<PyReadonlyArray2<f64>>() {
             match scalar_type {
                 ScalarType::F32 => {
-                    let (_owned_data, data_host) = pyarray2_to_owned_f32_host(data_f64)?;
+                    let (_owned_dgdu, dgdu_host) = pyarray2_to_owned_f32_host(dgdu_f64)?;
                     self.0
-                        .solve_sum_squares_adj(params_host, data_host, t_eval_host)?
+                        .solve_adjoint_bkwd(solution.inner(), checkpoint.inner(), dgdu_host)?
                 }
-                ScalarType::F64 => self.0.solve_sum_squares_adj(
-                    params_host,
-                    pyarray2_to_host_f64(data_f64)?,
-                    t_eval_host,
+                ScalarType::F64 => self.0.solve_adjoint_bkwd(
+                    solution.inner(),
+                    checkpoint.inner(),
+                    pyarray2_to_host_f64(dgdu_f64)?,
                 )?,
             }
         } else {
             return Err(PyDiffsolError::Conversion(
-                "data must be a 2D NumPy array of float32 or float64".to_string(),
+                "dgdu_eval must be a 2D NumPy array of float32 or float64".to_string(),
             ));
         };
-        Ok((value, host_array_to_py(py, sens)?))
+        host_array_to_py(py, gradient)
     }
 }
