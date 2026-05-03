@@ -21,8 +21,8 @@ def solve():
             v,
             -g,
         }
-        stop_i {
-            x,
+        stop {
+            x,          // stop when height x reaches zero
         }
         reset_i {
             1e-12,
