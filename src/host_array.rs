@@ -1,10 +1,9 @@
+// Convert between NumPy arrays and diffsol-c host arrays while preserving dtypes.
+
 use std::mem::size_of;
 
 use diffsol_c::host_array::HostArray;
-use numpy::{
-    ndarray::{Array2, ArrayView2},
-    PyReadonlyArray1, PyReadonlyArray2, ToPyArray,
-};
+use numpy::{ndarray::Array2, PyReadonlyArray1, PyReadonlyArray2, ToPyArray};
 use pyo3::{prelude::*, PyAny};
 
 use crate::error::PyDiffsolError;

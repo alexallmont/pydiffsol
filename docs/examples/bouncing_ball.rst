@@ -33,7 +33,7 @@ where \\(e\\) is the coefficient of restitution.
 
 In DiffSL we define an event (root) function ``stop_i { x }`` so integration
 halts when \\(x = 0\\). A ``reset_i`` block applies the discrete velocity reset
-\\(v^+ = -e v^-\\) at each impact. The example calls ``solve_hybrid_dense(...)``
+\\(v^+ = -e v^-\\) at each impact. The example calls ``solve_dense(...)``
 which automatically handles repeated bounce events throughout the integration,
 returning the full trajectory up to ``final_time``.
 

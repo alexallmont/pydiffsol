@@ -36,7 +36,7 @@ def solve():
 
     params = np.array([9.81, 10.0, 0.8])
     t_eval = np.linspace(0.0, final_time, 200)
-    solution = ode.solve_hybrid_dense(params, t_eval)
+    solution = ode.solve_dense(params, t_eval)
 
     ts = solution.ts
     x, v = solution.ys

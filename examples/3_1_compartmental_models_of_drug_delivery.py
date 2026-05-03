@@ -13,7 +13,7 @@ def solve():
             Qp1 = 50.0,
         }
         tdose_i { -1.0, 6.0, 12.0, 18.0 }
-        dose_i { 0.0, 1000.0, 1000.0, 1000.0 }
+        dose_i { 0.0, 1000.0, 2000.0, 1000.0 }
         u_i {
             qc = 1000.0,
             qp1 = 0.0,
@@ -36,7 +36,7 @@ def solve():
     )
 
     params = np.array([1000.0, 1000.0, 100.0, 50.0])
-    solution = ode.solve_hybrid(params, 24.0)
+    solution = ode.solve(params, 24.0)
 
     ts = solution.ts
     q_c, q_p1 = solution.ys
