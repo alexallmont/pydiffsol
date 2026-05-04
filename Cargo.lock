@@ -599,9 +599,9 @@ dependencies = [
 
 [[package]]
 name = "diffsol-c"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e35463d40e8991fb8a461d986bc692e9e7310f1838d816d52380a36f6ca3f110"
+checksum = "95b5c8f943faaf9901ff19fbb4e7a72326b7f66f469731ae5ab7e97b0158bae7"
 dependencies = [
  "diffsl",
  "diffsol",
