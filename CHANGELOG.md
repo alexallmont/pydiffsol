@@ -5,14 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.5.0]
 
 ### Added
 
+- Switch to `diffsol-c` wrapper, directly using `diffsol` crate's runtime dispatch and conversion (#80)
 - `Ode` split-adjoint methods: `solve_continuous_adjoint`, `solve_adjoint_fwd`, and `solve_adjoint_bkwd`.
 - Select ODE JIT backend rather than it being determined by platform.
 - Pickling support allows restoration of equivalent solver much faster than JIT compiling twice.
 - Methods to get underlying `diffsol_version` and `diffsl_version`
+
+### Fixed
+
+- Exposed missing `is_sens_available` method.
 
 ### Changed
 
