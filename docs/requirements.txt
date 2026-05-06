@@ -8,15 +8,15 @@ alabaster==1.0.0
     # via sphinx
 babel==2.18.0
     # via sphinx
-certifi==2026.2.25
+certifi==2026.4.22
     # via requests
-charset-normalizer==3.4.6
+charset-normalizer==3.4.7
     # via requests
 docutils==0.22.4
     # via
     #   sphinx
     #   sphinx-rtd-theme
-idna==3.11
+idna==3.13
     # via requests
 imagesize==2.0.0
     # via sphinx
@@ -26,9 +26,9 @@ markupsafe==3.0.3
     # via jinja2
 numpy==2.4.4
     # via pydiffsol
-packaging==26.0
+packaging==26.2
     # via sphinx
-pydiffsol==0.4.0
+pydiffsol==0.5.0
     # via -r requirements.in
 pygments==2.20.0
     # via sphinx
