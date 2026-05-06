@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Ode` `solve`, `solve_dense`, and `solve_fwd_sens` now handle stop/reset events automatically.
 - `SolverMethod` class renamed to `OdeSolverType`. Similarly, usage of `ode_solver` in `Ode` `solve` methods replaced with `ode_solver`.
 - `SolverType` class renamed to `LinearSolverType`.
+- VSCode `maturin develop` task moved from "Run Task" command to "Run Build Task" command.
 
 ## [0.4.0]
 
