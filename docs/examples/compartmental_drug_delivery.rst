@@ -13,14 +13,13 @@ central and peripheral compartments, the model is:
 
 .. math::
 
-  \frac{dq_c}{dt} =
+  \begin{aligned}
+  \frac{dq_c}{dt} &=
   - \frac{q_c}{V_c} CL
-  - Q_{p1} \left( \frac{q_c}{V_c} - \frac{q_{p1}}{V_{p1}} \right)
-
-.. math::
-
-  \frac{dq_{p1}}{dt} =
+  - Q_{p1} \left( \frac{q_c}{V_c} - \frac{q_{p1}}{V_{p1}} \right) \\\\
+  \frac{dq_{p1}}{dt} &=
   Q_{p1} \left( \frac{q_c}{V_c} - \frac{q_{p1}}{V_{p1}} \right)
+  \end{aligned}
 
 with initial conditions \\(q_c(0)=1000\\) ng and \\(q_{p1}(0)=0\\) ng.
 

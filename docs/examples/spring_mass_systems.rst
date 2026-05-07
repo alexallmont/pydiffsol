@@ -17,12 +17,12 @@ where \\(x\\) is the position of the mass, \\(t\\) is time, and the negative sig
 We can convert this to a system of two first order ODEs by introducing a new variable for the velocity of the mass:
 
 .. math::
-  \begin{align*}
+  \begin{aligned}
   \frac{dx}{dt} &= v \\\\
   \frac{dv}{dt} &= -\frac{k}{m} x - \frac{c}{m} v
-  \end{align*}
+  \end{aligned}
 
-where \\(v = \frac{dx}{dt}\\) is the velocity of the mass.
+where \\(v = \\frac{dx}{dt}\\) is the velocity of the mass.
 
 We can solve this system of ODEs using Diffsol with the following code:
 

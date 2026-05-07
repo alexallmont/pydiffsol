@@ -15,11 +15,10 @@ velocity \\(v = dx/dt\\), we write:
 
 .. math::
 
-  \frac{dx}{dt} = v
-
-.. math::
-
-  \frac{dv}{dt} = -g
+  \begin{aligned}
+  \frac{dx}{dt} &= v \\\\
+  \frac{dv}{dt} &= -g
+  \end{aligned}
 
 with initial conditions \\(x(0)=h\\), \\(v(0)=0\\).
 
