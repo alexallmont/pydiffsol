@@ -27,7 +27,7 @@ use crate::{
     solution::SolutionWrapper,
 };
 
-#[pyclass(module = "pydiffsol")]
+#[pyclass(from_py_object, module = "pydiffsol")]
 #[pyo3(name = "Ode")]
 #[derive(Clone)]
 pub struct OdeWrapper(diffsol_c::OdeWrapper);

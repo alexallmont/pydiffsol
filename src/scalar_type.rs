@@ -6,7 +6,7 @@ use pyo3::{
     types::{PyList, PyType},
 };
 
-#[pyclass(eq)]
+#[pyclass(from_py_object, eq)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ScalarType {
     #[pyo3(name = "f32")]

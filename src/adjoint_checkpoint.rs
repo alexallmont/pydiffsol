@@ -4,7 +4,7 @@
 
 use pyo3::prelude::*;
 
-#[pyclass(module = "pydiffsol")]
+#[pyclass(from_py_object, module = "pydiffsol")]
 #[pyo3(name = "AdjointCheckpoint")]
 #[derive(Clone)]
 pub struct AdjointCheckpointWrapper(diffsol_c::AdjointCheckpointWrapper);

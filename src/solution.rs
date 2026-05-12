@@ -6,7 +6,7 @@ use crate::error::PyDiffsolError;
 use crate::host_array::{host_array_to_py, host_array_vec_to_py};
 
 #[pyclass]
-#[pyo3(name = "Solution")]
+#[pyo3(from_py_object, name = "Solution")]
 #[derive(Clone)]
 pub struct SolutionWrapper(diffsol_c::SolutionWrapper);
 
