@@ -13,7 +13,7 @@ use pyo3::{
 /// :attr default: use the solver's default linear solver choice, typically LU
 /// :attr lu: use LU decomposition linear solver (dense or sparse as appropriate)
 /// :attr klu: use KLU sparse linear solver
-#[pyclass(eq)]
+#[pyclass(from_py_object, eq)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum LinearSolverType {
     #[pyo3(name = "default")]

@@ -2,7 +2,7 @@ use pyo3::prelude::*;
 
 use crate::error::PyDiffsolError;
 
-#[pyclass]
+#[pyclass(from_py_object)]
 #[derive(Clone)]
 pub struct InitialConditionSolverOptions(diffsol_c::InitialConditionSolverOptions);
 

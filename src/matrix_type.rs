@@ -12,7 +12,7 @@ use pyo3::{
 /// :attr nalgebra_dense: dense matrix using nalgebra crate (https://nalgebra.rs/)
 /// :attr faer_dense: dense matrix using faer crate (https://faer.veganb.tw/)
 /// :attr faer_sparse: sparse matrix using faer crate (https://faer.veganb.tw/)
-#[pyclass(eq)]
+#[pyclass(from_py_object, eq)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum MatrixType {
     #[pyo3(name = "nalgebra_dense")]
