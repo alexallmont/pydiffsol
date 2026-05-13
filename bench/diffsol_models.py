@@ -31,7 +31,7 @@ def setup(ngroups: int, tol: float, method: str, problem: str):
         code,
         matrix_type=matrix_type,
         scalar_type=ds.f64,
-        method=method,
+        ode_solver=method,
     )
     ode.rtol = tol
     ode.atol = tol
