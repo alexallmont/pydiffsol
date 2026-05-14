@@ -5,7 +5,7 @@ edition = "2021"
 
 [lib]
 name = "pydiffsol"
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "rlib"]
 
 [features]
 diffsol-llvm = []
@@ -27,6 +27,7 @@ pyo3 = { version = "0.28.3", default-features = false, features = [
 diffsol-c = { version = "0.4.2" }
 numpy = "0.28.0"
 pyo3-log = "0.13.2"
+pyo3-stub-gen = "0.22.2"
 serde_json = "1.0"
 
 [dev-dependencies]

@@ -1,6 +1,10 @@
 // Main pydiffsol Python extension module registration.
 
 use pyo3::prelude::*;
+use pyo3_stub_gen::{
+    derive::gen_stub_pyfunction,
+    define_stub_info_gatherer
+};
 
 #[cfg(not(any(feature = "diffsol-cranelift", feature = "diffsol-llvm")))]
 compile_error!("pydiffsol requires at least one JIT backend feature enabled");
@@ -19,6 +23,7 @@ mod scalar_type;
 mod solution;
 
 /// Get version of this pydiffsol module
+#[gen_stub_pyfunction]
 #[pyfunction]
 fn version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
@@ -95,3 +100,5 @@ fn pydiffsol(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     Ok(())
 }
+
+define_stub_info_gatherer!(stub_info);
