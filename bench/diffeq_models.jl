@@ -1,5 +1,8 @@
 import DifferentialEquations as DE
 import ModelingToolkit as MTK
+using OrdinaryDiffEqBDF: FBDF
+using OrdinaryDiffEqSDIRK: KenCarp3, TRBDF2
+using OrdinaryDiffEqTsit5: Tsit5
 include("diffeq_robertson.jl")
 include("diffeq_lokta_volterra.jl")
 
@@ -15,13 +18,13 @@ function setup(ngroups, tol, method, problem)
     @MTK.mtkcompile sys = MTK.modelingtoolkitize(prob)
     prob = DE.ODEProblem(sys, [], tspan, jac=true, sparse=ngroups >= 20)
     if method == "bdf"
-        alg = DE.FBDF()
+        alg = FBDF()
     elseif method == "kencarp3"
-        alg = DE.KenCarp3()
+        alg = KenCarp3()
     elseif method == "tr_bdf2"
-        alg = DE.TRBDF2()
+        alg = TRBDF2()
     elseif method == "tsit5"
-        alg = DE.Tsit5()
+        alg = Tsit5()
     else
         error("Unknown method: $method")
     end
