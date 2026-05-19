@@ -1,10 +1,12 @@
 // Wrap diffsol-c solution arrays with Python properties returning NumPy arrays.
 
 use pyo3::{prelude::*, PyAny};
+use pyo3_stub_gen::derive::gen_stub_pyclass;
 
 use crate::error::PyDiffsolError;
 use crate::host_array::{host_array_to_py, host_array_vec_to_py};
 
+#[gen_stub_pyclass]
 #[pyclass]
 #[pyo3(from_py_object, name = "Solution")]
 #[derive(Clone)]

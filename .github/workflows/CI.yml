@@ -29,7 +29,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
-          python-version: 3.x
+          python-version: 3.10
       - name: Install LLVM and Clang
         if: runner.os == 'macOS'
         uses: KyleMayes/install-llvm-action@v2
@@ -47,9 +47,13 @@ jobs:
           SCCACHE_VERSION: 0.2.13
           CIBW_BEFORE_ALL_LINUX: "curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y && yum install -y openssl-devel && source .github/workflows/maturin_linux_setup.sh"
           CIBW_BUILD_VERBOSITY: "1"
+          # FIXME for review have removed deprecated extension-module from Cargo.toml, so it PYO3_BUILD_EXTENSION_MODULE now needed in CI build?
           CIBW_ENVIRONMENT_LINUX: 'PATH="$PATH:$HOME/.cargo/bin" MATURIN_PEP517_ARGS="--features diffsol-llvm17 --features suitesparse" RUSTFLAGS="-C linker-features=-lld"'
           CIBW_ENVIRONMENT_MACOS: 'PATH="$PATH:$HOME/.cargo/bin" MACOSX_DEPLOYMENT_TARGET=14.0 MATURIN_PEP517_ARGS="--features diffsol-llvm17"'
           CIBW_ENVIRONMENT_WINDOWS: 'PATH="$PATH:$HOME/.cargo/bin" MATURIN_PEP517_ARGS="--features diffsol-cranelift"'
+          CIBW_BEFORE_BUILD_LINUX: 'PATH="$PATH:$HOME/.cargo/bin" cargo run --bin stub_gen --features diffsol-llvm17 --features suitesparse'
+          CIBW_BEFORE_BUILD_MACOS: 'PATH="$PATH:$HOME/.cargo/bin" cargo run --bin stub_gen --features diffsol-llvm17'
+          CIBW_BEFORE_BUILD_WINDOWS: 'PATH="$PATH:$HOME/.cargo/bin" cargo run --bin stub_gen --features diffsol-cranelift'
           CIBW_SKIP: "*-win32 *-musllinux_*"
       - name: Upload wheels
         uses: actions/upload-artifact@v7
@@ -66,7 +70,7 @@ jobs:
           set -e
           python3 -m venv .venv
           source $ACTIVATE
-          pip install "$(echo ./wheelhouse/*cp39*.whl)[dev,bench]" # Explicit local whl avoids falling back to PyPI
+          pip install "$(echo ./wheelhouse/*cp310*.whl)[dev,bench]" # Explicit local whl avoids falling back to PyPI
           pytest -s -v $PYTEST_DIRS
 
   sdist:

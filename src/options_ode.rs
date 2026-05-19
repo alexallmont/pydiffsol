@@ -1,7 +1,9 @@
 use pyo3::prelude::*;
+use pyo3_stub_gen::derive::gen_stub_pyclass;
 
 use crate::error::PyDiffsolError;
 
+#[gen_stub_pyclass]
 #[pyclass(from_py_object)]
 #[derive(Clone)]
 pub struct OdeSolverOptions(diffsol_c::OdeSolverOptions);
