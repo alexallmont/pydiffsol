@@ -38,6 +38,11 @@
             "windows": {
                 "command": "cargo run --bin stub_gen --features diffsol-cranelift"
             },
+            "options": {
+                "env": {
+                    "PYO3_PYTHON": "${command:python.interpreterPath}"
+                }
+            },
             "problemMatcher": [
                 "$rustc"
             ],
