@@ -25,11 +25,18 @@ jobs:
             target: AMD64
           - runner: macos-14
             target: arm64
+
+    env:
+      LINUX_FEATURE_FLAGS: "--features diffsol-llvm17 --features suitesparse"
+      MACOS_FEATURE_FLAGS: "--features diffsol-llvm17"
+      WINDOWS_FEATURE_FLAGS: "--features diffsol-cranelift"
+
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
           python-version: '3.10'
+
       - name: Install LLVM and Clang
         if: runner.os == 'macOS'
         uses: KyleMayes/install-llvm-action@v2
@@ -38,6 +45,17 @@ jobs:
       - name: Install SuiteSparse
         if: runner.os == 'macOS'
         run: brew install suite-sparse
+
+      - name: Generate Linux autocomplete .pyi
+        if: runner.os == 'Linux'
+        run: cargo run --bin stub_gen $LINUX_FEATURE_FLAGS
+      - name: Generate macOS autocomplete .pyi
+        if: runner.os == 'macOS'
+        run: cargo run --bin stub_gen $MACOS_FEATURE_FLAGS
+      - name: Generate Windows autocomplete .pyi
+        if: runner.os == 'Windows'
+        run: cargo run --bin stub_gen $WINDOWS_FEATURE_FLAGS
+
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.4.1
         env:
@@ -47,20 +65,17 @@ jobs:
           SCCACHE_VERSION: 0.2.13
           CIBW_BEFORE_ALL_LINUX: "curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y && yum install -y openssl-devel && source .github/workflows/maturin_linux_setup.sh"
           CIBW_BUILD_VERBOSITY: "1"
-          # FIXME for review have removed deprecated extension-module from Cargo.toml, so it PYO3_BUILD_EXTENSION_MODULE now needed in CI build?
-          CIBW_ENVIRONMENT_LINUX: 'PATH="$PATH:$HOME/.cargo/bin" MATURIN_PEP517_ARGS="--features diffsol-llvm17 --features suitesparse" RUSTFLAGS="-C linker-features=-lld"'
-          CIBW_ENVIRONMENT_MACOS: 'PATH="$PATH:$HOME/.cargo/bin" MACOSX_DEPLOYMENT_TARGET=14.0 MATURIN_PEP517_ARGS="--features diffsol-llvm17"'
-          CIBW_ENVIRONMENT_WINDOWS: 'PATH="$PATH:$HOME/.cargo/bin" MATURIN_PEP517_ARGS="--features diffsol-cranelift"'
-          # FIXME experimental disable stub_gen whilst checking 3.10 build
-          # CIBW_BEFORE_BUILD_LINUX: 'PATH="$PATH:$HOME/.cargo/bin" cargo run --bin stub_gen --features diffsol-llvm17 --features suitesparse'
-          # CIBW_BEFORE_BUILD_MACOS: 'PATH="$PATH:$HOME/.cargo/bin" cargo run --bin stub_gen --features diffsol-llvm17'
-          # CIBW_BEFORE_BUILD_WINDOWS: 'PATH="$PATH:$HOME/.cargo/bin" cargo run --bin stub_gen --features diffsol-cranelift'
+          CIBW_ENVIRONMENT_LINUX: 'PATH="$PATH:$HOME/.cargo/bin" MATURIN_PEP517_ARGS="${{ env.LINUX_FEATURE_FLAGS }} RUSTFLAGS="-C linker-features=-lld"'
+          CIBW_ENVIRONMENT_MACOS: 'PATH="$PATH:$HOME/.cargo/bin" MACOSX_DEPLOYMENT_TARGET=14.0 MATURIN_PEP517_ARGS="${{ env.MACOS_FEATURE_FLAGS }}"'
+          CIBW_ENVIRONMENT_WINDOWS: 'PATH="$PATH:$HOME/.cargo/bin" MATURIN_PEP517_ARGS="${{ env.WINDOWS_FEATURE_FLAGS }}"'
           CIBW_SKIP: "*-win32 *-musllinux_*"
+
       - name: Upload wheels
         uses: actions/upload-artifact@v7
         with:
           name: wheels-${{ matrix.platform.runner }}-${{ matrix.platform.target }}
           path: ./wheelhouse/*.whl
+
       - name: pytest
         shell: bash
         env:
