@@ -7,10 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.2]
 
+### Added
+
+- Method to get underlying `diffsol_c_version`.
+
 ### Changed
 
-- Updated diffsol-c to 0.4.4.
-- Update benchmarking results.
+- Update benchmarking results using latest diffsol-c 0.4.4.
 
 ## [0.5.1]
 

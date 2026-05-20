@@ -55,6 +55,13 @@ fn diffsl_version() -> String {
         .to_string()
 }
 
+#[pyfunction]
+fn diffsol_c_version() -> String {
+    option_env!("PYDIFFSOL_DIFFSOL_C_VERSION")
+        .unwrap_or("unknown")
+        .to_string()
+}
+
 #[pymodule]
 fn pydiffsol(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<matrix_type::MatrixType>()?;
@@ -90,6 +97,7 @@ fn pydiffsol(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(default_enabled_jit_backend, m)?)?;
     m.add_function(wrap_pyfunction!(diffsol_version, m)?)?;
     m.add_function(wrap_pyfunction!(diffsl_version, m)?)?;
+    m.add_function(wrap_pyfunction!(diffsol_c_version, m)?)?;
 
     pyo3_log::init();
 
