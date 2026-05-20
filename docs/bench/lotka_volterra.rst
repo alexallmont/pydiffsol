@@ -5,9 +5,11 @@ We benchmark ODE solvers on the Lotka-Volterra predator-prey model. This is a no
 
 .. math::
 
-   \frac{dx}{dt} = a x - b xy
+   \begin{aligned}
+   \frac{dx}{dt} &= a x - b xy
 
-   \frac{dy}{dt} = c xy - d y
+   \frac{dy}{dt} &= c xy - d y
+   \begin{aligned}
 
 where :math:`x` is the number of prey, :math:`y` is the number of predators, and :math:`a`, :math:`b`, :math:`c`, and :math:`d` are positive real parameters that describe the interaction between the two species.
 
