@@ -48,13 +48,13 @@ jobs:
 
       - name: Generate Linux autocomplete .pyi
         if: runner.os == 'Linux'
-        run: cargo run --bin stub_gen $LINUX_FEATURE_FLAGS
+        run: PATH="$PATH:$HOME/.cargo/bin" cargo run --bin stub_gen $LINUX_FEATURE_FLAGS
       - name: Generate macOS autocomplete .pyi
         if: runner.os == 'macOS'
-        run: cargo run --bin stub_gen $MACOS_FEATURE_FLAGS
+        run: PATH="$PATH:$HOME/.cargo/bin" cargo run --bin stub_gen $MACOS_FEATURE_FLAGS
       - name: Generate Windows autocomplete .pyi
         if: runner.os == 'Windows'
-        run: cargo run --bin stub_gen $WINDOWS_FEATURE_FLAGS
+        run: PATH="$PATH:$HOME/.cargo/bin" cargo run --bin stub_gen $WINDOWS_FEATURE_FLAGS
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.4.1
