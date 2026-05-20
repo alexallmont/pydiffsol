@@ -2283,7 +2283,7 @@ dependencies = [
 
 [[package]]
 name = "pydiffsol"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "cargo-lock",
  "diffsol-c",
