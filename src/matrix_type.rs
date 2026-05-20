@@ -6,7 +6,10 @@ use pyo3::{
     prelude::*,
     types::{PyList, PyType},
 };
-use pyo3_stub_gen::derive::gen_stub_pyclass_enum;
+use pyo3_stub_gen::derive::{
+    gen_stub_pyclass_enum,
+    gen_stub_pymethods,
+};
 
 /// Enumerates the possible matrix types for diffsol
 ///
@@ -61,6 +64,7 @@ impl From<diffsol_c::MatrixType> for MatrixType {
     }
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl MatrixType {
     /// Create MatrixType from string name

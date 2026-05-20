@@ -1,7 +1,7 @@
 // Main pydiffsol Python extension module registration.
 
 use pyo3::prelude::*;
-use pyo3_stub_gen::{derive::gen_stub_pyfunction, define_stub_info_gatherer};
+use pyo3_stub_gen::derive::gen_stub_pyfunction;
 
 #[cfg(not(any(feature = "diffsol-cranelift", feature = "diffsol-llvm")))]
 compile_error!("pydiffsol requires at least one JIT backend feature enabled");
@@ -62,6 +62,7 @@ fn diffsl_version() -> String {
         .to_string()
 }
 
+#[gen_stub_pyfunction]
 #[pyfunction]
 fn diffsol_c_version() -> String {
     option_env!("PYDIFFSOL_DIFFSOL_C_VERSION")
@@ -82,7 +83,7 @@ fn pydiffsol(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<options_ode::OdeSolverOptions>()?;
     m.add_class::<solution::SolutionWrapper>()?;
 
-    // FIXME add enums to stub_gen?
+    // FIXME add enums to stub gen
     for mt in matrix_type::MatrixType::all_enums() {
         m.add(mt.get_name(), mt)?;
     }
@@ -112,4 +113,4 @@ fn pydiffsol(m: &Bound<'_, PyModule>) -> PyResult<()> {
     Ok(())
 }
 
-define_stub_info_gatherer!(stub_info);
+pyo3_stub_gen::define_stub_info_gatherer!(stub_info);
