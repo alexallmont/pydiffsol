@@ -53,11 +53,15 @@ jobs:
           CIBW_ARCHS_MACOS: ${{ matrix.platform.target }}
           CIBW_ARCHS_WINDOWS: ${{ matrix.platform.target }}
           SCCACHE_VERSION: 0.2.13
-          CIBW_BEFORE_ALL_LINUX: 'curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y && yum install -y openssl-devel && source .github/workflows/maturin_linux_setup.sh && PATH="$PATH:$HOME/.cargo/bin" cargo run --bin stub_gen ${{ env.LINUX_FEATURE_FLAGS }}'
+          CIBW_BEFORE_ALL_LINUX: >
+            curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y
+            && yum install -y openssl-devel
+            && source .github/workflows/maturin_linux_setup.sh
+            && PATH="$PATH:$HOME/.cargo/bin" cargo run --bin stub_gen $LINUX_FEATURE_FLAGS
           CIBW_BEFORE_BUILD_MACOS: 'PATH="$PATH:$HOME/.cargo/bin" cargo run --bin stub_gen ${{ env.MACOS_FEATURE_FLAGS }}'
           CIBW_BEFORE_BUILD_WINDOWS: 'PATH="$PATH:$HOME/.cargo/bin" cargo run --bin stub_gen ${{ env.WINDOWS_FEATURE_FLAGS }}'
           CIBW_BUILD_VERBOSITY: "1"
-          CIBW_ENVIRONMENT_LINUX: 'PATH="$PATH:$HOME/.cargo/bin" MATURIN_PEP517_ARGS="${{ env.LINUX_FEATURE_FLAGS }} RUSTFLAGS="-C linker-features=-lld"'
+          CIBW_ENVIRONMENT_LINUX: 'PATH="$PATH:$HOME/.cargo/bin" MATURIN_PEP517_ARGS="${{ env.LINUX_FEATURE_FLAGS }}" RUSTFLAGS=-C linker-features=-lld'
           CIBW_ENVIRONMENT_MACOS: 'PATH="$PATH:$HOME/.cargo/bin" MACOSX_DEPLOYMENT_TARGET=14.0 MATURIN_PEP517_ARGS="${{ env.MACOS_FEATURE_FLAGS }}"'
           CIBW_ENVIRONMENT_WINDOWS: 'PATH="$PATH:$HOME/.cargo/bin" MATURIN_PEP517_ARGS="${{ env.WINDOWS_FEATURE_FLAGS }}"'
           CIBW_SKIP: "*-win32 *-musllinux_*"
