@@ -9,11 +9,7 @@ use pyo3::{
     types::{PyTuple, PyType},
     PyAny,
 };
-use pyo3_stub_gen::derive::{
-    gen_methods_from_python,
-    gen_stub_pymethods,
-    gen_stub_pyclass,
-};
+use pyo3_stub_gen::derive::{gen_methods_from_python, gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::{
     adjoint_checkpoint::AdjointCheckpointWrapper,
