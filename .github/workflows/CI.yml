@@ -46,11 +46,16 @@ jobs:
           CIBW_ARCHS_WINDOWS: ${{ matrix.platform.target }}
           SCCACHE_VERSION: 0.2.13
           CIBW_BEFORE_ALL_LINUX: "curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y && yum install -y openssl-devel && source .github/workflows/maturin_linux_setup.sh"
-          CIBW_BEFORE_BUILD_LINUX: 'PATH="$PATH:$HOME/.cargo/bin" RUSTFLAGS="-C linker-features=-lld" cargo run --bin stub_gen --features diffsol-llvm17 --features suitesparse'
+          CIBW_BEFORE_BUILD_LINUX: 'linker-features=-lld" cargo run --bin stub_gen --features diffsol-llvm17 --features suitesparse'
           CIBW_BEFORE_BUILD_MACOS: 'PATH="$PATH:$HOME/.cargo/bin" cargo run --bin stub_gen --features diffsol-llvm17'
           CIBW_BEFORE_BUILD_WINDOWS: 'PATH="$PATH:$HOME/.cargo/bin" cargo run --bin stub_gen --features diffsol-cranelift'
           CIBW_BUILD_VERBOSITY: "1"
-          CIBW_ENVIRONMENT_LINUX: 'PATH="$PATH:$HOME/.cargo/bin" MATURIN_PEP517_ARGS="--features diffsol-llvm17 --features suitesparse" RUSTFLAGS="-C linker-features=-lld"'
+          CIBW_ENVIRONMENT_LINUX: >
+            PATH="$PATH:$HOME/.cargo/bin"
+            PYO3_PYTHON="$(which python)"
+            PYTHON_SYS_EXECUTABLE="$(which python)"
+            MATURIN_PEP517_ARGS="--features diffsol-llvm17 --features suitesparse"
+            RUSTFLAGS="-C linker-features=-lld"
           CIBW_ENVIRONMENT_MACOS: 'PATH="$PATH:$HOME/.cargo/bin" MACOSX_DEPLOYMENT_TARGET=14.0 MATURIN_PEP517_ARGS="--features diffsol-llvm17"'
           CIBW_ENVIRONMENT_WINDOWS: 'PATH="$PATH:$HOME/.cargo/bin" MATURIN_PEP517_ARGS="--features diffsol-cranelift"'
           CIBW_SKIP: "*-win32 *-musllinux_*"
