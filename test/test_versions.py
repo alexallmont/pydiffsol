@@ -32,3 +32,4 @@ def test_pydiffsol_version_matches_cargo_toml():
 def test_dependency_versions_match_cargo_lock():
     assert ds.diffsol_version() == package_version_from_cargo_lock("diffsol")
     assert ds.diffsl_version() == package_version_from_cargo_lock("diffsl")
+    assert ds.diffsol_c_version() == package_version_from_cargo_lock("diffsol-c")
