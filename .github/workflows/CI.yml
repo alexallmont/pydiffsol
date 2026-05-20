@@ -57,7 +57,6 @@ jobs:
             curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y
             && yum install -y openssl-devel
             && source .github/workflows/maturin_linux_setup.sh
-            && PATH="$PATH:$HOME/.cargo/bin" cargo run --bin stub_gen $LINUX_FEATURE_FLAGS
           CIBW_BEFORE_BUILD_MACOS: 'PATH="$PATH:$HOME/.cargo/bin" cargo run --bin stub_gen ${{ env.MACOS_FEATURE_FLAGS }}'
           CIBW_BEFORE_BUILD_WINDOWS: 'PATH="$PATH:$HOME/.cargo/bin" cargo run --bin stub_gen ${{ env.WINDOWS_FEATURE_FLAGS }}'
           CIBW_BUILD_VERBOSITY: "1"
