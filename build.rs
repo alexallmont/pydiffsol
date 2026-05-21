@@ -42,7 +42,54 @@ fn emit_diffsol_versions(lockfile_path: &Path) {
     );
 }
 
+// FIXME do not push to main
+fn fixme_ci_env_diagnostics() {
+    use std::env;
+
+    println!("cargo:warning==== BUILD ENV ===");
+
+    for (k, v) in env::vars() {
+        println!("cargo:warning={}={}", k, v);
+    }
+
+    println!("cargo:warning==== IMPORTANT ===");
+
+    for key in [
+        "PATH",
+        "PYTHON_SYS_EXECUTABLE",
+        "PYO3_PYTHON",
+        "PYTHONPATH",
+        "LD_LIBRARY_PATH",
+        "LIBRARY_PATH",
+        "RUSTFLAGS",
+        "CARGO_ENCODED_RUSTFLAGS",
+    ] {
+        println!(
+            "cargo:warning={}={:?}",
+            key,
+            env::var(key).ok()
+        );
+    }
+
+    for key in env::vars().map(|x| x.0) {
+        if key.contains("LINK")
+            || key.contains("LIB")
+            || key.contains("PYTHON")
+            || key.contains("CARGO")
+            || key.contains("RUST")
+        {
+            println!(
+                "cargo:warning={}={}",
+                key,
+                env::var(&key).unwrap_or_default()
+            );
+        }
+    }
+}
+
 fn main() {
+    fixme_ci_env_diagnostics();
+
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR is not set");
     let lockfile_path = Path::new(&manifest_dir).join("Cargo.lock");
 
