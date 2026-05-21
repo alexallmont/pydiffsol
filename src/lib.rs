@@ -108,9 +108,22 @@ fn pydiffsol(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(diffsl_version, m)?)?;
     m.add_function(wrap_pyfunction!(diffsol_c_version, m)?)?;
 
+    m.add_function(wrap_pyfunction!(_generate_pyi, m)?)?;
     pyo3_log::init();
 
     Ok(())
 }
 
 pyo3_stub_gen::define_stub_info_gatherer!(stub_info);
+
+#[pyfunction]
+fn _generate_pyi() {
+    // FIXME replace Ok() blocks with ? and Result
+    // `stub_info` generated `define_stub_info_gatherer!` above
+    if let Ok(stub) = crate::stub_info() {
+        if let Ok(_) = stub.generate() {
+            println!("Saved to {}.pyi", stub.project_name);
+            return;
+        }
+    }
+}

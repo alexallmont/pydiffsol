@@ -53,8 +53,10 @@ jobs:
           CIBW_ENVIRONMENT_LINUX: 'PATH="$PATH:$HOME/.cargo/bin" MATURIN_PEP517_ARGS="--features diffsol-llvm17 --features suitesparse" RUSTFLAGS="-C linker-features=-lld"'
           CIBW_ENVIRONMENT_MACOS: 'PATH="$PATH:$HOME/.cargo/bin" MACOSX_DEPLOYMENT_TARGET=14.0 MATURIN_PEP517_ARGS="--features diffsol-llvm17"'
           CIBW_ENVIRONMENT_WINDOWS: 'PATH="$PATH:$HOME/.cargo/bin" MATURIN_PEP517_ARGS="--features diffsol-cranelift"'
-          CIBW_REPAIR_WHEEL_COMMAND_LINUX: >
-            sh -c 'echo REPAIR_PYTHON "$(which python)" && python --version && cp {wheel} {dest_dir}'
+          CIBW_REPAIR_WHEEL_COMMAND_LINUX: |
+            python -m pip install --force-reinstall --no-deps {wheel}
+            CARGO_MANIFEST_DIR=$(pwd) python -c "import pydiffsol as ds; ds._generate_pyi()"
+            echo "GREP_ME todo add to wheel"
           CIBW_BUILD: "cp310-manylinux_x86_64 cp310-macosx_arm64 cp310-win_amd64"
       - name: Upload wheels
         uses: actions/upload-artifact@v7
