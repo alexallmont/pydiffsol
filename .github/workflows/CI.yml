@@ -47,7 +47,7 @@ jobs:
           SCCACHE_VERSION: 0.2.13
           CIBW_BEFORE_ALL_LINUX: "curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y && yum install -y openssl-devel && source .github/workflows/maturin_linux_setup.sh"
           # FIXME re-enable after getting python path
-          CIBW_BEFORE_BUILD_LINUX: 'PATH="$PATH:$HOME/.cargo/bin" PYO3_PYTHON=/tmp/build-env-tpo_x36p/bin/python cargo run --bin stub_gen --features diffsol-llvm17 --features suitesparse'
+          CIBW_BEFORE_BUILD_LINUX: 'PATH="$PATH:$HOME/.cargo/bin" PYO3_PYTHON=python cargo run --bin stub_gen --features diffsol-llvm17 --features suitesparse'
           CIBW_BEFORE_BUILD_MACOS: 'PATH="$PATH:$HOME/.cargo/bin" cargo run --bin stub_gen --features diffsol-llvm17'
           CIBW_BEFORE_BUILD_WINDOWS: 'PATH="$PATH:$HOME/.cargo/bin" cargo run --bin stub_gen --features diffsol-cranelift'
           CIBW_BUILD_VERBOSITY: "1"
