@@ -55,6 +55,7 @@ jobs:
           CIBW_ENVIRONMENT_WINDOWS: 'PATH="$PATH:$HOME/.cargo/bin" MATURIN_PEP517_ARGS="--features diffsol-cranelift"'
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: |
             python -m pip install --force-reinstall --no-deps {wheel}
+            python -m pip install --upgrade wheel
             CARGO_MANIFEST_DIR=$(pwd) python -c "import pydiffsol as ds; ds._generate_pyi()"
             mkdir -p /tmp/wheel_add_pyi
             wheel unpack {wheel} -d /tmp/wheel_add_pyi
