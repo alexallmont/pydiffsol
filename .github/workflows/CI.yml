@@ -48,10 +48,12 @@ jobs:
           CIBW_ARCHS_WINDOWS: ${{ matrix.platform.target }}
           SCCACHE_VERSION: 0.2.13
           CIBW_BEFORE_ALL_LINUX: "curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y && yum install -y openssl-devel && source .github/workflows/maturin_linux_setup.sh"
+          CIBW_BEFORE_BUILD_MACOS: 'PATH="$PATH:$HOME/.cargo/bin" cargo run --bin stub_gen --features diffsol-llvm17'
+          CIBW_BEFORE_BUILD_WINDOWS: 'PATH="$PATH:$HOME/.cargo/bin" cargo run --bin stub_gen --features diffsol-cranelift'
           CIBW_ENVIRONMENT_LINUX: 'PATH="$PATH:$HOME/.cargo/bin" MATURIN_PEP517_ARGS="--features diffsol-llvm17 --features suitesparse" RUSTFLAGS="-C linker-features=-lld"'
           CIBW_ENVIRONMENT_MACOS: 'PATH="$PATH:$HOME/.cargo/bin" MACOSX_DEPLOYMENT_TARGET=14.0 MATURIN_PEP517_ARGS="--features diffsol-llvm17"'
           CIBW_ENVIRONMENT_WINDOWS: 'PATH="$PATH:$HOME/.cargo/bin" MATURIN_PEP517_ARGS="--features diffsol-cranelift"'
-          CIBW_REPAIR_WHEEL_COMMAND: |
+          CIBW_REPAIR_WHEEL_COMMAND_LINUX: |
             python -m pip install --force-reinstall --no-deps {wheel}
             python -m pip install --upgrade wheel
             CARGO_MANIFEST_DIR=$(pwd) python -c "import pydiffsol as ds; ds._generate_pyi()"
@@ -59,7 +61,6 @@ jobs:
             wheel unpack {wheel} -d /tmp/wheel_add_pyi
             cp pydiffsol.pyi /tmp/wheel_add_pyi/*/pydiffsol/pydiffsol.pyi
             wheel pack /tmp/wheel_add_pyi/* -d {dest_dir}
-            auditwheel repair -w {dest_dir} {wheel}
       - name: Upload wheels
         uses: actions/upload-artifact@v7
         with:
