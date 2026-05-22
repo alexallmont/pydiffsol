@@ -56,7 +56,10 @@ jobs:
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: |
             python -m pip install --force-reinstall --no-deps {wheel}
             CARGO_MANIFEST_DIR=$(pwd) python -c "import pydiffsol as ds; ds._generate_pyi()"
-            echo "GREP_ME todo add to wheel"
+            mkdir -p /tmp/wheel_add_pyi
+            wheel unpack {wheel} -d /tmp/wheel_add_pyi
+            cp pydiffsol.pyi /tmp/wheel_add_pyi/*/pydiffsol/pydiffsol.pyi
+            wheel pack /tmp/wheel_add_pyi/* -d {dest_dir}
           CIBW_BUILD: "cp310-manylinux_x86_64 cp310-macosx_arm64 cp310-win_amd64"
       - name: Upload wheels
         uses: actions/upload-artifact@v7
