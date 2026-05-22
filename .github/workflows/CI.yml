@@ -19,10 +19,10 @@ jobs:
     strategy:
       matrix:
         platform:
-          - runner: ubuntu-22.04
-            target: x86_64
-          - runner: windows-latest
-            target: AMD64
+          # - runner: ubuntu-22.04
+          #   target: x86_64
+          # - runner: windows-latest
+          #   target: AMD64
           - runner: macos-14
             target: arm64
     steps:
@@ -66,10 +66,10 @@ jobs:
             python -m pip install --force-reinstall --no-deps {wheel} wheel
             CARGO_MANIFEST_DIR={project} python .github/scripts/generate_pyi.py {wheel} /tmp/wheel_add_pyi
             auditwheel repair -w {dest_dir} /tmp/wheel_add_pyi/*.whl
-          # CIBW_REPAIR_WHEEL_COMMAND_MACOS: |
-          #   python -m pip install --force-reinstall --no-deps {wheel} wheel
-          #   CARGO_MANIFEST_DIR={project} python .github/scripts/generate_pyi.py {wheel} /tmp/wheel_add_pyi
-          #   delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v /tmp/wheel_add_pyi
+          CIBW_REPAIR_WHEEL_COMMAND_MACOS: |
+            python -m pip install --force-reinstall --no-deps {wheel} wheel
+            CARGO_MANIFEST_DIR={project} python .github/scripts/generate_pyi.py {wheel} /tmp/wheel_add_pyi
+            delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v /tmp/wheel_add_pyi
           # CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: >
           #   python -m pip install --force-reinstall --no-deps {wheel} wheel delvewheel &&
           #   CARGO_MANIFEST_DIR={project} python .github/scripts/generate_pyi.py {wheel} tmp/wheel_add_pyi &&
