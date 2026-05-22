@@ -1,23 +1,28 @@
-# Regenerate wheel with pyi autocomplete file created via pydiffsol
+# Regenerate .pyi autocomplete stub for wheel
 #
-# This is a non-standard approach to pyo3_stub_gen, building a standalone app with a
-# separate src/bin/stub_gen.rs binary. We build pyi on CI to accommodate differences
-# between platforms, and this does not work with the stub_gen.rs approach because on
-# some platforms it can't be built in the BEFORE or REPAIR CIBW_ hooks because those
-# are not running in same environment as build wheel itself, causing linker issues.
+# The pyo3_stub_gen docs recommend creating a standalone src/bin/stub_gen.rs to
+# create the pyi file. This does not work for pydiffsol because we regenerate pyi
+# on CI to accommodate differences between platforms, and building the stub_gen
+# binary in cibuildwheel is tricky; we would ideally do it in the BEFORE or
+# REPAIR CIBW_ hooks but those are not running in same environment as build wheel
+# itself which causes linker issues.
 #
-# Instead we provide a private _generate_pyi method in pydiffsol which is equivalent
-# to the src/bin/stub_gen.rs approach. This requires the CARGO_MANIFEST_DIR variable
-# to be set for introspection, see the usage example below.
+# Instead we provide a private _generate_pyi method in pydiffsol which is
+# equivalent src/bin/stub_gen.rs approach. This can be launched from Python to
+# generate pyi from the same binary and copy in as a repair step.
 #
-# This also does some post processing on the pyi file to append pydiffsol enums like
-# `ds.bdf` and `ds.f64` because pyo3_stub_gen does not support this natively.
+# This script also appends common pydiffsol enums like `ds.bdf` and `ds.f64` as
+# pyo3_stub_gen does not support adding module attrs like this natively.
+#
+# Run with the CARGO_MANIFEST_DIR variable set to the repo root for introspection,
+# see the usage example below.
 #
 from pathlib import Path
 import pydiffsol as ds
 import shutil
 import subprocess
 import sys
+import tempfile
 
 
 def generate_pydiffsol_pyi():
@@ -37,17 +42,25 @@ def repackage_with_pyi(wheel, dest_dir):
     generate_pydiffsol_pyi()
 
     # Rebuild in a temp work dir
-    work_dir = Path("/tmp/wheel_add_pyi")
-    work_dir.mkdir(parents=True, exist_ok=True)
+    work_dir = Path(tempfile.mkdtemp(prefix="wheel_add_pyi_"))
+    if not work_dir.is_dir():
+        raise RuntimeError(f"pyi repair temp dir not created: {work_dir}")
 
     # Unpack, add pyi file, then repackage
+    print(f"Unpacking wheel {wheel} to {work_dir}")
     subprocess.run(["wheel", "unpack", str(wheel), "-d", str(work_dir)], check=True)
+
     pkg = next(work_dir.iterdir())
+    print(f"Copying pydiffsol.pyi to {pkg}/pydiffsol")
     shutil.copy(
         "pydiffsol.pyi",
         pkg / "pydiffsol" / "pydiffsol.pyi",
     )
+
+    print(f"Packing wheel {pkg} to {dest_dir}")
     subprocess.run(["wheel", "pack", str(pkg), "-d", str(dest_dir)], check=True)
+
+    print("pydiffsol pyi repair complete!")
 
 
 if __name__ == "__main__":
