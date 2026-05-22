@@ -41,19 +41,17 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.4.1
         env:
+          CIBW_BUILD_VERBOSITY: "1"
+          CIBW_BUILD: "cp310-manylinux_x86_64 cp310-macosx_arm64 cp310-win_amd64"
           CIBW_ARCHS_LINUX: ${{ matrix.platform.target }}
           CIBW_ARCHS_MACOS: ${{ matrix.platform.target }}
           CIBW_ARCHS_WINDOWS: ${{ matrix.platform.target }}
           SCCACHE_VERSION: 0.2.13
           CIBW_BEFORE_ALL_LINUX: "curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y && yum install -y openssl-devel && source .github/workflows/maturin_linux_setup.sh"
-          #CIBW_BEFORE_BUILD_LINUX: 'PATH="$PATH:$HOME/.cargo/bin" PYO3_PYTHON="$(which python)" RUSTFLAGS="-L native=/host/usr/lib/x86_64-linux-gnu/ -C linker-features=-lld" cargo run --bin stub_gen --features diffsol-llvm17 --features suitesparse'
-          CIBW_BEFORE_BUILD_MACOS: 'PATH="$PATH:$HOME/.cargo/bin" cargo run --bin stub_gen --features diffsol-llvm17'
-          CIBW_BEFORE_BUILD_WINDOWS: 'PATH="$PATH:$HOME/.cargo/bin" cargo run --bin stub_gen --features diffsol-cranelift'
-          CIBW_BUILD_VERBOSITY: "1"
           CIBW_ENVIRONMENT_LINUX: 'PATH="$PATH:$HOME/.cargo/bin" MATURIN_PEP517_ARGS="--features diffsol-llvm17 --features suitesparse" RUSTFLAGS="-C linker-features=-lld"'
           CIBW_ENVIRONMENT_MACOS: 'PATH="$PATH:$HOME/.cargo/bin" MACOSX_DEPLOYMENT_TARGET=14.0 MATURIN_PEP517_ARGS="--features diffsol-llvm17"'
           CIBW_ENVIRONMENT_WINDOWS: 'PATH="$PATH:$HOME/.cargo/bin" MATURIN_PEP517_ARGS="--features diffsol-cranelift"'
-          CIBW_REPAIR_WHEEL_COMMAND_LINUX: |
+          CIBW_REPAIR_WHEEL_COMMAND: |
             python -m pip install --force-reinstall --no-deps {wheel}
             python -m pip install --upgrade wheel
             CARGO_MANIFEST_DIR=$(pwd) python -c "import pydiffsol as ds; ds._generate_pyi()"
@@ -61,7 +59,7 @@ jobs:
             wheel unpack {wheel} -d /tmp/wheel_add_pyi
             cp pydiffsol.pyi /tmp/wheel_add_pyi/*/pydiffsol/pydiffsol.pyi
             wheel pack /tmp/wheel_add_pyi/* -d {dest_dir}
-          CIBW_BUILD: "cp310-manylinux_x86_64 cp310-macosx_arm64 cp310-win_amd64"
+            auditwheel repair -w {dest_dir} {wheel}
       - name: Upload wheels
         uses: actions/upload-artifact@v7
         with:
