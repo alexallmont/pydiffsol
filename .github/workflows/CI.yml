@@ -66,18 +66,14 @@ jobs:
             python -m pip install --force-reinstall --no-deps {wheel} wheel
             CARGO_MANIFEST_DIR={project} python .github/scripts/generate_pyi.py {wheel} /tmp/wheel_add_pyi
             auditwheel repair -w {dest_dir} /tmp/wheel_add_pyi/*.whl
-          CIBW_REPAIR_WHEEL_COMMAND_MACOS: |
-            python -m pip install --force-reinstall --no-deps {wheel} wheel
-            CARGO_MANIFEST_DIR={project} python .github/scripts/generate_pyi.py {wheel} /tmp/wheel_add_pyi
-            delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v /tmp/wheel_add_pyi
-          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: >
-            echo GREP_ME_ONCE
-            echo GREP_ME_ONCE_AND_A_HALF
-            python -m pip install --force-reinstall --no-deps {wheel} wheel
-            echo GREP_ME_TWICE
-            set CARGO_MANIFEST_DIR={project}
-            python .github/scripts/generate_pyi.py {wheel} {dest_dir}
-            echo GREP_ME_THRICE
+          # CIBW_REPAIR_WHEEL_COMMAND_MACOS: |
+          #   python -m pip install --force-reinstall --no-deps {wheel} wheel
+          #   CARGO_MANIFEST_DIR={project} python .github/scripts/generate_pyi.py {wheel} /tmp/wheel_add_pyi
+          #   delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v /tmp/wheel_add_pyi
+          # CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: >
+          #   python -m pip install --force-reinstall --no-deps {wheel} wheel delvewheel &&
+          #   CARGO_MANIFEST_DIR={project} python .github/scripts/generate_pyi.py {wheel} tmp/wheel_add_pyi &&
+          #   delvewheel repair -w {dest_dir} tmp/wheel_add_pyi
       - name: Upload wheels
         uses: actions/upload-artifact@v7
         with:
