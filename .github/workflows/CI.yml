@@ -68,11 +68,11 @@ jobs:
             python -m pip install --force-reinstall --no-deps {wheel}
             python -m pip install --upgrade wheel
             CARGO_MANIFEST_DIR=$(pwd) python -c "import pydiffsol as ds; ds._generate_pyi()"
-            mkdir -p /tmp/wheel_add_pyi
+            mkdir -p /tmp/wheel_add_pyi /tmp/wheel_packed
             wheel unpack {wheel} -d /tmp/wheel_add_pyi
             cp pydiffsol.pyi /tmp/wheel_add_pyi/*/pydiffsol/pydiffsol.pyi
-            wheel pack /tmp/wheel_add_pyi/* -d {dest_dir}
-            auditwheel repair -w {dest_dir} {wheel}
+            wheel pack /tmp/wheel_add_pyi/* -d /tmp/wheel_packed
+            auditwheel repair -w {dest_dir} /tmp/wheel_packed/*.whl
       - name: Upload wheels
         uses: actions/upload-artifact@v7
         with:
