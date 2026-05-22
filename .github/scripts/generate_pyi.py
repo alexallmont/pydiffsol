@@ -38,13 +38,15 @@ def generate_pydiffsol_pyi():
                 print(f"{member} = {member.__class__.__name__}.{member}", file=pyi_file)
 
 
-def repackage_with_pyi(wheel, dest_dir):
+def repackage_with_pyi(wheel: Path, dest_dir: Path):
     generate_pydiffsol_pyi()
 
-    # Rebuild in a temp work dir
+    # Ensure temp work dir and dest dir exist
     work_dir = Path(tempfile.mkdtemp(prefix="wheel_add_pyi_"))
     if not work_dir.is_dir():
         raise RuntimeError(f"pyi repair temp dir not created: {work_dir}")
+
+    dest_dir.mkdir(parents=True, exist_ok=True)
 
     # Unpack, add pyi file, then repackage
     print(f"Unpacking wheel {wheel} to {work_dir}")
