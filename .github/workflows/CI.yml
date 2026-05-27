@@ -73,6 +73,7 @@ jobs:
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: >
             python -c "print('GREP_ME')" &&
             pip install delvewheel &&
+            python -m pip install --force-reinstall --no-deps {wheel} &&
             python -c "print('GREP_ME_TWICE')" &&
             delvewheel repair -w {dest_dir} {wheel}
           # CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: >
