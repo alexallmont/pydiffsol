@@ -25,21 +25,24 @@ import sys
 import tempfile
 
 
-def generate_pydiffsol_pyi():
+def generate_pydiffsol_pyi(project_dir: Path):
     # Generate bulk of pydiffsol.pyi using library method
+    print("FIXME_DEBUG_3")
     ds._generate_pyi()
+
+    print("FIXME_DEBUG_4")
 
     # Append common enums to end of pyi file
     print("Amending enums to .pyi")
-    with open("pydiffsol.pyi", "a") as pyi_file:
+    with (project_dir / "pydiffsol.pyi").open("a") as pyi_file:
         enums = [ds.JitBackendType, ds.LinearSolverType, ds.MatrixType, ds.OdeSolverType, ds.ScalarType]
         for enum in enums:
             for member in enum.all():
                 print(f"{member} = {member.__class__.__name__}.{member}", file=pyi_file)
 
 
-def repackage_with_pyi(wheel: Path, dest_dir: Path):
-    generate_pydiffsol_pyi()
+def repackage_with_pyi(project_dir: Path, wheel: Path, dest_dir: Path):
+    generate_pydiffsol_pyi(project_dir)
 
     # Ensure temp work dir and dest dir exist
     work_dir = Path(tempfile.mkdtemp(prefix="wheel_add_pyi_"))
@@ -66,11 +69,16 @@ def repackage_with_pyi(wheel: Path, dest_dir: Path):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 3:
+    print("FIXME_DEBUG_1")
+    if len(sys.argv) < 4:
         print("Usage:")
-        print("  CARGO_MANIFEST_DIR=. python .github/scripts/generate_pyi.py <wheel> <dest_dir>")
+        print("  CARGO_MANIFEST_DIR=. python .github/scripts/generate_pyi.py <project_dir> <wheel> <dest_dir>")
         exit()
 
-    wheel = Path(sys.argv[1])
-    dest_dir = Path(sys.argv[2])
-    repackage_with_pyi(wheel, dest_dir)
+    project_dir = Path(sys.argv[1])
+    wheel = Path(sys.argv[2])
+    dest_dir = Path(sys.argv[3])
+
+    print("FIXME_DEBUG_2")
+    print(project_dir, wheel, dest_dir) # FIXME
+    repackage_with_pyi(project_dir, wheel, dest_dir)
