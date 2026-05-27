@@ -51,8 +51,6 @@ jobs:
             curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y
             yum install -y openssl-devel
             source .github/scripts/maturin_linux_setup.sh
-          CIBW_BEFORE_ALL_WINDOWS: |
-            pip install delvewheel
           CIBW_ENVIRONMENT_LINUX: >-
             PATH="$PATH:$HOME/.cargo/bin"
             MATURIN_PEP517_ARGS="--features diffsol-llvm17 --features suitesparse"
@@ -74,6 +72,8 @@ jobs:
             delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v /tmp/wheel_add_pyi/*.whl
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: >
             python -c "print('GREP_ME')" &&
+            pip install delvewheel &&
+            python -c "print('GREP_ME_TWICE')" &&
             delvewheel repair -w {dest_dir} {wheel}
           # CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: >
           #   python -m pip install --force-reinstall --no-deps {wheel} wheel delvewheel &&
