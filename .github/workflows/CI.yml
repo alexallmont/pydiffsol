@@ -75,6 +75,7 @@ jobs:
             pip install delvewheel &&
             python -m pip install --force-reinstall --no-deps {wheel} &&
             python -c "print('GREP_ME_TWICE')" &&
+            CARGO_MANIFEST_DIR={project} python .github/scripts/generate_pyi.py {wheel} tmp/wheel_add_pyi &&
             delvewheel repair -w {dest_dir} {wheel}
           # CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: >
           #   python -m pip install --force-reinstall --no-deps {wheel} wheel delvewheel &&
