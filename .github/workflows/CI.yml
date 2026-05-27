@@ -72,10 +72,9 @@ jobs:
             python -m pip install --force-reinstall --no-deps {wheel} wheel
             CARGO_MANIFEST_DIR={project} python .github/scripts/generate_pyi.py {wheel} /tmp/wheel_add_pyi
             delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v /tmp/wheel_add_pyi/*.whl
-          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: .github/scripts/cibw_repair_wheel_command_windows.bat {dest_dir} {wheel}
-          # FIXME try fixed temp dir
-          # python -m pip install --force-reinstall --no-deps {wheel}
-          # mkdir "D:\Temp"
+          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: >
+            python -c "print('GREP_ME')" &&
+            delvewheel repair -w {dest_dir} {wheel}
           # CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: >
           #   python -m pip install --force-reinstall --no-deps {wheel} wheel delvewheel &&
           #   CARGO_MANIFEST_DIR={project} python .github/scripts/generate_pyi.py {wheel} tmp/wheel_add_pyi &&
