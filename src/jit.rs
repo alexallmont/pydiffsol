@@ -20,12 +20,12 @@ pub enum JitBackendType {
 
 impl JitBackendType {
     pub(crate) fn all_enums() -> Vec<Self> {
-        let mut values = Vec::new();
-        #[cfg(feature = "diffsol-cranelift")]
-        values.push(Self::Cranelift);
-        #[cfg(feature = "diffsol-llvm")]
-        values.push(Self::Llvm);
-        values
+        vec![
+            #[cfg(feature = "diffsol-cranelift")]
+            Self::Cranelift,
+            #[cfg(feature = "diffsol-llvm")]
+            Self::Llvm,
+        ]
     }
 
     pub(crate) fn get_name(&self) -> &str {
