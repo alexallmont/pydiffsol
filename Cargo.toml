@@ -36,7 +36,3 @@ pyo3 = { version = "*", features = [
 
 [build-dependencies]
 cargo-lock = "11.0.1"
-
-[[bin]]
-name = "stub_gen"
-doc = false
