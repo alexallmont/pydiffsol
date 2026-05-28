@@ -44,7 +44,7 @@ build = ["cp310-macosx_arm64"]
 # FIXME CIBW_BUILD: "cp310-manylinux_x86_64 cp310-macosx_arm64 cp310-win_amd64"
 
 [tool.cibuildwheel.macos.environment]
-MACOSX_DEPLOYMENT_TARGET = "15.0"
+MACOSX_DEPLOYMENT_TARGET = "14.0"
 MATURIN_PEP517_ARGS = "--features diffsol-llvm17"
 
 [tool.cibuildwheel.macos]
