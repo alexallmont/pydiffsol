@@ -75,7 +75,7 @@ jobs:
             python -m pip install --force-reinstall --no-deps {wheel} wheel &&
             set CARGO_MANIFEST_DIR={project} &&
             python .github/scripts/generate_pyi.py {project} {wheel} tmp/wheel_add_pyi &&
-            delvewheel repair -w {dest_dir} {wheel}
+            delvewheel repair -w {dest_dir} tmp/wheel_add_pyi/*.whl
           # CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: >
           #   python -m pip install --force-reinstall --no-deps {wheel} wheel delvewheel &&
           #   CARGO_MANIFEST_DIR={project} python .github/scripts/generate_pyi.py {wheel} tmp/wheel_add_pyi &&
