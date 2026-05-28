@@ -28,6 +28,11 @@ import tempfile
 def generate_pydiffsol_pyi(project_dir: Path):
     # Generate bulk of pydiffsol.pyi using library method
     print("FIXME_DEBUG_3")
+    print("FIXME_DEBUG_3_FORCE_MANIFEST_DIR")
+    os.environ["CARGO_MANIFEST_DIR"]=os.getcwd()
+    print(f"FIXME_DEBUG_3_CARGO_MANIFEST_DIR={os.environ['CARGO_MANIFEST_DIR']}")
+    print(f"FIXME_DEBUG_3_CARGO_MANIFEST_DIR_LS={os.listdir(os.environ['CARGO_MANIFEST_DIR'])}")
+
     ds._generate_pyi()
 
     print("FIXME_DEBUG_4")
