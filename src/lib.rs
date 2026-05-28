@@ -83,7 +83,8 @@ fn pydiffsol(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<options_ode::OdeSolverOptions>()?;
     m.add_class::<solution::SolutionWrapper>()?;
 
-    // FIXME add enums to stub gen
+    // Note that stub_gen is not automated for the these enums and
+    // instead they are appended afterwards via generate_pyi.py
     for mt in matrix_type::MatrixType::all_enums() {
         m.add(mt.get_name(), mt)?;
     }
