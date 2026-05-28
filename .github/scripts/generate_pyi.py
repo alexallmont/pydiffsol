@@ -39,7 +39,7 @@ def generate_pydiffsol_pyi():
 
     # Append common enums to end of pyi file
     print("Amending enums to .pyi")
-    with ("pydiffsol.pyi").open("a") as pyi_file:
+    with open("pydiffsol.pyi", "a") as pyi_file:
         enums = [ds.JitBackendType, ds.LinearSolverType, ds.MatrixType, ds.OdeSolverType, ds.ScalarType]
         for enum in enums:
             for member in enum.all():
