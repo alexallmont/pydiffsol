@@ -36,9 +36,6 @@ jobs:
         uses: KyleMayes/install-llvm-action@v2
         with:
           version: "17.0"
-      - name: Install SuiteSparse
-        if: runner.os == 'macOS'
-        run: brew install suite-sparse
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.4.1
         env:
