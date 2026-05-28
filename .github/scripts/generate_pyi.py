@@ -4,8 +4,8 @@
 # create the pyi file. This does not work for pydiffsol because we regenerate pyi
 # on CI to accommodate differences between platforms, and building the stub_gen
 # binary in cibuildwheel is tricky; we would ideally do it in the BEFORE or
-# REPAIR CIBW_ hooks but those are not running in same environment as build wheel
-# itself which causes linker issues.
+# REPAIR CIBW_ hooks but those do not run in same environment as build wheel
+# itself, causing linker discrepancies and errors.
 #
 # Instead we provide a private _generate_pyi method in pydiffsol which is
 # equivalent src/bin/stub_gen.rs approach. This can be launched from Python to
@@ -14,8 +14,9 @@
 # This script also appends common pydiffsol enums like `ds.bdf` and `ds.f64` as
 # pyo3_stub_gen does not support adding module attrs like this natively.
 #
-# Run with the CARGO_MANIFEST_DIR variable set to the repo root for introspection,
-# see the usage example below.
+# This script expects to be run in the project root as it sets CARGO_MANIFEST_DIR
+# from the current working dir. This was found to be the best approach to support
+# all platforms; Windows builds had trouble picking this up externally.
 #
 from pathlib import Path
 import pydiffsol as ds
@@ -25,17 +26,11 @@ import sys
 import tempfile
 
 
-def generate_pydiffsol_pyi(project_dir: Path):
+def generate_pydiffsol_pyi():
     # Generate bulk of pydiffsol.pyi using library method
-    print("FIXME_DEBUG_3")
-    print("FIXME_DEBUG_3_FORCE_MANIFEST_DIR")
+    print(f"Setting CARGO_MANIFEST_DIR to {os.getcwd()}")
     os.environ["CARGO_MANIFEST_DIR"]=os.getcwd()
-    print(f"FIXME_DEBUG_3_CARGO_MANIFEST_DIR={os.environ['CARGO_MANIFEST_DIR']}")
-    print(f"FIXME_DEBUG_3_CARGO_MANIFEST_DIR_LS={os.listdir(os.environ['CARGO_MANIFEST_DIR'])}")
-
     ds._generate_pyi()
-
-    print("FIXME_DEBUG_4")
 
     # Append common enums to end of pyi file
     print("Amending enums to .pyi")
@@ -74,22 +69,14 @@ def repackage_with_pyi(project_dir: Path, wheel: Path, dest_dir: Path):
 
 
 if __name__ == "__main__":
-    print("FIXME_DEBUG_1")
-    if len(sys.argv) < 4:
+    if len(sys.argv) < 3:
+        print("Regenerate .pyi autocomplete stubs for pydiffsol.")
+        print("Run from project root for setting CARGO_MANIFEST_DIR.")
         print("Usage:")
-        print("  CARGO_MANIFEST_DIR=. python .github/scripts/generate_pyi.py <project_dir> <wheel> <dest_dir>")
+        print("  python .github/scripts/generate_pyi.py <wheel> <dest_dir>")
         exit()
 
-    project_dir = Path(sys.argv[1])
-    wheel = Path(sys.argv[2])
-    dest_dir = Path(sys.argv[3])
+    wheel = Path(sys.argv[1])
+    dest_dir = Path(sys.argv[2])
 
-    print("FIXME_DEBUG_2")
-    print(f"FIXME_DEBUG_2_PROJECT_DIR={str(project_dir)}")
-    print(f"FIXME_DEBUG_2_WHEEL={str(wheel)}")
-    print(f"FIXME_DEBUG_2_DEST_DIR={str(dest_dir)}")
-    import os
-    print(f"FIXME_DEBUG_2_CWD={os.getcwd()}")
-    print(f"FIXME_DEBUG_2_CWD_LS={os.listdir()}")
-
-    repackage_with_pyi(project_dir, wheel, dest_dir)
+    repackage_with_pyi(wheel, dest_dir)
