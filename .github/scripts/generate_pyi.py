@@ -27,6 +27,9 @@ import tempfile
 
 
 def generate_pydiffsol_pyi():
+    """
+    Regen base .pyi file and append pydiffsol enums
+    """
     # Generate bulk of pydiffsol.pyi using library method
     print(f"Setting CARGO_MANIFEST_DIR to {os.getcwd()}")
     os.environ["CARGO_MANIFEST_DIR"]=os.getcwd()
@@ -41,8 +44,11 @@ def generate_pydiffsol_pyi():
                 print(f"{member} = {member.__class__.__name__}.{member}", file=pyi_file)
 
 
-def repackage_with_pyi(project_dir: Path, wheel: Path, dest_dir: Path):
-    generate_pydiffsol_pyi(project_dir)
+def repackage_with_pyi(wheel: Path, dest_dir: Path):
+    """
+    Unpack the wheel, build pyi through introspection and repackage wheel
+    """
+    generate_pydiffsol_pyi()
 
     # Ensure temp work dir and dest dir exist
     work_dir = Path(tempfile.mkdtemp(prefix="wheel_add_pyi_"))
