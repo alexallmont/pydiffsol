@@ -80,5 +80,14 @@ if __name__ == "__main__":
     dest_dir = Path(sys.argv[3])
 
     print("FIXME_DEBUG_2")
-    print(project_dir, wheel, dest_dir) # FIXME
+    print(f"FIXME_DEBUG_2_PROJECT_DIR={str(project_dir)}")
+    print(f"FIXME_DEBUG_2_WHEEL={str(wheel)}")
+    print(f"FIXME_DEBUG_2_DEST_DIR={str(dest_dir)}")
+    import os
+    print(f"FIXME_DEBUG_2_CWD={os.getcwd()}")
+    if "CARGO_MANIFEST_DIR" in os.environ:
+        print(f"FIXME_DEBUG_2_CARGO_MANIFEST_DIR={os.environ['CARGO_MANIFEST_DIR']}")
+    else
+        print(f"FIXME_DEBUG_2_CARGO_MANIFEST_DIR NOT SET")
+
     repackage_with_pyi(project_dir, wheel, dest_dir)
