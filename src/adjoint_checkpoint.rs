@@ -3,7 +3,9 @@
 // Rust type between adjoint solve forward and backward calls.
 
 use pyo3::prelude::*;
+use pyo3_stub_gen::derive::gen_stub_pyclass;
 
+#[gen_stub_pyclass]
 #[pyclass(from_py_object, module = "pydiffsol")]
 #[pyo3(name = "AdjointCheckpoint")]
 #[derive(Clone)]

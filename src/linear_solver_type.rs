@@ -7,12 +7,14 @@ use pyo3::{
     prelude::*,
     types::{PyList, PyType},
 };
+use pyo3_stub_gen::derive::{gen_stub_pyclass_enum, gen_stub_pymethods};
 
 /// Enumerates the possible linear solver types for diffsol
 ///
 /// :attr default: use the solver's default linear solver choice, typically LU
 /// :attr lu: use LU decomposition linear solver (dense or sparse as appropriate)
 /// :attr klu: use KLU sparse linear solver
+#[gen_stub_pyclass_enum]
 #[pyclass(from_py_object, eq)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum LinearSolverType {
@@ -60,6 +62,7 @@ impl From<diffsol_c::LinearSolverType> for LinearSolverType {
     }
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl LinearSolverType {
     #[classmethod]

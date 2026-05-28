@@ -5,7 +5,9 @@ use pyo3::{
     prelude::*,
     types::{PyList, PyType},
 };
+use pyo3_stub_gen::derive::{gen_stub_pyclass_enum, gen_stub_pymethods};
 
+#[gen_stub_pyclass_enum]
 #[pyclass(from_py_object, eq)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ScalarType {
@@ -47,6 +49,7 @@ impl From<diffsol_c::ScalarType> for ScalarType {
     }
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl ScalarType {
     #[classmethod]

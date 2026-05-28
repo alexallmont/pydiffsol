@@ -13,7 +13,7 @@ The main design challenge in `pydiffsol` is bridging Rust's static types with Py
 You will need:
 
 - Rust via [`rustup`](https://rustup.rs/)
-- Python 3.9+
+- Python 3.10+
 - a virtual environment
 - [`maturin`](https://www.maturin.rs/)
 
