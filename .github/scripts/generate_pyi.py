@@ -85,8 +85,11 @@ if __name__ == "__main__":
     print(f"FIXME_DEBUG_2_DEST_DIR={str(dest_dir)}")
     import os
     print(f"FIXME_DEBUG_2_CWD={os.getcwd()}")
+    print(f"FIXME_DEBUG_2_CWD_LS={os.listdir()}")
+
     if "CARGO_MANIFEST_DIR" in os.environ:
         print(f"FIXME_DEBUG_2_CARGO_MANIFEST_DIR={os.environ['CARGO_MANIFEST_DIR']}")
+        print(f"FIXME_DEBUG_2_CARGO_MANIFEST_DIR_LS={os.listdir(os.environ['CARGO_MANIFEST_DIR'])}")
     else:
         print(f"FIXME_DEBUG_2_CARGO_MANIFEST_DIR NOT SET")
 
