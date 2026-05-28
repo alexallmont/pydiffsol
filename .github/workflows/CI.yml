@@ -19,10 +19,11 @@ jobs:
     strategy:
       matrix:
         platform:
-          - runner: ubuntu-22.04
-            target: x86_64
-          - runner: windows-latest
-            target: AMD64
+          # FIXME re-enable after testing macos
+          # - runner: ubuntu-22.04
+          #   target: x86_64
+          # - runner: windows-latest
+          #   target: AMD64
           - runner: macos-14
             target: arm64
     steps:
@@ -51,6 +52,8 @@ jobs:
             curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y
             yum install -y openssl-devel
             source .github/scripts/maturin_linux_setup.sh
+          CIBW_BEFORE_ALL_MACOS: |
+            brew install suite-sparse
           CIBW_ENVIRONMENT_LINUX: >-
             PATH="$PATH:$HOME/.cargo/bin"
             MATURIN_PEP517_ARGS="--features diffsol-llvm17 --features suitesparse"
@@ -58,7 +61,7 @@ jobs:
           CIBW_ENVIRONMENT_MACOS: >-
             PATH="$PATH:$HOME/.cargo/bin"
             MACOSX_DEPLOYMENT_TARGET=14.0
-            MATURIN_PEP517_ARGS="--features diffsol-llvm17"
+            MATURIN_PEP517_ARGS="--features diffsol-llvm17 --features suitesparse"
           CIBW_ENVIRONMENT_WINDOWS: >-
             PATH="$PATH:$HOME/.cargo/bin"
             MATURIN_PEP517_ARGS="--features diffsol-cranelift"
