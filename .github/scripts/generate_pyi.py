@@ -37,13 +37,29 @@ def generate_pydiffsol_pyi():
     os.environ["CARGO_MANIFEST_DIR"]=os.getcwd()
     ds._generate_pyi()
 
-    # Append common enums to end of pyi file
-    print("Amending enums to .pyi")
-    with open("pydiffsol.pyi", "a") as pyi_file:
-        enums = [ds.JitBackendType, ds.LinearSolverType, ds.MatrixType, ds.OdeSolverType, ds.ScalarType]
-        for enum in enums:
-            for member in enum.all():
-                print(f"{member} = {member.__class__.__name__}.{member}", file=pyi_file)
+    # Append common enums to end of pyi file whilst collating for __all__ later
+    print("Collating pydiffsol enums...")
+    all_enum_members = []
+    all_enum_defs = []
+    enums = [ds.JitBackendType, ds.LinearSolverType, ds.MatrixType, ds.OdeSolverType, ds.ScalarType]
+    for enum in enums:
+        for member in enum.all():
+            all_enum_members.append(str(member))
+            all_enum_defs.append(f"{member} = {member.__class__.__name__}.{member}")
+
+
+    # Find __all__ block and replace with new enums
+    print("Replacing __all__ and enums in .pyi")
+    pyi_contents = open("pydiffsol.pyi").read()
+    with open("pydiffsol.pyi", "w") as pyi_file:
+        # Replace from leading __all__ block for guaranteed grep
+        all_sentinel = "__all__ = [\n"
+        replace_str = all_sentinel + "\n".join(f'    "{name}",' for name in all_enum_members) + "\n"
+        new_pyi_contents = pyi_contents.replace(all_sentinel, replace_str)
+
+        # Append the enum definition strings to the end of the file and write
+        new_pyi_contents += "\n".join(all_enum_defs) + "\n"
+        pyi_file.write(new_pyi_contents)
 
 
 def repackage_with_pyi(wheel: Path, dest_dir: Path):
