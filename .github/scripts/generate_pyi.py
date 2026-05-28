@@ -18,12 +18,14 @@
 # from the current working dir. This was found to be the best approach to support
 # all platforms; Windows builds had trouble picking this up externally.
 #
+import os
 from pathlib import Path
-import pydiffsol as ds
 import shutil
 import subprocess
 import sys
 import tempfile
+
+import pydiffsol as ds
 
 
 def generate_pydiffsol_pyi():
