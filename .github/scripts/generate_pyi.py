@@ -87,7 +87,7 @@ if __name__ == "__main__":
     print(f"FIXME_DEBUG_2_CWD={os.getcwd()}")
     if "CARGO_MANIFEST_DIR" in os.environ:
         print(f"FIXME_DEBUG_2_CARGO_MANIFEST_DIR={os.environ['CARGO_MANIFEST_DIR']}")
-    else
+    else:
         print(f"FIXME_DEBUG_2_CARGO_MANIFEST_DIR NOT SET")
 
     repackage_with_pyi(project_dir, wheel, dest_dir)
