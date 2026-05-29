@@ -44,8 +44,12 @@ jobs:
           CIBW_ARCHS_MACOS: ${{ matrix.platform.target }}
           CIBW_ARCHS_WINDOWS: ${{ matrix.platform.target }}
           SCCACHE_VERSION: 0.2.13
-          CIBW_ENVIRONMENT_MACOS:
+          CIBW_ENVIRONMENT_LINUX: >-
+            MATURIN_PEP517_ARGS="--features diffsol-llvm17 --features suitesparse"
+            RUSTFLAGS="-C linker-features=-lld"
+          CIBW_ENVIRONMENT_MACOS: >-
             MACOSX_DEPLOYMENT_TARGET=14.0
+            MATURIN_PEP517_ARGS="--features diffsol-llvm17"
           CIBW_ENVIRONMENT_WINDOWS: >-
             PATH="$PATH:$HOME/.cargo/bin"
             MATURIN_PEP517_ARGS="--features diffsol-cranelift"
@@ -59,7 +63,7 @@ jobs:
         with:
           name: wheels-${{ matrix.platform.runner }}-${{ matrix.platform.target }}
           path: ./wheelhouse/*.whl
-      - name: pytest
+      - name: pytest and mypy
         shell: bash
         env:
           ACTIVATE: ${{ runner.os == 'Windows' && '.venv/Scripts/activate' || '.venv/bin/activate' }}

@@ -42,13 +42,6 @@ features = ["pyo3/extension-module"]
 [tool.cibuildwheel]
 build = ["cp310-manylinux_x86_64", "cp310-macosx_arm64", "cp310-win_amd64"]
 
-[tool.cibuildwheel.linux.environment]
-MATURIN_PEP517_ARGS = "--features diffsol-llvm17 --features suitesparse"
-RUSTFLAGS = "-C linker-features=-lld"
-
-[tool.cibuildwheel.macos.environment]
-MATURIN_PEP517_ARGS = "--features diffsol-llvm17"
-
 [tool.cibuildwheel.linux]
 before-all = [
     "curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y",
