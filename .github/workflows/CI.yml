@@ -20,12 +20,12 @@ jobs:
       matrix:
         platform:
           # FIXME uncomment
-          - runner: ubuntu-22.04
-            target: x86_64
+          # - runner: ubuntu-22.04
+          #   target: x86_64
           # - runner: windows-latest
           #   target: AMD64
-          # - runner: macos-14
-          #   target: arm64
+          - runner: macos-14
+            target: arm64
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
@@ -44,6 +44,8 @@ jobs:
           CIBW_ARCHS_MACOS: ${{ matrix.platform.target }}
           CIBW_ARCHS_WINDOWS: ${{ matrix.platform.target }}
           SCCACHE_VERSION: 0.2.13
+          CIBW_ENVIRONMENT_MACOS:
+            MACOSX_DEPLOYMENT_TARGET=14.0
           CIBW_ENVIRONMENT_WINDOWS: >-
             PATH="$PATH:$HOME/.cargo/bin"
             MATURIN_PEP517_ARGS="--features diffsol-cranelift"
