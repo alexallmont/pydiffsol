@@ -48,6 +48,17 @@ before-all = [
     "source .github/scripts/maturin_linux_setup.sh",
 ]
 
+[tool.cibuildwheel.linux.environment]
+MATURIN_PEP517_ARGS="--features diffsol-llvm17 --features suitesparse"
+RUSTFLAGS="-C linker-features=-lld"
+
+[tool.cibuildwheel.macos]
+repair-wheel-command = [
+    "python -m pip install --force-reinstall --no-deps {wheel} wheel",
+    "python .github/scripts/generate_pyi.py {wheel} tmp/wheel_add_pyi",
+    "auditwheel repair -w {dest_dir} tmp/wheel_add_pyi/*.whl",
+]
+
 [tool.cibuildwheel.macos.environment]
 MACOSX_DEPLOYMENT_TARGET = "14.0"
 MATURIN_PEP517_ARGS = "--features diffsol-llvm17"
