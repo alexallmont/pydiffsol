@@ -35,9 +35,6 @@ jobs:
         uses: KyleMayes/install-llvm-action@v2
         with:
           version: "17.0"
-      - name: Install SuiteSparse
-        if: runner.os == 'macOS'
-        run: brew install suite-sparse
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.4.1
         env:
@@ -49,32 +46,15 @@ jobs:
           SCCACHE_VERSION: 0.2.13
           CIBW_BEFORE_ALL_LINUX: |
             curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y
-            yum install -y openssl-devel
             source .github/scripts/maturin_linux_setup.sh
           CIBW_ENVIRONMENT_LINUX: >-
-            PATH="$PATH:$HOME/.cargo/bin"
             MATURIN_PEP517_ARGS="--features diffsol-llvm17 --features suitesparse"
             RUSTFLAGS="-C linker-features=-lld"
           CIBW_ENVIRONMENT_MACOS: >-
-            PATH="$PATH:$HOME/.cargo/bin"
             MACOSX_DEPLOYMENT_TARGET=14.0
             MATURIN_PEP517_ARGS="--features diffsol-llvm17"
           CIBW_ENVIRONMENT_WINDOWS: >-
-            PATH="$PATH:$HOME/.cargo/bin"
             MATURIN_PEP517_ARGS="--features diffsol-cranelift"
-          CIBW_REPAIR_WHEEL_COMMAND_LINUX: |
-            python -m pip install --force-reinstall --no-deps {wheel} wheel
-            python .github/scripts/generate_pyi.py {wheel} /tmp/wheel_add_pyi
-            auditwheel repair -w {dest_dir} /tmp/wheel_add_pyi/*.whl
-          CIBW_REPAIR_WHEEL_COMMAND_MACOS: |
-            python -m pip install --force-reinstall --no-deps {wheel} wheel
-            python .github/scripts/generate_pyi.py {wheel} /tmp/wheel_add_pyi
-            delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v /tmp/wheel_add_pyi/*.whl
-          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: >
-            python -m pip install delvewheel wheel &&
-            python -m pip install --force-reinstall --no-deps {wheel} &&
-            python .github/scripts/generate_pyi.py {wheel} tmp/wheel_add_pyi &&
-            delvewheel repair -w {dest_dir} tmp/wheel_add_pyi/*.whl
       - name: Upload wheels
         uses: actions/upload-artifact@v7
         with:

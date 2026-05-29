@@ -9,7 +9,7 @@ use pyo3::{
     types::{PyTuple, PyType},
     PyAny,
 };
-use pyo3_stub_gen::derive::{gen_methods_from_python, gen_stub_pyclass, gen_stub_pymethods};
+use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::{
     adjoint_checkpoint::AdjointCheckpointWrapper,
@@ -67,9 +67,15 @@ impl OdeWrapper {
     /// so after construction, both code and matrix_type fields are read-only.
     /// All other fields are editable, for example setting the solver type or
     /// method, or changing solver tolerances.
-    #[gen_stub(skip)] // Handled in custom stub gen inventory::submit below
     #[new]
-    #[pyo3(signature=(code, jit_backend=None, scalar_type=ScalarType::F64, matrix_type=MatrixType::NalgebraDense, linear_solver=LinearSolverType::Default, ode_solver=OdeSolverType::Bdf))]
+    #[pyo3(signature=(
+        code,
+        jit_backend=None,
+        scalar_type=ScalarType::F64,
+        matrix_type=MatrixType::NalgebraDense,
+        linear_solver=LinearSolverType::Default,
+        ode_solver=OdeSolverType::Bdf
+    ))]
     fn new(
         code: &str,
         jit_backend: Option<JitBackendType>,
@@ -550,24 +556,5 @@ impl OdeWrapper {
             ));
         };
         host_array_to_py(py, gradient)
-    }
-}
-
-// Custom Ode constructor for .pyi autocomplete - stub gen cannot resolve constructor args.
-// For stub to compile the underlying name `OdeWrapper` must be used, not the PyO3 alias `Ode`.
-pyo3_stub_gen::inventory::submit! {
-    gen_methods_from_python! {
-        r#"
-        class OdeWrapper:
-            def __init__(
-                self,
-                code: str,
-                jit_backend: JitBackendType | None = None,
-                scalar_type: ScalarType = ScalarType.F64,
-                matrix_type: MatrixType = MatrixType.NalgebraDense,
-                linear_solver: LinearSolverType = LinearSolverType.Default,
-                ode_solver: OdeSolverType = OdeSolverType.Bdf,
-            ) -> Ode: ...
-        "#
     }
 }
