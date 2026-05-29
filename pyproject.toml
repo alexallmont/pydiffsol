@@ -42,13 +42,15 @@ features = ["pyo3/extension-module"]
 [tool.cibuildwheel.linux]
 repair-wheel-command = [
     "python -m pip install --force-reinstall --no-deps {wheel} wheel",
-    "python .github/scripts/generate_pyi.py {wheel} tmp/wheel_add_pyi",
-    "auditwheel repair -w {dest_dir} tmp/wheel_add_pyi/*.whl",
+    "python .github/scripts/generate_pyi.py {wheel}",
+    "auditwheel repair -w {dest_dir} {wheel}",
 ]
 
 [tool.cibuildwheel.macos]
 repair-wheel-command = [
     "python -m pip install --force-reinstall --no-deps {wheel} wheel",
+    "python .github/scripts/generate_pyi.py {wheel}",
+    "delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}",
     "python .github/scripts/generate_pyi.py {wheel} tmp/wheel_add_pyi",
     "delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v tmp/wheel_add_pyi/*.whl",
 ]
