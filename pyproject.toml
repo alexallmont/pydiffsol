@@ -42,11 +42,11 @@ features = ["pyo3/extension-module"]
 [tool.cibuildwheel]
 build = ["cp310-manylinux_x86_64", "cp310-macosx_arm64", "cp310-win_amd64"]
 
+[tool.cibuildwheel.linux.environment]
+MATURIN_PEP517_ARGS = "--features diffsol-llvm17 --features suitesparse"
+RUSTFLAGS = "-C linker-features=-lld"
+
 [tool.cibuildwheel.linux]
-environment = {
-    MATURIN_PEP517_ARGS="--features diffsol-llvm17 --features suitesparse",
-    RUSTFLAGS="-C linker-features=-lld",
-}
 before-all = [
     "curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y",
     "source .github/scripts/maturin_linux_setup.sh",
@@ -57,11 +57,11 @@ repair-wheel-command = [
     "auditwheel repair -w {dest_dir} tmp/wheel_add_pyi/*.whl",
 ]
 
+[tool.cibuildwheel.macos.environment]
+MACOSX_DEPLOYMENT_TARGET = "14.0"
+MATURIN_PEP517_ARGS = "--features diffsol-llvm17"
+
 [tool.cibuildwheel.macos]
-environment = {
-    MACOSX_DEPLOYMENT_TARGET="14.0",
-    MATURIN_PEP517_ARGS="--features diffsol-llvm17",
-}
 repair-wheel-command = [
     "python -m pip install --force-reinstall --no-deps {wheel} wheel",
     "python .github/scripts/generate_pyi.py {wheel} tmp/wheel_add_pyi",
