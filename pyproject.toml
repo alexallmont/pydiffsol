@@ -40,10 +40,6 @@ bench = [
 features = ["pyo3/extension-module"]
 
 [tool.cibuildwheel.linux]
-before-all = [
-    "curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y",
-    "source .github/scripts/maturin_linux_setup.sh",
-]
 repair-wheel-command = [
     "python -m pip install --force-reinstall --no-deps {wheel} wheel",
     "python .github/scripts/generate_pyi.py {wheel} tmp/wheel_add_pyi",
