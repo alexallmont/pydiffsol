@@ -52,7 +52,7 @@ before-all = [
 MATURIN_PEP517_ARGS="--features diffsol-llvm17 --features suitesparse"
 RUSTFLAGS="-C linker-features=-lld"
 
-[tool.cibuildwheel.macos]
+[tool.cibuildwheel.linux]
 repair-wheel-command = [
     "python -m pip install --force-reinstall --no-deps {wheel} wheel",
     "python .github/scripts/generate_pyi.py {wheel} tmp/wheel_add_pyi",
