@@ -45,7 +45,6 @@ build = "cp310-*"
 [tool.cibuildwheel.linux]
 before-all = [
     "curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y",
-    "yum install -y openssl-devel",
     "source .github/scripts/maturin_linux_setup.sh",
 ]
 
