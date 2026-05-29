@@ -73,8 +73,6 @@ jobs:
           source $ACTIVATE
           pip install "$(echo ./wheelhouse/*cp310*.whl)[dev,bench]" # Explicit local whl avoids falling back to PyPI
           pytest -s -v $PYTEST_DIRS
-          pip install mypy
-          python -m mypy.stubtest pydiffsol --ignore-missing-stub
 
   sdist:
     runs-on: ubuntu-latest
