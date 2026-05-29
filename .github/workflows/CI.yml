@@ -19,13 +19,12 @@ jobs:
     strategy:
       matrix:
         platform:
-          # FIXME uncomment
-          # - runner: ubuntu-22.04
-          #   target: x86_64
+          - runner: ubuntu-22.04
+            target: x86_64
           - runner: windows-latest
             target: AMD64
-          # - runner: macos-14
-          #   target: arm64
+          - runner: macos-14
+            target: arm64
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
