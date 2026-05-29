@@ -51,6 +51,12 @@ repair-wheel-command = [
     "python -m pip install --force-reinstall --no-deps {wheel} wheel",
     "python .github/scripts/generate_pyi.py {wheel}",
     "delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}",
-    "python .github/scripts/generate_pyi.py {wheel} tmp/wheel_add_pyi",
-    "delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v tmp/wheel_add_pyi/*.whl",
+]
+
+[tool.cibuildwheel.windows]
+repair-wheel-command = [
+    "python -m pip install delvewheel wheel",
+    "python -m pip install --force-reinstall --no-deps {wheel}",
+    "python .github/scripts/generate_pyi.py {wheel}",
+    "delvewheel repair -w {dest_dir} {wheel}",
 ]

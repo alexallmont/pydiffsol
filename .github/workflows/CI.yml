@@ -55,13 +55,7 @@ jobs:
             MACOSX_DEPLOYMENT_TARGET=14.0
             MATURIN_PEP517_ARGS="--features diffsol-llvm17"
           CIBW_ENVIRONMENT_WINDOWS: >-
-            PATH="$PATH:$HOME/.cargo/bin"
             MATURIN_PEP517_ARGS="--features diffsol-cranelift"
-          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: >
-            python -m pip install delvewheel wheel &&
-            python -m pip install --force-reinstall --no-deps {wheel} &&
-            python .github/scripts/generate_pyi.py {wheel} tmp/wheel_add_pyi &&
-            delvewheel repair -w {dest_dir} tmp/wheel_add_pyi/*.whl
       - name: Upload wheels
         uses: actions/upload-artifact@v7
         with:
@@ -79,6 +73,8 @@ jobs:
           source $ACTIVATE
           pip install "$(echo ./wheelhouse/*cp310*.whl)[dev,bench]" # Explicit local whl avoids falling back to PyPI
           pytest -s -v $PYTEST_DIRS
+          pip install mypy
+          python -m mypy.stubtest pydiffsol
 
   sdist:
     runs-on: ubuntu-latest
