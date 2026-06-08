@@ -34,6 +34,3 @@ pyo3 = { version = "*", features = ["auto-initialize"] }
 
 [build-dependencies]
 cargo-lock = "11.0.1"
-
-[patch.crates-io]
-diffsol-c = { path = "../diffsol/diffsol-c" }
