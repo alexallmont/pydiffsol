@@ -93,10 +93,10 @@ Small, focused pull requests are easiest to review.
 
 Please include:
 
-- the problem being solved
-- the approach taken
-- any relevant feature flags or platform notes
-- tests or examples updated as part of the change
+- Update `CHANGELOG.md` with your work.
+- Description of problem being solved.
+- Detail approach taken or design strategy for deeper code changes.
+- Note any feature flag changes or platform specific notes.
 
 ## Project management
 
@@ -108,9 +108,9 @@ To release v0.x.y, e.g. x and y from next unreleased draft [issue](https://githu
 
 1. Ensure all PRs are merged to `main` and there are no build issues.
 1. Ensure `Cargo.toml` is correct, e.g. `version = "0.x.y"`.
-1. Ensure `CHANGELOG.md` details latest changes up to v0.x.y.
-1. Edit `docs/requirements.in` and change `pydiffsol==0.x.y` to the latest version.
+1. Ensure `CHANGELOG.md` details latest changes up to `[0.x.y]`.
 1. Update `docs/requirements.txt` by running `pip install pip-tools`, then `cd docs` and `pip-compile --upgrade requirements.in`
+1. Edit the generated `docs/requirements.txt`, remove the auto-generated `-e ..` lines and restore the `pydiffsol==` lines with the new `0.x.y` version.
 1. Go to the [releases](https://github.com/alexallmont/pydiffsol/releases), click **Draft a new release**.
 1. Click on 'Select tag' then 'Create new tag'.
 1. Set the tag and release name to v0.x.y, note the leading 'v'.
@@ -120,4 +120,4 @@ To release v0.x.y, e.g. x and y from next unreleased draft [issue](https://githu
 1. Check build action completes and the new package is on [PyPI](https://pypi.org/project/pydiffsol/).
 1. Log in to [readthedocs](https://app.readthedocs.org/dashboard/), rebuild `latest`, `stable` and add a new version for `v0.x.y`
 
-The final step manually rebuilding readthedocs is needed because the docs are built through introspection. This requires the latest PyPI version of pydiffsol, but readthedocs is triggered by watching GitHub and not PyPI, so presently there is a bug where the docs try to build before the package is available.
+The manual manipulation of `docs/requirements.txt` and rebuild of readthedocs is needed because the docs are built through introspection, requiring the latest PyPI version of `pydiffsol`. readthedocs is triggered by watching GitHub and not PyPI, and the version needs to be right at time of tag creation so the docs tags are correct. The bug is the docs try to build before the package is available. Suggested fix in issue [#85](https://github.com/alexallmont/pydiffsol/issues/85).

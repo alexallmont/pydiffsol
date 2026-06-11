@@ -1,27 +1,32 @@
-// Convert diffsol errors to custom pydiffsol error type
-
-use diffsol::error::DiffsolError;
 use pyo3::{
     exceptions::{PyRuntimeError, PyValueError},
-    prelude::*,
+    PyErr,
 };
 
 pub enum PyDiffsolError {
-    Diffsol(DiffsolError),
+    Diffsol(diffsol_c::DiffsolRtError),
     Conversion(String),
+    Python(PyErr),
 }
 
 impl From<PyDiffsolError> for PyErr {
     fn from(err: PyDiffsolError) -> Self {
         match err {
-            PyDiffsolError::Diffsol(e) => PyRuntimeError::new_err(e.to_string()),
+            PyDiffsolError::Diffsol(err) => PyRuntimeError::new_err(err.to_string()),
             PyDiffsolError::Conversion(msg) => PyValueError::new_err(msg),
+            PyDiffsolError::Python(err) => err,
         }
     }
 }
 
-impl From<DiffsolError> for PyDiffsolError {
-    fn from(other: DiffsolError) -> Self {
-        PyDiffsolError::Diffsol(other)
+impl From<diffsol_c::DiffsolRtError> for PyDiffsolError {
+    fn from(err: diffsol_c::DiffsolRtError) -> Self {
+        PyDiffsolError::Diffsol(err)
+    }
+}
+
+impl From<PyErr> for PyDiffsolError {
+    fn from(err: PyErr) -> Self {
+        PyDiffsolError::Python(err)
     }
 }

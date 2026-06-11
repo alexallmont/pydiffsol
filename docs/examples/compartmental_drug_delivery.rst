@@ -13,14 +13,13 @@ central and peripheral compartments, the model is:
 
 .. math::
 
-  \frac{dq_c}{dt} =
+  \begin{aligned}
+  \frac{dq_c}{dt} &=
   - \frac{q_c}{V_c} CL
-  - Q_{p1} \left( \frac{q_c}{V_c} - \frac{q_{p1}}{V_{p1}} \right)
-
-.. math::
-
-  \frac{dq_{p1}}{dt} =
+  - Q_{p1} \left( \frac{q_c}{V_c} - \frac{q_{p1}}{V_{p1}} \right) \\\\
+  \frac{dq_{p1}}{dt} &=
   Q_{p1} \left( \frac{q_c}{V_c} - \frac{q_{p1}}{V_{p1}} \right)
+  \end{aligned}
 
 with initial conditions \\(q_c(0)=1000\\) ng and \\(q_{p1}(0)=0\\) ng.
 
@@ -31,10 +30,8 @@ We use:
 - \\(CL = 100\\) mL/h
 - \\(Q_{p1} = 50\\) mL/h
 
-Bolus doses of 1000 ng are applied at 0, 6, 12, and 18 hours. In this Python
-version, each bolus event is implemented by updating ``solution.current_state``
-for the central compartment before continuing the solve. The example uses
-``ode.solve(...)`` segment-by-segment between dose times.
+This Python version solves the model over a 24 hour window with multiple bolus dosing
+events applied via hybrid stop/reset callbacks.
 
 .. literalinclude:: ../../examples/3_1_compartmental_models_of_drug_delivery.py
   :encoding: latin-1

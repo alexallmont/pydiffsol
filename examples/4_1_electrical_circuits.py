@@ -35,7 +35,7 @@ def solve():
             iR,
         }
         """,
-        ds.nalgebra_dense
+        matrix_type=ds.nalgebra_dense,
     )
 
     params = np.array([])

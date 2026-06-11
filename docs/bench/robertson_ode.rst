@@ -7,21 +7,21 @@ This test case can be written as an ODE given by the following set of equations:
 
 .. math::
 
-   \begin{align}
+   \begin{aligned}
    \frac{dx}{dt} &= -0.04x + 10^4 y z \\
    \frac{dy}{dt} &= 0.04x - 3 \cdot 10^7 y^2 - 10^4 y z \\
    \frac{dz}{dt} &= 3 \cdot 10^7 y^2 \\
-   \end{align}
+   \end{aligned}
 
 with initial conditions:
 
 .. math::
 
-   \begin{align}
+   \begin{aligned}
    x(0) &= 1 \\
    y(0) &= 0 \\
    z(0) &= 0 \\
-   \end{align}
+   \end{aligned}
 
 This problem is known to be stiff due to the presence of widely varying timescales in the solution.
 

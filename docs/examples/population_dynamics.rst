@@ -21,8 +21,10 @@ Putting the two equations together, we have a system of two first order ODEs:
 
 .. math::
 
-  \frac{dx}{dt} = a x - b x y \\
-  \frac{dy}{dt} = c x y - d y
+  \begin{aligned}
+  \frac{dx}{dt} &= a x - b x y \\
+  \frac{dy}{dt} &= c x y - d y
+  \end{aligned}
 
 which can be written in vector form as:
 

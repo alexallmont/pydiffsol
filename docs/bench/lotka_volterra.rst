@@ -5,9 +5,11 @@ We benchmark ODE solvers on the Lotka-Volterra predator-prey model. This is a no
 
 .. math::
 
-   \frac{dx}{dt} = a x - b xy
+   \begin{aligned}
+   \frac{dx}{dt} &= a x - b xy
 
-   \frac{dy}{dt} = c xy - d y
+   \frac{dy}{dt} &= c xy - d y
+   \end{aligned}
 
 where :math:`x` is the number of prey, :math:`y` is the number of predators, and :math:`a`, :math:`b`, :math:`c`, and :math:`d` are positive real parameters that describe the interaction between the two species.
 
@@ -97,8 +99,8 @@ The results are shown below:
   :height: 600
   :alt: benchmark_lotka_volterra_ode_macbook.svg
 
-The Diffsol and DifferentialEquations.jl implementations of the TSIT45 method perform the best across all tolerances and hardware setups, with Diffsol being slightly faster at larger tolerances and DifferentialEquations.jl being slightly faster at smaller tolerances.
-Diffrax's Tsit5 implementation is slowest, perhaps due to the use of double precision, which is not a common use case for ML libraries.
+The Diffsol implementation of the TSIT45 method performs best across all tolerances and hardware setups. The 
+DifferentialEquations.jl and Diffrax implementations perform similarly, with DifferentialEquations.jl slightly improved, particularly on the rack server.
 
-For the BDF/FBDF methods, the Diffsol implementation outperforms both the Casadi and DifferentialEquations.jl implementations across all tolerances and hardware setups.
-The Casadi implementation is the slowest of the three, likely due to the overhead of evaluating the function using the computational graph.
+The BDF/FBDF methods follow a similar trend, with the Diffsol implementation significantly outperforming both the Casadi and DifferentialEquations.jl 
+implementations across all tolerances and hardware setups.
