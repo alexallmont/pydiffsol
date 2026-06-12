@@ -62,7 +62,7 @@ def generate_pydiffsol_pyi():
         pyi_file.write(new_pyi_contents)
 
 
-def repackage_with_pyi(wheel: Path, dest_dir: Path):
+def repackage_with_pyi(wheel: Path):
     """
     Unpack the wheel, build pyi through introspection and repackage wheel
     """
@@ -72,8 +72,6 @@ def repackage_with_pyi(wheel: Path, dest_dir: Path):
     work_dir = Path(tempfile.mkdtemp(prefix="wheel_add_pyi_"))
     if not work_dir.is_dir():
         raise RuntimeError(f"pyi repair temp dir not created: {work_dir}")
-
-    dest_dir.mkdir(parents=True, exist_ok=True)
 
     # Unpack, add pyi file, then repackage
     print(f"Unpacking wheel {wheel} to {work_dir}")
@@ -86,21 +84,23 @@ def repackage_with_pyi(wheel: Path, dest_dir: Path):
         pkg / "pydiffsol" / "pydiffsol.pyi",
     )
 
-    print(f"Packing wheel {pkg} to {dest_dir}")
-    subprocess.run(["wheel", "pack", str(pkg), "-d", str(dest_dir)], check=True)
+    with tempfile.TemporaryDirectory() as td:
+        print(f"Packing wheel {pkg} back into to {wheel}")
+        subprocess.run(["wheel", "pack", str(pkg), "-d", td], check=True)
+        new_wheel = next(Path(td).glob("*.whl"))
+        shutil.move(new_wheel, wheel)
 
     print("pydiffsol pyi repair complete!")
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print("Regenerate .pyi autocomplete stubs for pydiffsol.")
+    if len(sys.argv) < 2:
+        print("Regenerate .pyi autocomplete stubs and write back to wheel.")
         print("Run from project root for setting CARGO_MANIFEST_DIR.")
         print("Usage:")
-        print("  python .github/scripts/generate_pyi.py <wheel> <dest_dir>")
-        exit()
+        print("  python .github/scripts/generate_pyi.py <wheel>")
+        exit(1)
 
     wheel = Path(sys.argv[1])
-    dest_dir = Path(sys.argv[2])
 
-    repackage_with_pyi(wheel, dest_dir)
+    repackage_with_pyi(wheel)

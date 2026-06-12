@@ -1,6 +1,6 @@
 [package]
 name = "pydiffsol"
-version = "0.5.3"
+version = "0.6.0"
 edition = "2021"
 
 [lib]
@@ -20,7 +20,7 @@ diffsol-cranelift = ["diffsol-c/diffsl-cranelift"]
 suitesparse = ["diffsol-c/suitesparse"]
 
 [dependencies]
-diffsol-c = { version = "0.4.4" }
+diffsol-c = { version = "0.4.6" }
 numpy = "0.28.0"
 pyo3 = { version = "0.28.3", default-features = false, features = [
   "abi3-py310",

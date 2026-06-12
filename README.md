@@ -1,9 +1,17 @@
 # pydiffsol
 
-Python bindings for [diffsol](https://github.com/martinjrobins/diffsol)
+Pydiffsol provides python bindings for [diffsol](https://github.com/martinjrobins/diffsol), a Rust library for solving ordinary differential equations (ODEs) or semi-explicit differential algebraic equations (DAEs).
 
 - **PyPI**: [https://pypi.org/project/pydiffsol](https://pypi.org/project/pydiffsol)
 - **Documentation**: [https://pydiffsol.readthedocs.io/en/latest](https://pydiffsol.readthedocs.io/en/latest)
+
+Equations are specified with [diffsl](https://github.com/martinjrobins/diffsl), a domain specific language (DSL) that uses automatic differentiation to calculate the necessary jacobians, and JIT compilation using [LLVM](https://llvm.org/) or [Cranelift](https://cranelift.dev/) to generate efficient native code at runtime.
+
+This provides the performance of Rust with the flexibility of Python. Users create a Python `Ode` object with DiffSL code, specifying the diffsol solver, matrix, linear solver and scalar types. All standard solver configuration settings such as tolerances, min step size, max newton steps etc. can be set through the `Ode` instance.
+
+Currently supported solver types are BDF, ESDIRK34, TRBDF2 and TSIT45.
+
+Wheels are built for linux, windows and macos.
 
 ## Example usage
 
@@ -59,3 +67,18 @@ different configuration, you may need to edit `tasks.json` and `settings.json`.
 The python path is hard-coded in `launch.json` to `.venv/bin/activate` (this is
 the default when running `uv` in macos or Linux). If you have pip-installed
 to a different location or running on Windows, you need to edit `launch.json`.
+
+## Local wheel builds
+
+To replicate CI wheel builds, specify CIBW_ environment variables equivalent to
+those in `.github/workflows/CI.yml`. Using `cibuildwheel` performs the repair
+step required to generate the .pyi autocomplete stubs.
+
+For example, building alternative macos deployment target with python 3.11:
+
+```sh
+    CIBW_BUILD=cp311-macosx_arm64 \
+    MACOSX_DEPLOYMENT_TARGET=15.0 \
+    MATURIN_PEP517_ARGS="--features diffsol-llvm17" \
+    cibuildwheel --platform macos .
+```
