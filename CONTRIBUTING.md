@@ -87,10 +87,10 @@ Small, focused pull requests are easiest to review.
 
 Please include:
 
-- the problem being solved
-- the approach taken
-- any relevant feature flags or platform notes
-- tests or examples updated as part of the change
+- Update `CHANGELOG.md` with your work.
+- Description of problem being solved.
+- Detail approach taken or design strategy for deeper code changes.
+- Note any feature flag changes or platform specific notes.
 
 ## Project management
 
@@ -102,7 +102,7 @@ To release v0.x.y, e.g. x and y from next unreleased draft [issue](https://githu
 
 1. Ensure all PRs are merged to `main` and there are no build issues.
 1. Ensure `Cargo.toml` is correct, e.g. `version = "0.x.y"`.
-1. Ensure `CHANGELOG.md` details latest changes up to v0.x.y.
+1. Ensure `CHANGELOG.md` details latest changes up to `[0.x.y]`.
 1. Update `docs/requirements.txt` by running `pip install pip-tools`, then `cd docs` and `pip-compile --upgrade requirements.in`
 1. Edit the generated `docs/requirements.txt`, remove the auto-generated `-e ..` lines and restore the `pydiffsol==` lines with the new `0.x.y` version.
 1. Go to the [releases](https://github.com/alexallmont/pydiffsol/releases), click **Draft a new release**.

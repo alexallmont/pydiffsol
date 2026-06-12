@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Upgraded base Python version to 3.10 (#93)
 
+## [0.5.3]
+
+### Changed
+
+- Update diffsol-c to v0.4.6 to include fix for enzyme pow gradient bug.
+
 ## [0.5.2]
 
 ### Added
