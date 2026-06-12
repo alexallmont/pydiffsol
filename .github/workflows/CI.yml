@@ -50,6 +50,20 @@ jobs:
             source .github/scripts/maturin_linux_setup.sh
           CIBW_BEFORE_ALL_MACOS: |
             brew install suite-sparse
+            echo GREP_ME_MACOS_DIAGNOSTICS
+            xcode-select -p
+            xcrun --show-sdk-path
+            xcrun --sdk macosx --show-sdk-path
+            which clang
+            xcrun --find clang
+            clang -v
+            echo "SDKROOT=$SDKROOT"
+            echo "DEVELOPER_DIR=$DEVELOPER_DIR"
+            printenv
+            echo GREP_MINIMISED_PRINTENV
+            printenv | sort | grep -E '^(SDKROOT|DEVELOPER_DIR|CC|CXX|CFLAGS|CXXFLAGS|CPPFLAGS|LDFLAGS|PKG_CONFIG_PATH)='
+            brew --prefix suite-sparse
+            ls "$(brew --prefix suite-sparse)/include/suitesparse"
           CIBW_ENVIRONMENT_LINUX: >-
             MATURIN_PEP517_ARGS="--features diffsol-llvm17 --features suitesparse"
             RUSTFLAGS="-C linker-features=-lld"
