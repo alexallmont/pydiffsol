@@ -3,7 +3,9 @@ use pyo3::{
     prelude::*,
     types::{PyList, PyType},
 };
+use pyo3_stub_gen::derive::{gen_stub_pyclass_enum, gen_stub_pymethods};
 
+#[gen_stub_pyclass_enum]
 #[pyclass(from_py_object, eq)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum JitBackendType {
@@ -18,12 +20,12 @@ pub enum JitBackendType {
 
 impl JitBackendType {
     pub(crate) fn all_enums() -> Vec<Self> {
-        let mut values = Vec::new();
-        #[cfg(feature = "diffsol-cranelift")]
-        values.push(Self::Cranelift);
-        #[cfg(feature = "diffsol-llvm")]
-        values.push(Self::Llvm);
-        values
+        vec![
+            #[cfg(feature = "diffsol-cranelift")]
+            Self::Cranelift,
+            #[cfg(feature = "diffsol-llvm")]
+            Self::Llvm,
+        ]
     }
 
     pub(crate) fn get_name(&self) -> &str {
@@ -58,6 +60,7 @@ impl From<diffsol_c::JitBackendType> for JitBackendType {
     }
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl JitBackendType {
     #[classmethod]

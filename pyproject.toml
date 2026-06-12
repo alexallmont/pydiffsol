@@ -5,7 +5,7 @@ build-backend = "maturin"
 [project]
 name = "pydiffsol"
 dynamic = ["version"]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
@@ -38,3 +38,25 @@ bench = [
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
+
+[tool.cibuildwheel.linux]
+repair-wheel-command = [
+    "python -m pip install --force-reinstall --no-deps {wheel} wheel",
+    "python .github/scripts/generate_pyi.py {wheel}",
+    "auditwheel repair -w {dest_dir} {wheel}",
+]
+
+[tool.cibuildwheel.macos]
+repair-wheel-command = [
+    "python -m pip install --force-reinstall --no-deps {wheel} wheel",
+    "python .github/scripts/generate_pyi.py {wheel}",
+    "delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}",
+]
+
+[tool.cibuildwheel.windows]
+repair-wheel-command = [
+    "python -m pip install delvewheel wheel",
+    "python -m pip install --force-reinstall --no-deps {wheel}",
+    "python .github/scripts/generate_pyi.py {wheel}",
+    "delvewheel repair -w {dest_dir} {wheel}",
+]

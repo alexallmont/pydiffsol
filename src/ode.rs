@@ -9,6 +9,7 @@ use pyo3::{
     types::{PyTuple, PyType},
     PyAny,
 };
+use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::{
     adjoint_checkpoint::AdjointCheckpointWrapper,
@@ -27,6 +28,7 @@ use crate::{
     solution::SolutionWrapper,
 };
 
+#[gen_stub_pyclass]
 #[pyclass(from_py_object, module = "pydiffsol")]
 #[pyo3(name = "Ode")]
 #[derive(Clone)]
@@ -57,6 +59,7 @@ impl OdeWrapper {
     }
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl OdeWrapper {
     /// Construct an ODE solver for specified diffsol using a given matrix type.
@@ -65,7 +68,14 @@ impl OdeWrapper {
     /// All other fields are editable, for example setting the solver type or
     /// method, or changing solver tolerances.
     #[new]
-    #[pyo3(signature=(code, jit_backend=None, scalar_type=ScalarType::F64, matrix_type=MatrixType::NalgebraDense, linear_solver=LinearSolverType::Default, ode_solver=OdeSolverType::Bdf))]
+    #[pyo3(signature=(
+        code,
+        jit_backend=None,
+        scalar_type=ScalarType::F64,
+        matrix_type=MatrixType::NalgebraDense,
+        linear_solver=LinearSolverType::Default,
+        ode_solver=OdeSolverType::Bdf
+    ))]
     fn new(
         code: &str,
         jit_backend: Option<JitBackendType>,
