@@ -20,7 +20,7 @@ diffsol-cranelift = ["diffsol-c/diffsl-cranelift"]
 suitesparse = ["diffsol-c/suitesparse"]
 
 [dependencies]
-diffsol-c = { version = "0.4.6" }
+diffsol-c = { version = "0.4.7" }
 numpy = "0.28.0"
 pyo3 = { version = "0.28.3", default-features = false, features = [
   "abi3-py310",
