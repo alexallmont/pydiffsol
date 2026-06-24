@@ -34,5 +34,9 @@ pyo3 = { version = "*", features = [
   "auto-initialize"
 ] }
 
+[profile.dev]
+lto = true
+codegen-units = 1
+
 [build-dependencies]
 cargo-lock = "11.0.1"
