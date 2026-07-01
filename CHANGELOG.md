@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - .pyi stub file for autocomplete in editors (#93)
+- Enable link time optimisation to improve faer performance (#110)
+- PyO3 security vulnerability fix (#109)
+- Fix Ode API docs (#112)
 
 ### Changes
 
