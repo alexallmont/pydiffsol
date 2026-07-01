@@ -28,6 +28,11 @@ use crate::{
     solution::SolutionWrapper,
 };
 
+/// Construct an ODE solver for specified diffsol using a given matrix type.
+/// The code is JIT-compiled immediately based on the matrix type and jit_backend,
+/// so after construction, both code and matrix_type fields are read-only.
+/// All other fields are editable, for example setting the solver type or
+/// method, or changing solver tolerances.
 #[gen_stub_pyclass]
 #[pyclass(from_py_object, module = "pydiffsol")]
 #[pyo3(name = "Ode")]
@@ -62,11 +67,6 @@ impl OdeWrapper {
 #[gen_stub_pymethods]
 #[pymethods]
 impl OdeWrapper {
-    /// Construct an ODE solver for specified diffsol using a given matrix type.
-    /// The code is JIT-compiled immediately based on the matrix type and jit_backend,
-    /// so after construction, both code and matrix_type fields are read-only.
-    /// All other fields are editable, for example setting the solver type or
-    /// method, or changing solver tolerances.
     #[new]
     #[pyo3(signature=(
         code,
