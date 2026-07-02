@@ -34,7 +34,7 @@ jobs:
         if: runner.os == 'macOS'
         uses: KyleMayes/install-llvm-action@v2
         with:
-          version: "21.0"
+          version: "21.1.8"
       - name: Build wheels
         uses: pypa/cibuildwheel@v4.1.0
         env:
