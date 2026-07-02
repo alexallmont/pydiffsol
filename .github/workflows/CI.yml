@@ -55,7 +55,7 @@ jobs:
             RUSTFLAGS="-C linker-features=-lld"
           CIBW_ENVIRONMENT_MACOS: >-
             CC="$(xcrun --find clang)"
-            CXX="$(xcrun --find clang++)
+            CXX="$(xcrun --find clang++)"
             SDKROOT="$(xcrun --sdk macosx --show-sdk-path)"
             MACOSX_DEPLOYMENT_TARGET=14.0
             MATURIN_PEP517_ARGS="--features diffsol-llvm17 --features suitesparse"
