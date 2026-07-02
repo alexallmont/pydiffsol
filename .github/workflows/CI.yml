@@ -28,31 +28,35 @@ jobs:
           - runner: macos-14
             target: arm64
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
         with:
-          python-version: 3.x
+          python-version: '3.10'
       - name: Install LLVM and Clang
         if: runner.os == 'macOS'
         uses: KyleMayes/install-llvm-action@v2
         with:
           version: "17.0"
-      - name: Install SuiteSparse
-        if: runner.os == 'macOS'
-        run: brew install suite-sparse
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3.4.1
+        uses: pypa/cibuildwheel@v4.1.0
         env:
+          CIBW_BUILD_VERBOSITY: "1"
+          CIBW_BUILD: "cp310-manylinux_x86_64 cp310-macosx_arm64 cp310-win_amd64"
           CIBW_ARCHS_LINUX: ${{ matrix.platform.target }}
           CIBW_ARCHS_MACOS: ${{ matrix.platform.target }}
           CIBW_ARCHS_WINDOWS: ${{ matrix.platform.target }}
           SCCACHE_VERSION: 0.2.13
-          CIBW_BEFORE_ALL_LINUX: "curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y && yum install -y openssl-devel && source .github/workflows/maturin_linux_setup.sh"
-          CIBW_BUILD_VERBOSITY: "1"
-          CIBW_ENVIRONMENT_LINUX: 'PATH="$PATH:$HOME/.cargo/bin" MATURIN_PEP517_ARGS="--features diffsol-llvm17 --features suitesparse"'
-          CIBW_ENVIRONMENT_MACOS: 'PATH="$PATH:$HOME/.cargo/bin" MACOSX_DEPLOYMENT_TARGET=14.0 MATURIN_PEP517_ARGS="--features diffsol-llvm17"'
-          CIBW_ENVIRONMENT_WINDOWS: 'PATH="$PATH:$HOME/.cargo/bin" MATURIN_PEP517_ARGS="--features diffsol-cranelift"'
-          CIBW_SKIP: "*-win32 *-musllinux_*"
+          CIBW_BEFORE_ALL_LINUX: |
+            curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y
+            source .github/scripts/maturin_linux_setup.sh
+          CIBW_ENVIRONMENT_LINUX: >-
+            MATURIN_PEP517_ARGS="--features diffsol-llvm17 --features suitesparse"
+            RUSTFLAGS="-C linker-features=-lld"
+          CIBW_ENVIRONMENT_MACOS: >-
+            MACOSX_DEPLOYMENT_TARGET=14.0
+            MATURIN_PEP517_ARGS="--features diffsol-llvm17"
+          CIBW_ENVIRONMENT_WINDOWS: >-
+            MATURIN_PEP517_ARGS="--features diffsol-cranelift"
       - name: Upload wheels
         uses: actions/upload-artifact@v7
         with:
@@ -68,13 +72,13 @@ jobs:
           set -e
           python3 -m venv .venv
           source $ACTIVATE
-          pip install "$(echo ./wheelhouse/*cp39*.whl)[dev,bench]" # Explicit local whl avoids falling back to PyPI
+          pip install "$(echo ./wheelhouse/*cp310*.whl)[dev,bench]" # Explicit local whl avoids falling back to PyPI
           pytest -s -v $PYTEST_DIRS
 
   sdist:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Build sdist
         uses: PyO3/maturin-action@v1
         with:

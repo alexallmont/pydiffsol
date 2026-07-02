@@ -6,12 +6,14 @@ use pyo3::{
     prelude::*,
     types::{PyList, PyType},
 };
+use pyo3_stub_gen::derive::{gen_stub_pyclass_enum, gen_stub_pymethods};
 
 /// Enumerates the possible matrix types for diffsol
 ///
 /// :attr nalgebra_dense: dense matrix using nalgebra crate (https://nalgebra.rs/)
 /// :attr faer_dense: dense matrix using faer crate (https://faer.veganb.tw/)
 /// :attr faer_sparse: sparse matrix using faer crate (https://faer.veganb.tw/)
+#[gen_stub_pyclass_enum]
 #[pyclass(from_py_object, eq)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum MatrixType {
@@ -59,6 +61,7 @@ impl From<diffsol_c::MatrixType> for MatrixType {
     }
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl MatrixType {
     /// Create MatrixType from string name

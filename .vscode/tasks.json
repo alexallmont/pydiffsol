@@ -25,6 +25,30 @@
                 "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+            "label": "generate .pyi stubs",
+            "type": "shell",
+            "linux": {
+                "command": "cargo run --bin stub_gen --features diffsol-llvm17 --features suitesparse"
+            },
+            "osx": {
+                "command": "cargo run --bin stub_gen --features diffsol-llvm17"
+            },
+            "windows": {
+                "command": "cargo run --bin stub_gen --features diffsol-cranelift"
+            },
+            "options": {
+                "env": {
+                    "PYO3_PYTHON": "${command:python.interpreterPath}"
+                }
+            },
+            "problemMatcher": [
+                "$rustc"
+            ],
+            "presentation": {
+                "clear": true
+            }
         }
     ]
 }
