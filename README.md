@@ -40,11 +40,6 @@ solution = ode.solve(params, 0.4)
 print(solution.ys, solution.ts)
 ```
 
-## Known issues
-
-- Instability for BDF with FaerSparse KLU. We are investigating a segfault in
-underlying diffsol. In the meantime, unit tests are disabled for this combination.
-
 ## Local development
 
 To build locally, create a venv and use [maturin](https://www.maturin.rs/installation.html)
@@ -67,3 +62,18 @@ different configuration, you may need to edit `tasks.json` and `settings.json`.
 The python path is hard-coded in `launch.json` to `.venv/bin/activate` (this is
 the default when running `uv` in macos or Linux). If you have pip-installed
 to a different location or running on Windows, you need to edit `launch.json`.
+
+## Local wheel builds
+
+To replicate CI wheel builds, specify CIBW_ environment variables equivalent to
+those in `.github/workflows/CI.yml`. Using `cibuildwheel` performs the repair
+step required to generate the .pyi autocomplete stubs.
+
+For example, building alternative macos deployment target with python 3.11:
+
+```sh
+    CIBW_BUILD=cp311-macosx_arm64 \
+    MACOSX_DEPLOYMENT_TARGET=15.0 \
+    MATURIN_PEP517_ARGS="--features diffsol-llvm17" \
+    cibuildwheel --platform macos .
+```

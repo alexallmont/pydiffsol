@@ -19,7 +19,7 @@ fn emit_rerun_rules(lockfile_path: &Path) {
 
 fn emit_diffsol_versions(lockfile_path: &Path) {
     // Save versions to rustc-env values to be baked into Python API at compile time
-    let (diffsol_version, diffsl_version, diffsol_c_version) = match Lockfile::load(&lockfile_path) {
+    let (diffsol_version, diffsl_version, diffsol_c_version) = match Lockfile::load(lockfile_path) {
         Ok(lockfile) => (
             package_version(&lockfile, "diffsol"),
             package_version(&lockfile, "diffsl"),

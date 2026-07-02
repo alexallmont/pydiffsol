@@ -1,11 +1,11 @@
 [package]
 name = "pydiffsol"
-version = "0.5.3"
+version = "0.6.0"
 edition = "2021"
 
 [lib]
 name = "pydiffsol"
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "rlib"]
 
 [features]
 diffsol-llvm = []
@@ -19,18 +19,23 @@ diffsol-llvm21 = ["diffsol-c/diffsl-llvm21", "diffsol-llvm"]
 diffsol-cranelift = ["diffsol-c/diffsl-cranelift"]
 suitesparse = ["diffsol-c/suitesparse"]
 
+[workspace.dependencies]
+pyo3 = { version = "0.29", default-features = false }
+
 [dependencies]
-pyo3 = { version = "0.28.3", default-features = false, features = [
-  "abi3-py39",
-  "extension-module",
-] }
-diffsol-c = { version = "0.4.6" }
-numpy = "0.28.0"
+diffsol-c = { version = "0.4" }
+numpy = "0.29.0"
+pyo3 = { workspace = true, features = ["abi3-py310"] }
 pyo3-log = "0.13.2"
+pyo3-stub-gen = { version = "0.23" }
 serde_json = "1.0"
 
 [dev-dependencies]
-pyo3 = { version = "*", features = ["auto-initialize"] }
+pyo3 = { workspace = true, features = ["auto-initialize"] }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
 
 [build-dependencies]
 cargo-lock = "11.0.1"

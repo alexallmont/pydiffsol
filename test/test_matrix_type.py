@@ -42,9 +42,6 @@ def invalid_pairs():
 
 @pytest.mark.parametrize("matrix_type,ode_solver,linear_solver", valid_triplets())
 def test_valid_config_solve(jit_backend, matrix_type, ode_solver, linear_solver):
-    if matrix_type == ds.faer_sparse and linear_solver == ds.klu and ode_solver == ds.bdf:
-        pytest.skip("Known upstream instability for FaerSparse + KLU + BDF")
-
     ode = ds.Ode(
         DIFFSL_LOGISTIC,
         jit_backend=jit_backend,

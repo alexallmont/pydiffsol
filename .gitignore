@@ -28,6 +28,7 @@ venv/
 *.egg-info/
 .installed.cfg
 *.egg
+wheelhouse/
 
 # Installer logs
 pip-log.txt
@@ -58,3 +59,6 @@ docs/_build/
 
 # julia Manifest
 Manifest.toml
+
+# Ignore locally-generated pyi stubs, not checked in because these are generated per platform on CI
+pydiffsol.pyi
