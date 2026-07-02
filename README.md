@@ -40,11 +40,6 @@ solution = ode.solve(params, 0.4)
 print(solution.ys, solution.ts)
 ```
 
-## Known issues
-
-- Instability for BDF with FaerSparse KLU. We are investigating a segfault in
-underlying diffsol. In the meantime, unit tests are disabled for this combination.
-
 ## Local development
 
 To build locally, create a venv and use [maturin](https://www.maturin.rs/installation.html)
