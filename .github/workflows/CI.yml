@@ -41,7 +41,11 @@ jobs:
         uses: pypa/cibuildwheel@v4.1.0
         env:
           CIBW_BUILD_VERBOSITY: "1"
-          CIBW_BUILD: "cp310-manylinux_x86_64 cp310-macosx_arm64 cp310-win_amd64"
+          CIBW_BUILD: >-
+            cp310-manylinux_x86_64
+            cp310-manylinux_aarch64
+            cp310-macosx_arm64
+            cp310-win_amd64
           CIBW_ARCHS_LINUX: ${{ matrix.platform.target }}
           CIBW_ARCHS_MACOS: ${{ matrix.platform.target }}
           CIBW_ARCHS_WINDOWS: ${{ matrix.platform.target }}
