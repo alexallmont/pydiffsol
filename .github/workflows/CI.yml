@@ -20,8 +20,8 @@ jobs:
       matrix:
         platform:
           # FIXME re-enable
-          #- runner: ubuntu-22.04
-          #  target: x86_64
+          - runner: ubuntu-22.04
+            target: x86_64
           - runner: ubuntu-24.04-arm
             arch: aarch64
           #- runner: windows-latest
