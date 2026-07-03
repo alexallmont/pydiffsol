@@ -15,7 +15,7 @@ if [ -f "/etc/debian_version" ]; then
 else
     echo Installing LLVM via yum
     yum update -y
-    yum -y install llvm-devel-21.0.6 clang-devel-21.0.6 libzstd-devel zstd ncurses-devel zlib-devel libffi libffi-devel
+    yum -y install llvm-devel-21.1.8 clang-devel-21.1.8 libzstd-devel zstd ncurses-devel zlib-devel libffi libffi-devel
     export LLVM_DIR=/usr
     export LLVM_SYS_211_PREFIX=/usr
 
