@@ -19,11 +19,10 @@ jobs:
     strategy:
       matrix:
         platform:
-          # FIXME re-enable after testing macos
-          # - runner: ubuntu-22.04
-          #   target: x86_64
-          # - runner: windows-latest
-          #   target: AMD64
+          - runner: ubuntu-22.04
+            target: x86_64
+          - runner: windows-latest
+            target: AMD64
           - runner: macos-14
             target: arm64
     steps:
