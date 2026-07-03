@@ -21,12 +21,15 @@ jobs:
         platform:
           - runner: ubuntu-22.04
             target: x86_64
+            rustflags: "-C linker-features=-lld"
           - runner: ubuntu-24.04-arm
             target: aarch64
+            rustflags: ""
           - runner: windows-latest
             target: AMD64
           - runner: macos-14
             target: arm64
+
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
@@ -55,12 +58,13 @@ jobs:
             source .github/scripts/maturin_linux_setup.sh
           CIBW_ENVIRONMENT_LINUX: >-
             MATURIN_PEP517_ARGS="--features diffsol-llvm17 --features suitesparse"
-            # RUSTFLAGS="-C linker-features=-lld" FIXME disabled for test
+            RUSTFLAGS="${{ matrix.platform.rustflags }}"
           CIBW_ENVIRONMENT_MACOS: >-
             MACOSX_DEPLOYMENT_TARGET=14.0
             MATURIN_PEP517_ARGS="--features diffsol-llvm17"
           CIBW_ENVIRONMENT_WINDOWS: >-
             MATURIN_PEP517_ARGS="--features diffsol-cranelift"
+
       - name: Upload wheels
         uses: actions/upload-artifact@v7
         with:
