@@ -11,9 +11,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - .pyi stub file for autocomplete in editors (#93)
 
-### Changes
+### Changed
 
-- Upgraded base Python version to 3.10 (#93)
+- Upgraded the minimum supported Python version to 3.10 (#93)
+- Enable link time optimisation to improve faer performance (#110)
+
+### Fixed
+
+- Fix Ode API docs (#112)
+
+### Security
+
+- Updated PyO3 to address a security vulnerability (#109)
 
 ## [0.5.3]
 
