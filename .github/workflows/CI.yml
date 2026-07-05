@@ -53,7 +53,6 @@ jobs:
             MATURIN_PEP517_ARGS="--features diffsol-llvm17 --features suitesparse"
             RUSTFLAGS="-C linker-features=-lld"
           CIBW_ENVIRONMENT_MACOS: >-
-            SDKROOT="$(xcrun --sdk macosx --show-sdk-path)"
             MACOSX_DEPLOYMENT_TARGET=14.0
             DYLD_FALLBACK_LIBRARY_PATH="$(brew --prefix gcc)/lib/gcc/current"
             MATURIN_PEP517_ARGS="--features diffsol-llvm17 --features suitesparse"
