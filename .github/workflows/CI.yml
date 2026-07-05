@@ -54,7 +54,6 @@ jobs:
             RUSTFLAGS="-C linker-features=-lld"
           CIBW_ENVIRONMENT_MACOS: >-
             CC="$(xcrun --find clang)"
-            CXX="$(xcrun --find clang++)"
             SDKROOT="$(xcrun --sdk macosx --show-sdk-path)"
             MACOSX_DEPLOYMENT_TARGET=14.0
             DYLD_FALLBACK_LIBRARY_PATH="$(brew --prefix gcc)/lib/gcc/current"
