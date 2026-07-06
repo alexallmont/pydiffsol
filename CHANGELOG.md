@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - aarch64 wheel for linux containers running on macos (#101)
+- Add suitesparse support to macos wheel (#98)
 
 ## [0.6.0]
 
