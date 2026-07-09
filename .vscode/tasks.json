@@ -10,7 +10,7 @@
                 "command": "maturin develop --extras dev --features diffsol-llvm21 --features suitesparse"
             },
             "osx": {
-                "command": "maturin develop --extras dev --features diffsol-llvm21"
+                "command": "maturin develop --extras dev --features diffsol-llvm21 --features suitesparse"
             },
             "windows": {
                 "command": "maturin develop --extras dev --features diffsol-cranelift"
@@ -30,10 +30,10 @@
             "label": "generate .pyi stubs",
             "type": "shell",
             "linux": {
-                "command": "cargo run --bin stub_gen --features diffsol-llvm17 --features suitesparse"
+                "command": "cargo run --bin stub_gen --features diffsol-llvm21 --features suitesparse"
             },
             "osx": {
-                "command": "cargo run --bin stub_gen --features diffsol-llvm17"
+                "command": "cargo run --bin stub_gen --features diffsol-llvm21 --features suitesparse"
             },
             "windows": {
                 "command": "cargo run --bin stub_gen --features diffsol-cranelift"

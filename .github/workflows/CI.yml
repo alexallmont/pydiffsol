@@ -21,10 +21,15 @@ jobs:
         platform:
           - runner: ubuntu-22.04
             target: x86_64
-          #- runner: windows-latest
-          #  target: AMD64
-          #- runner: macos-14
-          #  target: arm64
+            rustflags: "-C linker-features=-lld"
+          # - runner: ubuntu-24.04-arm
+          #   target: aarch64
+          #   rustflags: ""
+          # - runner: windows-latest
+          #   target: AMD64
+          # - runner: macos-14
+          #   target: arm64
+
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
@@ -39,7 +44,11 @@ jobs:
         uses: pypa/cibuildwheel@v4.1.0
         env:
           CIBW_BUILD_VERBOSITY: "1"
-          CIBW_BUILD: "cp310-manylinux_x86_64 cp310-macosx_arm64 cp310-win_amd64"
+          CIBW_BUILD: >-
+            cp310-manylinux_x86_64
+            cp310-manylinux_aarch64
+            cp310-macosx_arm64
+            cp310-win_amd64
           CIBW_ARCHS_LINUX: ${{ matrix.platform.target }}
           CIBW_ARCHS_MACOS: ${{ matrix.platform.target }}
           CIBW_ARCHS_WINDOWS: ${{ matrix.platform.target }}
@@ -47,14 +56,19 @@ jobs:
           CIBW_BEFORE_ALL_LINUX: |
             curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y
             source .github/scripts/maturin_linux_setup.sh
+          CIBW_BEFORE_ALL_MACOS: |
+            brew install gcc suite-sparse
           CIBW_ENVIRONMENT_LINUX: >-
             MATURIN_PEP517_ARGS="--features diffsol-llvm21 --features suitesparse"
-            RUSTFLAGS="-C linker-features=-lld"
+            RUSTFLAGS="${{ matrix.platform.rustflags }}"
           CIBW_ENVIRONMENT_MACOS: >-
+            SDKROOT="$(xcrun --sdk macosx --show-sdk-path)"
             MACOSX_DEPLOYMENT_TARGET=14.0
-            MATURIN_PEP517_ARGS="--features diffsol-llvm21"
+            DYLD_FALLBACK_LIBRARY_PATH="$(brew --prefix gcc)/lib/gcc/current"
+            MATURIN_PEP517_ARGS="--features diffsol-llvm21 --features suitesparse"
           CIBW_ENVIRONMENT_WINDOWS: >-
             MATURIN_PEP517_ARGS="--features diffsol-cranelift"
+
       - name: Upload wheels
         uses: actions/upload-artifact@v7
         with:
