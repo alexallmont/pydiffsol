@@ -19,7 +19,7 @@ jobs:
     strategy:
       matrix:
         platform:
-          - runner: ubuntu-22.04
+          - runner: ubuntu-24.04
             target: x86_64
             rustflags: "-C linker-features=-lld"
           # - runner: ubuntu-24.04-arm
