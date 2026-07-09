@@ -19,16 +19,16 @@ jobs:
     strategy:
       matrix:
         platform:
-          - runner: ubuntu-24.04
-            target: x86_64
-            rustflags: "-C linker-features=-lld"
-          - runner: ubuntu-24.04-arm
-            target: aarch64
-            rustflags: ""
+          # - runner: ubuntu-24.04
+          #   target: x86_64
+          #   rustflags: "-C linker-features=-lld"
+          # - runner: ubuntu-24.04-arm
+          #   target: aarch64
+          #   rustflags: ""
           # - runner: windows-latest
           #   target: AMD64
-          # - runner: macos-14
-          #   target: arm64
+          - runner: macos-14
+            target: arm64
 
     steps:
       - uses: actions/checkout@v7
