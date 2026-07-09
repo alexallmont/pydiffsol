@@ -1,6 +1,6 @@
 {
     "rust-analyzer.cargo.features": [
-        "diffsol-llvm17",
+        "diffsol-llvm21",
         "suitesparse",
     ],
     "rust-analyzer.files.exclude": [
