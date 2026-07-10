@@ -94,7 +94,9 @@ def test_solve_f32_near_f64(jit_backend, final_time, params):
     for scalar_type in [ds.f64, ds.f32]:
         ode = make_ode(jit_backend, scalar_type=scalar_type, ode_solver=ds.bdf)
         solution = ode.solve(np.array(params), final_time)
-        results.append((solution.ys[0, -1], solution.ts[-1], solution.ys.dtype, solution.ts.dtype))
+        results.append(
+            (solution.ys[0, -1], solution.ts[-1], solution.ys.dtype, solution.ts.dtype)
+        )
 
     assert results[0][0] == pytest.approx(results[1][0], abs=1e-4)
     assert results[0][1] == pytest.approx(results[1][1], abs=1e-4)
@@ -138,14 +140,20 @@ def test_hybrid_metadata_and_solve_paths(jit_backend):
         assert hybrid_sens.sens[0].shape == hybrid_sens.ys.shape
 
 
-@pytest.mark.skipif(not hasattr(ds, "llvm"), reason="Forward sensitivities require an LLVM JIT backend")
+@pytest.mark.skipif(
+    not hasattr(ds, "llvm"), reason="Forward sensitivities require an LLVM JIT backend"
+)
 def test_solve_fwd_sens():
     ode = make_ode(ds.llvm, scalar_type=ds.f64, ode_solver=ds.bdf)
+    ode.sens_rtol = 1e-6
+    ode.sens_atol = 1e-6
     params = np.array([1.0, 1.0, 0.1])
     t_eval = np.array([0.0, 0.1, 0.5])
 
     if os.name == "nt":
-        with pytest.raises(Exception, match="Sensitivity analysis is not supported on Windows"):
+        with pytest.raises(
+            Exception, match="Sensitivity analysis is not supported on Windows"
+        ):
             ode.solve_fwd_sens(params, t_eval)
         return
 
@@ -161,13 +169,19 @@ def test_solve_fwd_sens():
     np.testing.assert_allclose(solution.sens[0][0], expected_r, rtol=1e-4)
 
 
-@pytest.mark.skipif(not hasattr(ds, "llvm"), reason="Adjoint sensitivities require an LLVM JIT backend")
+@pytest.mark.skipif(
+    not hasattr(ds, "llvm"), reason="Adjoint sensitivities require an LLVM JIT backend"
+)
 def test_solve_continuous_adjoint():
-    ode = make_ode(ds.llvm, code=ADJOINT_LOGISTIC_CODE, scalar_type=ds.f64, ode_solver=ds.bdf)
+    ode = make_ode(
+        ds.llvm, code=ADJOINT_LOGISTIC_CODE, scalar_type=ds.f64, ode_solver=ds.bdf
+    )
     params = np.array([2.0])
 
     if os.name == "nt":
-        with pytest.raises(Exception, match="Sensitivity analysis is not supported on Windows"):
+        with pytest.raises(
+            Exception, match="Sensitivity analysis is not supported on Windows"
+        ):
             ode.solve_continuous_adjoint(params, 1.0)
         return
 
@@ -178,18 +192,27 @@ def test_solve_continuous_adjoint():
     assert np.isfinite(gradient).all()
 
 
-@pytest.mark.skipif(not hasattr(ds, "llvm"), reason="Adjoint sensitivities require an LLVM JIT backend")
-@pytest.mark.parametrize("dgdu_dtype", [
-    np.float64, # dgdu type matches scalar_type so can be borrowed directly
-    np.float32, # dgdu type differs from scalar_type so must be converted to f64
-])
+@pytest.mark.skipif(
+    not hasattr(ds, "llvm"), reason="Adjoint sensitivities require an LLVM JIT backend"
+)
+@pytest.mark.parametrize(
+    "dgdu_dtype",
+    [
+        np.float64,  # dgdu type matches scalar_type so can be borrowed directly
+        np.float32,  # dgdu type differs from scalar_type so must be converted to f64
+    ],
+)
 def test_split_adjoint(dgdu_dtype):
-    ode = make_ode(ds.llvm, code=ADJOINT_LOGISTIC_CODE, scalar_type=ds.f64, ode_solver=ds.bdf)
+    ode = make_ode(
+        ds.llvm, code=ADJOINT_LOGISTIC_CODE, scalar_type=ds.f64, ode_solver=ds.bdf
+    )
     params = np.array([1.0])
     t_eval = np.array([0.0, 0.1, 0.5])
 
     if os.name == "nt":
-        with pytest.raises(Exception, match="Sensitivity analysis is not supported on Windows"):
+        with pytest.raises(
+            Exception, match="Sensitivity analysis is not supported on Windows"
+        ):
             ode.solve_adjoint_fwd(params, t_eval)
         return
 
@@ -204,10 +227,16 @@ def test_split_adjoint(dgdu_dtype):
     assert np.isfinite(gradient).all()
 
 
-@pytest.mark.skipif(not hasattr(ds, "llvm"), reason="Adjoint sensitivities require an LLVM JIT backend")
-@pytest.mark.skipif(os.name == "nt", reason="Adjoint sensitivities are not supported on Windows")
+@pytest.mark.skipif(
+    not hasattr(ds, "llvm"), reason="Adjoint sensitivities require an LLVM JIT backend"
+)
+@pytest.mark.skipif(
+    os.name == "nt", reason="Adjoint sensitivities are not supported on Windows"
+)
 def test_split_adjoint_invalid_dgdu():
-    ode = make_ode(ds.llvm, code=ADJOINT_LOGISTIC_CODE, scalar_type=ds.f64, ode_solver=ds.bdf)
+    ode = make_ode(
+        ds.llvm, code=ADJOINT_LOGISTIC_CODE, scalar_type=ds.f64, ode_solver=ds.bdf
+    )
     params = np.array([1.0])
     t_eval = np.array([0.0, 0.1, 0.5])
 
