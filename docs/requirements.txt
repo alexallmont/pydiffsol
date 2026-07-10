@@ -8,9 +8,9 @@ alabaster==1.0.0
     # via sphinx
 babel==2.18.0
     # via sphinx
-certifi==2026.5.20
+certifi==2026.6.17
     # via requests
-charset-normalizer==3.4.7
+charset-normalizer==3.4.9
     # via requests
 docutils==0.21.2
     # via
@@ -28,7 +28,7 @@ numpy==2.2.6
     # via pydiffsol
 packaging==26.2
     # via sphinx
-pydiffsol==0.6.0
+pydiffsol==0.6.1
     # via -r requirements.in
 pygments==2.20.0
     # via sphinx
