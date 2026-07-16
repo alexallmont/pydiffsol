@@ -1,54 +1,83 @@
 [build-system]
-requires = ["maturin>=1.8,<2.0"]
+requires = [
+    "maturin>=1.8,<2.0",
+]
 build-backend = "maturin"
 
 [project]
+name = "pydiffsol"
+dynamic = [
+    "version",
+]
+requires-python = ">=3.10"
 authors = [
-  { email = "alex.allmont@dtc.ox.ac.uk", name = "Alex Allmont" },
-  { email = "martinjrobins@gmail.com", name = "Martin Robinson" },
+    { email = "alex.allmont@dtc.ox.ac.uk", name = "Alex Allmont" },
+    { email = "martinjrobins@gmail.com", name = "Martin Robinson" },
 ]
 classifiers = [
-  "Programming Language :: Rust",
-  "Programming Language :: Python :: Implementation :: CPython",
-  "Programming Language :: Python :: Implementation :: PyPy",
-  "Development Status :: 4 - Beta",
-  "Topic :: Scientific/Engineering :: Mathematics",
-  "License :: OSI Approved :: MIT License",
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "Development Status :: 4 - Beta",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "License :: OSI Approved :: MIT License",
 ]
 keywords = [
-  "ODE",
-  "solver",
-  "DSL",
-  "scientific-computing",
-  "sparse-matrix",
-  "jacobian",
-  "runge-kutta",
-  "bdf",
+    "ODE",
+    "solver",
+    "DSL",
+    "scientific-computing",
+    "sparse-matrix",
+    "jacobian",
+    "runge-kutta",
+    "bdf",
 ]
 readme = { file = "README_PyPI.md", content-type = "text/markdown" }
-license-files = ["LICENSE", "LICENSE.libunwind", "LICENSE.zstd"]
+license-files = [
+    "LICENSE",
+    "LICENSE.libunwind",
+    "LICENSE.zstd",
+]
 
-dependencies = ["numpy"]
+dependencies = [
+    "numpy",
+]
 
 [project.optional-dependencies]
-dev = ["docutils", "json5", "markdown-it-py", "matplotlib", "pytest", "tomli"]
-bench = ["casadi", "diffrax", "jax<0.7.0", "matplotlib", "numpy", "pandas"]
+dev = [
+    "docutils",
+    "json5",
+    "markdown-it-py",
+    "matplotlib",
+    "pytest",
+    "tomli",
+]
+bench = [
+    "casadi",
+    "diffrax",
+    "jax<0.7.0",
+    "matplotlib",
+    "numpy",
+    "pandas",
+]
 
 [tool.maturin]
-features = ["pyo3/extension-module"]
+features = [
+    "pyo3/extension-module",
+]
 
 [tool.cibuildwheel.linux]
 repair-wheel-command = [
-  "python -m pip install --force-reinstall --no-deps {wheel} wheel",
-  "python .github/scripts/generate_pyi.py {wheel}",
-  "auditwheel repair -w {dest_dir} {wheel}",
+    "python -m pip install --force-reinstall --no-deps {wheel} wheel",
+    "python .github/scripts/generate_pyi.py {wheel}",
+    "auditwheel repair -w {dest_dir} {wheel}",
 ]
 
 [tool.cibuildwheel.macos]
 repair-wheel-command = [
-  "python -m pip install --force-reinstall --no-deps {wheel} wheel",
-  "python .github/scripts/generate_pyi.py {wheel}",
-  "delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}",
+    "python -m pip install --force-reinstall --no-deps {wheel} wheel",
+    "python .github/scripts/generate_pyi.py {wheel}",
+    "delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}",
 ]
 
 [tool.cibuildwheel.windows]
@@ -57,6 +86,4 @@ repair-wheel-command = [
     "python -m pip install --force-reinstall --no-deps {wheel}",
     "python .github/scripts/generate_pyi.py {wheel}",
     "delvewheel repair -w {dest_dir} {wheel}",
-]name = "pydiffsol"
-dynamic = ["version"]
-requires-python = ">=3.10"
+]
