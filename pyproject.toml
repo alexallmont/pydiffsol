@@ -1,18 +1,44 @@
 [build-system]
-requires = ["maturin>=1.8,<2.0"]
+requires = [
+    "maturin>=1.8,<2.0",
+]
 build-backend = "maturin"
 
 [project]
 name = "pydiffsol"
-dynamic = ["version"]
+dynamic = [
+    "version",
+]
 requires-python = ">=3.10"
+authors = [
+    { email = "alex.allmont@dtc.ox.ac.uk", name = "Alex Allmont" },
+    { email = "martinjrobins@gmail.com", name = "Martin Robinson" },
+]
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
+    "Development Status :: 4 - Beta",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "License :: OSI Approved :: MIT License",
+]
+keywords = [
+    "ODE",
+    "DAE",
+    "solver",
+    "DSL",
+    "scientific-computing",
+    "sparse-matrix",
+    "jacobian",
+    "runge-kutta",
+    "bdf",
 ]
 readme = { file = "README_PyPI.md", content-type = "text/markdown" }
-license-files = ["LICENSE", "LICENSE.libunwind", "LICENSE.zstd"]
+license-files = [
+    "LICENSE",
+    "LICENSE.libunwind",
+    "LICENSE.zstd",
+]
 
 dependencies = [
     "numpy",
@@ -25,7 +51,7 @@ dev = [
     "markdown-it-py",
     "matplotlib",
     "pytest",
-    "tomli"
+    "tomli",
 ]
 bench = [
     "casadi",
@@ -37,7 +63,9 @@ bench = [
 ]
 
 [tool.maturin]
-features = ["pyo3/extension-module"]
+features = [
+    "pyo3/extension-module",
+]
 
 [tool.cibuildwheel.linux]
 repair-wheel-command = [
