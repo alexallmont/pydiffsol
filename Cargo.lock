@@ -553,9 +553,9 @@ checksum = "7cd812cc2bc1d69d4764bd80df88b4317eaef9e773c75226407d9bc0876b211c"
 
 [[package]]
 name = "diffsl"
-version = "0.12.2"
+version = "0.12.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aa1e0c8c8a28b4578b30347093a0fd30d6c3728a59926ffc59f1902779e2b2da"
+checksum = "65357bb7b24a340b94019b68afaf704b12fd5c6de7d9558dc99306fb8ee3b57f"
 dependencies = [
  "aliasable",
  "anyhow",
@@ -594,16 +594,14 @@ dependencies = [
 
 [[package]]
 name = "diffsol"
-version = "0.16.0"
+version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "068d5f82ef700d82859ac0b1f91380c47b66661c290ae8fdd0cd1089d08b43ad"
+checksum = "5df81c513abe1e17db8a8b2f6da885ead5dc979fb154e95e9b6ea522bc2370fc"
 dependencies = [
  "diffsl",
- "faer",
- "faer-traits",
+ "diffsol-la",
+ "diffsol-nl",
  "log",
- "nalgebra",
- "nalgebra-sparse",
  "num-traits",
  "petgraph",
  "serde",
@@ -614,9 +612,9 @@ dependencies = [
 
 [[package]]
 name = "diffsol-c"
-version = "0.5.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2d6bd3ec340ffeed47d0c640325240972d5c6b594a5c6f7b500c733e7743ac88"
+checksum = "4a5398ce7de58b7576e5d845571b01145192a2423f808963f57909b76c48b4f5"
 dependencies = [
  "diffsl",
  "diffsol",
@@ -630,6 +628,32 @@ dependencies = [
  "schemars",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "diffsol-la"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dd42e083ac1b3ea85db099025a33eb802cf0f186cb3a8eb2d7809597f0e2097f"
+dependencies = [
+ "faer",
+ "faer-traits",
+ "nalgebra",
+ "num-traits",
+ "suitesparse_sys",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "diffsol-nl"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a5f90f3f8e82154b9e984a21816867d840c0b1c1d2a150a3a477d331b020aa0e"
+dependencies = [
+ "diffsol-la",
+ "log",
+ "num-traits",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -1694,18 +1718,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.118",
-]
-
-[[package]]
-name = "nalgebra-sparse"
-version = "0.12.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e8935b578b6a012f3667131452add895472f37c242d2844497daf7c49f6b8059"
-dependencies = [
- "nalgebra",
- "num-traits",
- "pest",
- "pest_derive",
 ]
 
 [[package]]
