@@ -41,7 +41,7 @@ The mass matrix \\(M\\) has one on the diagonal for the differential equations a
 
 .. math:: M = \begin{bmatrix} 0 & 0 & 0 & 0 \\\\ 0 & 1 & 0 & 0 \\\\ 0 & 0 & 0 & 0 \\\\ 0 & 0 & 0 & 1 \end{bmatrix}
 
-Instead of providing the mass matrix explicitly, the DiffSL language specifies the multiplication of the mass matrix with the derivative term, \\(M \frac{d\mathbf{y}}{dt}\\), which is given by:
+Instead of providing the mass matrix explicitly, the DiffSL language specifies the multiplication of the mass matrix with the derivative term, \\(M \\frac{d\\mathbf{y}}{dt}\\), which is given by:
 
 .. math:: M \frac{d\mathbf{y}}{dt} = \begin{bmatrix} 0 \\\\ \frac{di_L}{dt} \\\\ 0 \\\\ \frac{dV}{dt} \end{bmatrix}
 
