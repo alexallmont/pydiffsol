@@ -106,7 +106,7 @@ Releases are drafted in [issues](https://github.com/alexallmont/pydiffsol/issues
 
 To release v0.x.y, e.g. x and y from next unreleased draft [issue](https://github.com/alexallmont/pydiffsol/issues):
 
-1. Ensure all PRs are merged to `main` and there are no build issues.
+1. Ensure all PRs are merged to `main` (check latest 'Draft Release' issue) and there are no build issues.
 1. Ensure `Cargo.toml` is correct, e.g. `version = "0.x.y"`.
 1. Ensure `CHANGELOG.md` details latest changes up to `[0.x.y]`.
 1. Update `docs/requirements.txt` by running `pip install pip-tools`, then `cd docs` and `pip-compile --upgrade requirements.in`
@@ -119,5 +119,6 @@ To release v0.x.y, e.g. x and y from next unreleased draft [issue](https://githu
 1. Click 'Publish release'
 1. Check build action completes and the new package is on [PyPI](https://pypi.org/project/pydiffsol/).
 1. Log in to [readthedocs](https://app.readthedocs.org/dashboard/), rebuild `latest`, `stable` and add a new version for `v0.x.y`
+2. Create a new Draft Release issue, copying outstanding notes from last into new, then close last. Make a milestone for major releases.
 
 The manual manipulation of `docs/requirements.txt` and rebuild of readthedocs is needed because the docs are built through introspection, requiring the latest PyPI version of `pydiffsol`. readthedocs is triggered by watching GitHub and not PyPI, and the version needs to be right at time of tag creation so the docs tags are correct. The bug is the docs try to build before the package is available. Suggested fix in issue [#85](https://github.com/alexallmont/pydiffsol/issues/85).
