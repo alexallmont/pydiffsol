@@ -79,7 +79,8 @@ jobs:
         env:
           ACTIVATE: ${{ runner.os == 'Windows' && '.venv/Scripts/activate' || '.venv/bin/activate' }}
           # FIXME restore to 'test examples/* bench/main_bench.py'. Temporarily disabled for work on config branch
-          PYTEST_DIRS: ${{ runner.os == 'macOS' && 'test' || 'test examples/*' }} # MacOS runner fails with LLVM and matplotlib
+          PYTEST_DIRS: 'test examples/*'
+          MPLBACKEND: Agg # Headless rendering for matplotlib, avoid GUI issues on CI
         run: |
           set -e
           python3 -m venv .venv
