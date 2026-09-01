@@ -594,9 +594,9 @@ dependencies = [
 
 [[package]]
 name = "diffsol"
-version = "0.16.1"
+version = "0.16.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5df81c513abe1e17db8a8b2f6da885ead5dc979fb154e95e9b6ea522bc2370fc"
+checksum = "4b324c954a5178683516e35e06051f02e3e2471d22b8175d9a01b274bd81269d"
 dependencies = [
  "diffsl",
  "diffsol-la",
@@ -612,9 +612,9 @@ dependencies = [
 
 [[package]]
 name = "diffsol-c"
-version = "0.5.1"
+version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4a5398ce7de58b7576e5d845571b01145192a2423f808963f57909b76c48b4f5"
+checksum = "322d3f90ea1dd420826c2dc8cb9e4396dd7c53566710791f438e15e7335484ce"
 dependencies = [
  "diffsl",
  "diffsol",
@@ -632,9 +632,9 @@ dependencies = [
 
 [[package]]
 name = "diffsol-la"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dd42e083ac1b3ea85db099025a33eb802cf0f186cb3a8eb2d7809597f0e2097f"
+checksum = "0fd836b0b52b6459b1e16c4ebfe267599b39c07a2eb638426a4e72a279a4e384"
 dependencies = [
  "faer",
  "faer-traits",
@@ -646,9 +646,9 @@ dependencies = [
 
 [[package]]
 name = "diffsol-nl"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a5f90f3f8e82154b9e984a21816867d840c0b1c1d2a150a3a477d331b020aa0e"
+checksum = "6b24ab3f56ff94c563ab85e7897ba57f884617d0dc83a081028d28ec800213a1"
 dependencies = [
  "diffsol-la",
  "log",
@@ -2200,9 +2200,9 @@ dependencies = [
 
 [[package]]
 name = "pyo3"
-version = "0.29.0"
+version = "0.29.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cd274650b21d4bfc26a0a47587962c1edb425f69287324355cd040c3ea66071c"
+checksum = "4688ddedf473e32662b9b067670129a8afb8c18e351482c70d62ba4a88171e8b"
 dependencies = [
  "libc",
  "once_cell",
@@ -2214,18 +2214,18 @@ dependencies = [
 
 [[package]]
 name = "pyo3-build-config"
-version = "0.29.0"
+version = "0.29.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c5e2a7d2f0d013342f295c048ad19237add5154a55b1c5a254c0ec93d4109078"
+checksum = "f41027e41b4bd03f6e60f9f417fe24a6341a6bb744edd62b6f709f2a52ea30e9"
 dependencies = [
  "target-lexicon",
 ]
 
 [[package]]
 name = "pyo3-ffi"
-version = "0.29.0"
+version = "0.29.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ca85c467da1bbc8d866eea5deff9cf29ea5f7785054a17da36e65bda9c05845b"
+checksum = "e591a95526fead067432c3b3a33fc74770b87b1e04e73671090d9c2055a2b327"
 dependencies = [
  "libc",
  "pyo3-build-config",
@@ -2244,9 +2244,9 @@ dependencies = [
 
 [[package]]
 name = "pyo3-macros"
-version = "0.29.0"
+version = "0.29.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9ac53762fd065daa3194dd09337a38bd793a188100fd1a9304c4ab312d901771"
+checksum = "73225868fc1cd84eef2c3c230ddb91273bf1de46aeb8a4248da76d32a0924a1c"
 dependencies = [
  "proc-macro2",
  "pyo3-macros-backend",
@@ -2256,9 +2256,9 @@ dependencies = [
 
 [[package]]
 name = "pyo3-macros-backend"
-version = "0.29.0"
+version = "0.29.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4ca3a1557399783172dc5bf39cfca835157732532cba56b71d2292161e53b362"
+checksum = "571575aa3749fa6216757dd47d2a3e7ef360f329a40f0666a9fbd14889024952"
 dependencies = [
  "heck",
  "proc-macro2",
