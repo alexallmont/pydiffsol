@@ -1,0 +1,37 @@
+name: Audit workflows with zizmor
+
+on:
+# FIXME remove pull_request before merge to main
+  pull_request:
+#  schedule:
+#    - cron: '23 5 * * 1'  # Every Monday at 05:23 AM UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  zizmor:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Run zizmor (upload to code scanning)
+        uses: zizmorcore/zizmor-action@cc914d7f3750a2d13d75c7f184a1060aa0e9d482 # v0.6.4
+        with:
+          inputs: .github/workflows
+
+      - name: Run zizmor (annotate and fail on findings)
+        uses: zizmorcore/zizmor-action@cc914d7f3750a2d13d75c7f184a1060aa0e9d482 # v0.6.4
+        with:
+          inputs: .github/workflows
+          advanced-security: false
+          annotations: true
