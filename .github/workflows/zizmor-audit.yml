@@ -1,10 +1,8 @@
 name: Audit workflows with zizmor
 
 on:
-# FIXME remove pull_request before merge to main
-  pull_request:
-#  schedule:
-#    - cron: '23 5 * * 1'  # Every Monday at 05:23 AM UTC
+  schedule:
+    - cron: '23 5 * * 1'  # Every Monday at 05:23 AM UTC
   workflow_dispatch:
 
 permissions:
